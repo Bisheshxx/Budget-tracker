@@ -26,6 +26,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((s) => {
         if (active) setSession(s)
       })
+      .catch((err) => {
+        console.error('Failed to resolve initial session', err)
+        if (active) setSession(null)
+      })
       .finally(() => {
         if (active) setLoading(false)
       })
