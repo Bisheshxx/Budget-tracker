@@ -6,7 +6,14 @@ import { credentialsSchema } from '../lib/schemas/auth'
 import type { CredentialsInput } from '../lib/schemas/auth'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
-import { Label } from '../components/ui/label'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../components/ui/form'
 import {
   Card,
   CardContent,
@@ -22,12 +29,7 @@ export const Route = createFileRoute('/login')({
 function LoginPage() {
   const { signIn } = useAuth()
   const navigate = useNavigate()
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<CredentialsInput>({
+  const form = useForm<CredentialsInput>({
     resolver: zodResolver(credentialsSchema),
     defaultValues: { email: '', password: '' },
   })
@@ -37,7 +39,7 @@ function LoginPage() {
       await signIn(values)
       await navigate({ to: '/dashboard' })
     } catch (err) {
-      setError('root', {
+      form.setError('root', {
         message: err instanceof Error ? err.message : 'Could not sign in',
       })
     }
@@ -51,48 +53,52 @@ function LoginPage() {
           <CardDescription>Welcome back. Enter your details.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            noValidate
-            className="flex flex-col gap-4"
-          >
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                aria-invalid={!!errors.email}
-                {...register('email')}
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              noValidate
+              className="flex flex-col gap-4"
+            >
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" autoComplete="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.email && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        autoComplete="current-password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {form.formState.errors.root && (
                 <p className="text-sm text-destructive">
-                  {errors.email.message}
+                  {form.formState.errors.root.message}
                 </p>
               )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                aria-invalid={!!errors.password}
-                {...register('password')}
-              />
-              {errors.password && (
-                <p className="text-sm text-destructive">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-            {errors.root && (
-              <p className="text-sm text-destructive">{errors.root.message}</p>
-            )}
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Logging in…' : 'Log in'}
-            </Button>
-          </form>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Logging in…' : 'Log in'}
+              </Button>
+            </form>
+          </Form>
           <p className="mt-4 text-sm text-muted-foreground">
             No account?{' '}
             <Link to="/signup" className="underline">

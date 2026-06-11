@@ -7,7 +7,14 @@ import { credentialsSchema } from '../lib/schemas/auth'
 import type { CredentialsInput } from '../lib/schemas/auth'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
-import { Label } from '../components/ui/label'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '../components/ui/form'
 import {
   Card,
   CardContent,
@@ -24,12 +31,7 @@ function SignupPage() {
   const { signUp } = useAuth()
   const navigate = useNavigate()
   const [notice, setNotice] = useState<string | null>(null)
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<CredentialsInput>({
+  const form = useForm<CredentialsInput>({
     resolver: zodResolver(credentialsSchema),
     defaultValues: { email: '', password: '' },
   })
@@ -46,7 +48,7 @@ function SignupPage() {
         setNotice('Check your email to confirm your account, then log in.')
       }
     } catch (err) {
-      setError('root', {
+      form.setError('root', {
         message: err instanceof Error ? err.message : 'Could not sign up',
       })
     }
@@ -62,49 +64,55 @@ function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            noValidate
-            className="flex flex-col gap-4"
-          >
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                aria-invalid={!!errors.email}
-                {...register('email')}
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              noValidate
+              className="flex flex-col gap-4"
+            >
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" autoComplete="email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              {errors.email && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        autoComplete="new-password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {form.formState.errors.root && (
                 <p className="text-sm text-destructive">
-                  {errors.email.message}
+                  {form.formState.errors.root.message}
                 </p>
               )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                aria-invalid={!!errors.password}
-                {...register('password')}
-              />
-              {errors.password && (
-                <p className="text-sm text-destructive">
-                  {errors.password.message}
-                </p>
+              {notice && (
+                <p className="text-sm text-muted-foreground">{notice}</p>
               )}
-            </div>
-            {errors.root && (
-              <p className="text-sm text-destructive">{errors.root.message}</p>
-            )}
-            {notice && <p className="text-sm text-muted-foreground">{notice}</p>}
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating account…' : 'Sign up'}
-            </Button>
-          </form>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Creating account…' : 'Sign up'}
+              </Button>
+            </form>
+          </Form>
           <p className="mt-4 text-sm text-muted-foreground">
             Already have an account?{' '}
             <Link to="/login" className="underline">
