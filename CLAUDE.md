@@ -34,6 +34,8 @@ This is a **TanStack Start** app (full-stack React 19 framework on Vite) using *
 - **Import aliases:** `#/*` and `@/*` both map to `src/*` (see `tsconfig.json` and `package.json` `imports`). shadcn aliases resolve `#/components`, `#/lib/utils`, etc.
 - TypeScript is `strict` with `noUnusedLocals`/`noUnusedParameters` and `verbatimModuleSyntax` — use `import type` for type-only imports.
 - Files prefixed `demo` (e.g. `src/routes/demo/`) are starter examples and safe to delete.
+- **Tests live in a top-level `tests/` folder, not co-located with source.** Mirror the `src/` structure under `tests/` (e.g. `src/services/auth-service.ts` → `tests/services/auth-service.test.ts`) and name files `*.test.ts(x)`. Import the code under test via the `#/*` alias (e.g. `import { AuthService } from '#/services/auth-service.ts'`). Vitest's defaults discover `tests/` with no extra config.
+- **Forms & validation:** use **react-hook-form** with **zod** (via `@hookform/resolvers`'s `zodResolver`) for all forms. Define the zod schema as the single source of truth in `src/lib/schemas/` and reuse it both in the form resolver and in the service-layer validation (e.g. `AuthService` validates with `credentialsSchema` via `safeParse`) so UI and service rules never drift. Wire inputs with `{...register(...)}`, render field errors from `formState.errors`, surface submit failures via `setError('root', …)`, drive disabled/loading state from `isSubmitting`, and add `noValidate` to the `<form>` so zod owns validation. See `src/lib/schemas/auth.ts` and `src/routes/login.tsx`.
 
 ## Agent skills
 
