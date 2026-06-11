@@ -1,3 +1,4 @@
+import { credentialsSchema } from '../lib/schemas/auth'
 import type {
   AuthSession,
   Credentials,
@@ -32,9 +33,12 @@ export class AuthService {
     return this.repo.onAuthStateChange(callback)
   }
 
-  private validate({ email, password }: Credentials): void {
-    if (!email.includes('@')) throw new Error('Enter a valid email address')
-    if (password.length < 6)
-      throw new Error('Password must be at least 6 characters')
+  private validate(credentials: Credentials): void {
+    const result = credentialsSchema.safeParse(credentials)
+    if (!result.success) {
+      // Surface the first issue as a plain Error so callers (UI catch blocks,
+      // tests) get a friendly message rather than a raw ZodError.
+      throw new Error(result.error.issues[0].message)
+    }
   }
 }
