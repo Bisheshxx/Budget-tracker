@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": [
+    "src/index.{ts,tsx,js,jsx}",
+    "src/main.{ts,tsx,js,jsx}",
+    "src/lib/utils.ts"
+  ],
+  "ignoreDependencies": ["fallow", "lucide-react", "class-variance-authority"],
+  "ignoreExports": [
+    {
+      "file": "src/integrations/tanstack-query/root-provider.tsx",
+      "exports": ["default"]
+    }
+  ],
+  "duplicates": {
+    "minOccurrences": 3
+  },
+  "health": {
+    "maxCrap": 60,
+    "ignore": ["src/components/Header.tsx", "src/routes/index.tsx"]
+  },
+  "rules": {
+    "unused-dependencies": "warn",
+    "test-only-dependencies": "off"
+  }
+}
