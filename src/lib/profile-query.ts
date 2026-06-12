@@ -43,7 +43,11 @@ export function useProfile(): ProfileResult {
     loading: authLoading || query.isLoading,
     isOnboarded: profileService.isOnboarded(profile),
     refresh: async () => {
-      await query.refetch()
+      // refetch() resolves (doesn't reject) on a failed fetch, so surface the
+      // error explicitly — callers like OnboardingForm await this and must fail
+      // fast rather than route on as if the refresh succeeded.
+      const result = await query.refetch()
+      if (result.error) throw result.error
     },
   }
 }
