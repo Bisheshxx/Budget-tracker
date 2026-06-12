@@ -8,6 +8,7 @@ const { auth } = vi.hoisted(() => ({
   auth: {
     signUp: vi.fn(),
     signInWithPassword: vi.fn(),
+    signInWithOAuth: vi.fn(),
     signOut: vi.fn(),
     getSession: vi.fn(),
     onAuthStateChange: vi.fn(),
@@ -116,6 +117,36 @@ describe('SupabaseAuthRepository', () => {
       await expect(repo.signIn(creds)).rejects.toThrow(
         'invalid login credentials',
       )
+    })
+  })
+
+  describe('signInWithOAuth', () => {
+    it('passes the provider and redirect through to Supabase', async () => {
+      auth.signInWithOAuth.mockResolvedValue({
+        data: { provider: 'google', url: 'https://accounts.google.com/...' },
+        error: null,
+      })
+      const repo = new SupabaseAuthRepository()
+
+      await expect(
+        repo.signInWithOAuth('google', 'http://localhost:3000/auth/callback'),
+      ).resolves.toBeUndefined()
+      expect(auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'google',
+        options: { redirectTo: 'http://localhost:3000/auth/callback' },
+      })
+    })
+
+    it('throws the Supabase error', async () => {
+      auth.signInWithOAuth.mockResolvedValue({
+        data: { provider: null, url: null },
+        error: new Error('provider not enabled'),
+      })
+      const repo = new SupabaseAuthRepository()
+
+      await expect(
+        repo.signInWithOAuth('google', 'http://localhost:3000/auth/callback'),
+      ).rejects.toThrow('provider not enabled')
     })
   })
 
