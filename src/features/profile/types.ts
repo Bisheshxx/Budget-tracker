@@ -1,6 +1,6 @@
-// Source-agnostic profile contract. Backed by Supabase today; swappable for an
-// axios/REST backend later. Components and services depend on THIS, never on
-// supabase-js directly. See docs/adr/0001-client-side-swappable-repositories.md.
+// Domain types owned by the profile feature — the vocabulary services, hooks,
+// components, and the repository port all speak. The persistence port that
+// traffics in these lives in #/data/profile/IProfileRepository. See docs/adr/0004.
 
 export type PaydayFrequency = 'weekly' | 'biweekly' | 'monthly'
 
@@ -28,11 +28,4 @@ export interface ProfileUpdate {
   paydayFrequency: PaydayFrequency
   groceryDayOfWeek: number | null
   monthlyBudgetTargetCents: number
-}
-
-export interface IProfileRepository {
-  /** The current user's profile, or null if none exists yet. */
-  getByAuthUserId: (authUserId: string) => Promise<UserProfile | null>
-  /** Patch the profile and return the saved row. */
-  update: (authUserId: string, patch: ProfileUpdate) => Promise<UserProfile>
 }

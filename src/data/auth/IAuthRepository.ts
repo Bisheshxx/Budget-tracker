@@ -1,21 +1,10 @@
-// Source-agnostic auth contract. Today it's backed by Supabase; tomorrow it can
-// be an axios/REST backend. Components and services depend on THIS, never on
-// supabase-js directly. See docs/adr/0001-client-side-swappable-repositories.md.
+import type { AuthSession, Credentials } from '#/features/auth/types'
 
-export interface AuthUser {
-  id: string
-  email: string | null
-}
-
-export interface AuthSession {
-  user: AuthUser
-}
-
-export interface Credentials {
-  email: string
-  password: string
-}
-
+// The auth persistence port. Today it's implemented by Supabase
+// (supabase-auth-repository.ts); tomorrow it can be an axios/REST backend —
+// swap the impl in index.ts. Services depend on THIS, never on supabase-js
+// directly. It speaks the auth feature's domain types. See docs/adr/0001 and
+// docs/adr/0004.
 export interface IAuthRepository {
   signUp: (credentials: Credentials) => Promise<AuthSession | null>
   signIn: (credentials: Credentials) => Promise<AuthSession>

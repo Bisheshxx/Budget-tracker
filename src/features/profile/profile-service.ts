@@ -1,10 +1,8 @@
 import { onboardingSchema } from './schema'
 import { toCents } from '#/lib/money'
 import type { OnboardingInput } from './schema'
-import type {
-  IProfileRepository,
-  UserProfile,
-} from '#/data/profile/profile-repository'
+import type { UserProfile } from '#/features/profile/types'
+import type { IProfileRepository } from '#/data/profile/IProfileRepository'
 
 // Thin service over the profile repository. Holds the app-level rules for
 // Onboarding (validation + the "onboarded" invariant) so UI stays declarative.
