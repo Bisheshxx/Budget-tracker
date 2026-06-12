@@ -16,6 +16,7 @@ function makeFakeRepo(overrides: Partial<IAuthRepository> = {}) {
   return {
     signUp: vi.fn(async (_c: Credentials) => session),
     signIn: vi.fn(async (_c: Credentials) => session),
+    signInWithOAuth: vi.fn(async (_p: 'google', _r: string) => {}),
     signOut: vi.fn(async () => {}),
     getSession: vi.fn(async () => session),
     onAuthStateChange: vi.fn(() => unsubscribe),
@@ -74,6 +75,17 @@ describe('AuthService', () => {
 
       await expect(service.getSession()).resolves.toEqual(session)
       expect(repo.getSession).toHaveBeenCalledOnce()
+    })
+
+    it('signInWithOAuth delegates provider and redirect without validation', async () => {
+      const repo = makeFakeRepo()
+      const service = new AuthService(repo)
+
+      await service.signInWithOAuth('google', 'http://localhost:3000/auth/callback')
+      expect(repo.signInWithOAuth).toHaveBeenCalledWith(
+        'google',
+        'http://localhost:3000/auth/callback',
+      )
     })
 
     it('onAuthStateChange returns the repo unsubscribe fn', () => {

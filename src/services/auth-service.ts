@@ -21,6 +21,10 @@ export class AuthService {
     return this.repo.signIn(credentials)
   }
 
+  signInWithOAuth(provider: 'google', redirectTo: string): Promise<void> {
+    return this.repo.signInWithOAuth(provider, redirectTo)
+  }
+
   signOut(): Promise<void> {
     return this.repo.signOut()
   }

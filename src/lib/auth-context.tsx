@@ -9,6 +9,8 @@ interface AuthContextValue {
   loading: boolean
   signUp: (credentials: Credentials) => Promise<AuthSession | null>
   signIn: (credentials: Credentials) => Promise<AuthSession>
+  /** Kick off the Google OAuth redirect, returning to /auth/callback. */
+  signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -50,6 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       signUp: (c) => authService.signUp(c),
       signIn: (c) => authService.signIn(c),
+      signInWithGoogle: () =>
+        authService.signInWithOAuth(
+          'google',
+          `${window.location.origin}/auth/callback`,
+        ),
       signOut: () => authService.signOut(),
     }),
     [session, loading],

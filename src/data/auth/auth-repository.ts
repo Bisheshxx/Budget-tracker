@@ -19,6 +19,11 @@ export interface Credentials {
 export interface IAuthRepository {
   signUp: (credentials: Credentials) => Promise<AuthSession | null>
   signIn: (credentials: Credentials) => Promise<AuthSession>
+  /**
+   * Start an OAuth flow. Triggers a full-page redirect to the provider; the
+   * promise resolves once the redirect has been kicked off, not on return.
+   */
+  signInWithOAuth: (provider: 'google', redirectTo: string) => Promise<void>
   signOut: () => Promise<void>
   getSession: () => Promise<AuthSession | null>
   /** Subscribe to session changes. Returns an unsubscribe function. */

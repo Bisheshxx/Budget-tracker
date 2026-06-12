@@ -33,6 +33,17 @@ export class SupabaseAuthRepository implements IAuthRepository {
     return session
   }
 
+  async signInWithOAuth(
+    provider: 'google',
+    redirectTo: string,
+  ): Promise<void> {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo },
+    })
+    if (error) throw error
+  }
+
   async signOut(): Promise<void> {
     const { error } = await supabase.auth.signOut()
     if (error) throw error

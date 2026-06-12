@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useAuth } from '../lib/auth-context'
 import { credentialsSchema } from '../lib/schemas/auth'
 import type { CredentialsInput } from '../lib/schemas/auth'
+import { GoogleButton } from '../components/google-button'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import {
@@ -99,6 +100,12 @@ function LoginPage() {
               </Button>
             </form>
           </Form>
+          <div className="my-4 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <GoogleButton />
           <p className="mt-4 text-sm text-muted-foreground">
             No account?{' '}
             <Link to="/signup" className="underline">
