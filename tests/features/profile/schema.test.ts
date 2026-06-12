@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   onboardingSchema,
   resolveDisplayName,
-} from '#/lib/schemas/profile.ts'
+} from '#/features/profile/schema.ts'
 
 describe('onboardingSchema', () => {
   it('accepts the required fields alone and coerces the start day', () => {

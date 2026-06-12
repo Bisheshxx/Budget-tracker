@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ProfileService } from '#/services/profile-service.ts'
+import { ProfileService } from '#/features/profile/profile-service.ts'
 import type {
   IProfileRepository,
   ProfileUpdate,
   UserProfile,
 } from '#/data/profile/profile-repository.ts'
-import type { OnboardingInput } from '#/lib/schemas/profile.ts'
+import type { OnboardingInput } from '#/features/profile/schema.ts'
 
 const blankProfile: UserProfile = {
   id: 'profile-1',

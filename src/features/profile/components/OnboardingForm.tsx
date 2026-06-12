@@ -1,23 +1,23 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { ReactNode } from 'react'
-import { useAuth } from '../lib/auth-context'
-import { useProfile } from '../lib/profile-query'
-import { profileService } from '../services'
+import { useAuth } from '#/features/auth/auth-context'
+import { useProfile } from '#/features/profile/use-profile'
+import { profileService } from '#/features/profile'
 import {
   CURRENCIES,
   PAYDAY_FREQUENCIES,
   onboardingSchema,
   resolveDisplayName,
-} from '../lib/schemas/profile'
+} from '#/features/profile/schema'
 import type {
   OnboardingFormValues,
   OnboardingInput,
-} from '../lib/schemas/profile'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { Select } from './ui/select'
-import { Label } from './ui/label'
+} from '#/features/profile/schema'
+import { Button } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
+import { Select } from '#/components/ui/select'
+import { Label } from '#/components/ui/label'
 
 const DAYS_OF_WEEK = [
   'Sunday',
