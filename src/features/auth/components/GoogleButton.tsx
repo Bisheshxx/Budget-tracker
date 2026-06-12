@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useAuth } from '../lib/auth-context'
-import { Button } from './ui/button'
+import { useAuth } from '#/features/auth/auth-context'
+import { Button } from '#/components/ui/button'
 
 const googleIcon = '/icons/google.svg'
 

@@ -1,15 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { useAuth } from '../lib/auth-context'
-import { useProfile } from '../lib/profile-query'
-import { OnboardingForm } from '../components/onboarding-form'
+import { useAuth } from '#/features/auth/auth-context'
+import { useProfile } from '#/features/profile/use-profile'
+import { OnboardingForm } from '#/features/profile/components/OnboardingForm'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../components/ui/card'
+} from '#/components/ui/card'
 
 export const Route = createFileRoute('/onboarding')({
   component: OnboardingPage,

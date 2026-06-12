@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import ThemeToggle from './ThemeToggle'
-import { useAuth } from '../lib/auth-context'
+import { useAuth } from '#/features/auth/auth-context'
 
 export default function Header() {
   const { session, loading } = useAuth()

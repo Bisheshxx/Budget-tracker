@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useAuth } from '../../lib/auth-context'
-import { Button } from '../../components/ui/button'
+import { useAuth } from '#/features/auth/auth-context'
+import { Button } from '#/components/ui/button'
 
 // Empty protected shell. Real cashflow content lands in issue 05.
 export const Route = createFileRoute('/_authed/dashboard')({
