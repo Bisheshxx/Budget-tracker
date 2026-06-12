@@ -1,11 +1,11 @@
-import { supabase } from '../../lib/supabase'
-import type { Database } from '../../lib/database.types'
+import { supabase } from '`#/lib/supabase`'
+import type { Database } from '`#/lib/database.types`'
 import type {
-  IProfileRepository,
   PaydayFrequency,
   ProfileUpdate,
   UserProfile,
-} from './profile-repository'
+} from '#/features/profile/types'
+import type { IProfileRepository } from './IProfileRepository'
 
 type ProfileRow = Database['public']['Tables']['user_profiles']['Row']
 

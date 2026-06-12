@@ -1,10 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { AuthService } from '#/features/auth/auth-service.ts'
-import type {
-  AuthSession,
-  Credentials,
-  IAuthRepository,
-} from '#/data/auth/auth-repository.ts'
+import type { AuthSession, Credentials } from '#/features/auth/types.ts'
+import type { IAuthRepository } from '#/data/auth/IAuthRepository.ts'
 
 const session: AuthSession = {
   user: { id: 'user-1', email: 'a@b.com' },

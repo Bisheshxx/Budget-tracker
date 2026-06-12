@@ -1,9 +1,6 @@
 import { credentialsSchema } from './schema'
-import type {
-  AuthSession,
-  Credentials,
-  IAuthRepository,
-} from '#/data/auth/auth-repository'
+import type { AuthSession, Credentials } from '#/features/auth/types'
+import type { IAuthRepository } from '#/data/auth/IAuthRepository'
 
 // Thin service over the auth repository. Holds app-level auth rules (e.g. input
 // validation) so UI components stay declarative. Inject a fake IAuthRepository
