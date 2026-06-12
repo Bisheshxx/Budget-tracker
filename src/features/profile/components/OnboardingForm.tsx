@@ -38,7 +38,12 @@ const DAYS_OF_WEEK = [
 
 // The Onboarding form. Owns its own form state; on success it persists the
 // profile, refreshes the profile context (flipping isOnboarded), then routes on
-// via the supplied callback. Rendered only once the gate has allowed it.
+/**
+ * Renders the onboarding form, persists the user's onboarding settings, refreshes the profile, and invokes the provided callback when setup completes.
+ *
+ * @param onComplete - Callback invoked after onboarding is successfully saved and the profile has been refreshed
+ * @returns The onboarding form React element
+ */
 export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
   const { session } = useAuth()
   const { refresh } = useProfile()
@@ -57,6 +62,13 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
   })
   const { control, handleSubmit, formState, setError } = form
 
+  /**
+   * Complete onboarding using the provided form values and finalize setup for the current user.
+   *
+   * Attempts to persist the onboarding values for the currently authenticated user, refreshes the profile context, and invokes the `onComplete` callback on success. If there is no active session the function returns without side effects. On failure, sets a root form error message using the thrown error's message when available or a generic fallback.
+   *
+   * @param values - The onboarding form values to persist
+   */
   async function onSubmit(values: OnboardingInput) {
     if (!session) return
     try {
