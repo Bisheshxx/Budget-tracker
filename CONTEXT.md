@@ -32,6 +32,10 @@ _Avoid_: Balance (implies a running account balance, which we don't track)
 A *derived outcome*, not a tracked transaction. What the user saved in a Period = net Cashflow (income − real expenses). Transfers to a savings account are deliberately NOT recorded — they aren't consumption and the user still holds the money. There is no Savings input category.
 _Avoid_: Savings category, savings transaction, savings transfer (none exist as inputs)
 
+**Category**:
+A label for grouping transactions (and Recurring Expenses). **System/preset** categories (e.g. Housing, Food) are seeded and shared by everyone; **custom** categories are owned by one user. **Uncategorized** is the fallback bucket — a transaction with no category (null `category_id`) reads as Uncategorized; deleting a custom category falls its transactions back to it. Each carries a color and a lucide icon name.
+_Avoid_: Tag, label (use "category"), folder
+
 **Period Comparison**:
 This Period vs. the previous Period, reported as both a percentage change and an absolute amount (e.g. "Food +18% (+$120)"), overall and per category. The payoff of tracking over time; part of V1 (no AI involved).
 _Avoid_: Trend, delta (use "comparison")
