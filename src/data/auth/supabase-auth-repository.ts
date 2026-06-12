@@ -3,6 +3,12 @@ import type { Session } from '@supabase/supabase-js'
 import type { AuthSession, Credentials } from '#/features/auth/types'
 import type { IAuthRepository } from './IAuthRepository'
 
+/**
+ * Convert a Supabase `Session` into the application's `AuthSession` shape.
+ *
+ * @param session - The Supabase session to convert, or `null`.
+ * @returns The mapped `AuthSession` with `user.id` and `user.email` (email set to `null` if absent), or `null` if `session` is `null`.
+ */
 function toAuthSession(session: Session | null): AuthSession | null {
   if (!session) return null
   return {
