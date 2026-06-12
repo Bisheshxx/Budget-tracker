@@ -12,8 +12,6 @@ create table public.user_profiles (
   auth_user_id            uuid not null references auth.users(id) on delete cascade,
   display_name            text,
   currency                text not null default 'USD',
-  payday_day_of_month     int check (payday_day_of_month between 1 and 31),
-  payday_frequency        text not null default 'monthly' check (payday_frequency in ('weekly', 'biweekly', 'monthly')),
   grocery_day_of_week     int check (grocery_day_of_week between 0 and 6),
   monthly_budget_target   int not null default 0,
   budget_period_start_day int not null default 1 check (budget_period_start_day between 1 and 28),

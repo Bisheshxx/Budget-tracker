@@ -3,7 +3,7 @@ import { z } from 'zod'
 // Single source of truth for Onboarding input. Used by the onboarding form (via
 // @hookform/resolvers' zodResolver) AND by ProfileService as a backstop, so the
 // required/optional rules never drift between UI and service. See CONTEXT.md for
-// the domain language (Period, Payday, Budget Target).
+// the domain language (Period, Budget Target).
 
 export const CURRENCIES = [
   'USD',
@@ -15,8 +15,6 @@ export const CURRENCIES = [
   'INR',
   'NPR',
 ] as const
-
-export const PAYDAY_FREQUENCIES = ['weekly', 'biweekly', 'monthly'] as const
 
 // react-hook-form hands string values from inputs; coerce numbers and treat a
 // blank string as "not provided" for the optional fields. Whitespace-only
@@ -41,19 +39,6 @@ export const onboardingSchema = z.object({
   displayName: z.preprocess(
     blankToUndefined,
     z.string().trim().min(1).max(80, 'Name is too long').optional(),
-  ),
-  paydayDayOfMonth: z.preprocess(
-    blankToUndefined,
-    z.coerce
-      .number()
-      .int('Enter a whole number')
-      .min(1, 'Day must be between 1 and 31')
-      .max(31, 'Day must be between 1 and 31')
-      .optional(),
-  ),
-  paydayFrequency: z.preprocess(
-    blankToUndefined,
-    z.enum(PAYDAY_FREQUENCIES).optional(),
   ),
   groceryDayOfWeek: z.preprocess(
     blankToUndefined,

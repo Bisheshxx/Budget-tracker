@@ -8,9 +8,17 @@ A personal finance app for staying on top of your cashflow — knowing how much 
 The canonical budgeting cycle a budget target and reports are measured against. A monthly cycle anchored on the user's `budget_period_start_day` (e.g. the 25th of one month to the 24th of the next), not necessarily the calendar 1st.
 _Avoid_: Month (ambiguous with calendar month), cycle
 
-**Payday**:
-A contextual signal (day + frequency) describing when the user gets paid. Informs AI narration and UI nudges only — it does NOT define Period boundaries or reset the budget.
-_Avoid_: Pay cycle (suggests it bounds the budget — it does not)
+**Recurring Expense**:
+A user-defined template for a fixed, repeating cost (e.g. rent, gym, a subscription). Expenses only — income stays manual because it varies. Carries a category, a default amount, a frequency (weekly or monthly), and an anchor day. Deactivated rather than deleted when it ends, so its history is retained.
+_Avoid_: Subscription (too narrow), bill, standing order
+
+**Recurring Occurrence**:
+A single due instance of a Recurring Expense within a window (a week for weekly, a Period for monthly). Stored only once resolved — as `confirmed` (the user logged it, creating a linked transaction) or `skipped` (deliberately not paid this window).
+_Avoid_: Instalment, charge
+
+**Due**:
+A *computed* state (never stored): an active Recurring Expense whose current window has no resolved Occurrence yet. The Dashboard surfaces Due items as prompt-to-confirm nudges.
+_Avoid_: Pending, scheduled (nothing is auto-generated or scheduled)
 
 **Budget Target**:
 A soft reference amount the user sets to frame their mindset for a Period — NOT a pass/fail verdict. The headline signal is Cashflow, not target adherence. The Period is always monthly; the user configures its start day and this reference target.
@@ -29,5 +37,5 @@ This Period vs. the previous Period, reported as both a percentage change and an
 _Avoid_: Trend, delta (use "comparison")
 
 **Onboarding**:
-A one-screen setup gate shown after first signup, before the dashboard is reachable. Required: currency + Period start day. Everything else (display name, payday, target) is optional and editable later in Settings. A user is "onboarded" once `display_name` is set (the signup trigger leaves it null).
+A one-screen setup gate shown after first signup, before the dashboard is reachable. Required: currency + Period start day. Everything else (display name, grocery day, target) is optional and editable later in Settings. A user is "onboarded" once `display_name` is set (the signup trigger leaves it null).
 _Avoid_: Setup wizard, registration (that's auth/signup, a separate step)

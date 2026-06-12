@@ -11,7 +11,7 @@ Type: AFK
 
 Complete transaction CRUD by adding edit and delete to the existing add/list flow.
 
-- Edit an existing transaction (amount, type, category, date, note, recurring label) through `TransactionService` / `ITransactionRepository`.
+- Edit an existing transaction (amount, type, category, date, note) through `TransactionService` / `ITransactionRepository`.
 - Delete a transaction.
 - Lists and the current-Period summary reflect edits/deletes.
 

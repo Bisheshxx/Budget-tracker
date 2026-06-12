@@ -42,8 +42,6 @@ export class ProfileService {
       displayName,
       currency: v.currency,
       budgetPeriodStartDay: v.budgetPeriodStartDay,
-      paydayDayOfMonth: v.paydayDayOfMonth ?? null,
-      paydayFrequency: v.paydayFrequency ?? 'monthly',
       groceryDayOfWeek: v.groceryDayOfWeek ?? null,
       monthlyBudgetTargetCents:
         v.monthlyBudgetTarget != null ? toCents(v.monthlyBudgetTarget) : 0,
