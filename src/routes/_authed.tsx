@@ -1,7 +1,7 @@
 import { Outlet, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { useAuth } from '../lib/auth-context'
-import { useProfile } from '../lib/profile-query'
+import { useAuth } from '#/features/auth/auth-context'
+import { useProfile } from '#/features/profile/use-profile'
 
 // Pathless protected layout. Any route nested under `_authed` requires a
 // session AND a completed Onboarding. The guard runs client-side (SSR deferred

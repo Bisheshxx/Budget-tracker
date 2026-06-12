@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { useAuth } from '../../lib/auth-context'
+import { useAuth } from '#/features/auth/auth-context'
 
 // Landing route after the Google OAuth redirect. supabase-js parses the session
 // from the URL (detectSessionInUrl: true), so we just wait for the auth context

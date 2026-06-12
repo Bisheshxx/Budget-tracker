@@ -1,12 +1,12 @@
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useAuth } from '../lib/auth-context'
-import { credentialsSchema } from '../lib/schemas/auth'
-import type { CredentialsInput } from '../lib/schemas/auth'
-import { GoogleButton } from '../components/google-button'
-import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { useAuth } from '#/features/auth/auth-context'
+import { credentialsSchema } from '#/features/auth/schema'
+import type { CredentialsInput } from '#/features/auth/schema'
+import { GoogleButton } from '#/features/auth/components/GoogleButton'
+import { Button } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
 import {
   Form,
   FormControl,
@@ -14,14 +14,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '../components/ui/form'
+} from '#/components/ui/form'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../components/ui/card'
+} from '#/components/ui/card'
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,

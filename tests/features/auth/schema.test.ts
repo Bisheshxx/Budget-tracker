@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { credentialsSchema } from '#/lib/schemas/auth.ts'
+import { credentialsSchema } from '#/features/auth/schema.ts'
 
 describe('credentialsSchema', () => {
   it('accepts a valid email and a 6+ char password', () => {

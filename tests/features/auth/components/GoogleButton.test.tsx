@@ -8,11 +8,12 @@ const { signInWithGoogle } = vi.hoisted(() => ({
   signInWithGoogle: vi.fn(),
 }))
 
-vi.mock('#/lib/auth-context.tsx', () => ({
+vi.mock('#/features/auth/auth-context.tsx', () => ({
   useAuth: () => ({ signInWithGoogle }),
 }))
 
-const { GoogleButton } = await import('#/components/google-button.tsx')
+const { GoogleButton } =
+  await import('#/features/auth/components/GoogleButton.tsx')
 
 afterEach(() => {
   cleanup()

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { AuthService } from '#/services/auth-service.ts'
+import { AuthService } from '#/features/auth/auth-service.ts'
 import type {
   AuthSession,
   Credentials,
