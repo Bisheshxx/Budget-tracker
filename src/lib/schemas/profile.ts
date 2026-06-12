@@ -19,9 +19,14 @@ export const CURRENCIES = [
 export const PAYDAY_FREQUENCIES = ['weekly', 'biweekly', 'monthly'] as const
 
 // react-hook-form hands string values from inputs; coerce numbers and treat a
-// blank string as "not provided" for the optional fields.
-const blankToUndefined = (v: unknown) =>
-  v === '' || v === null ? undefined : v
+// blank string as "not provided" for the optional fields. Whitespace-only
+// strings count as blank too, so a display name of "   " is absent (and falls
+// back) rather than failing .trim().min(1) validation.
+const blankToUndefined = (v: unknown) => {
+  if (v === null) return undefined
+  if (typeof v === 'string' && v.trim() === '') return undefined
+  return v
+}
 
 export const onboardingSchema = z.object({
   // Required.
