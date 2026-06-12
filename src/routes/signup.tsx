@@ -42,8 +42,9 @@ function SignupPage() {
     try {
       const session = await signUp(values)
       if (session) {
-        // No email confirmation required — straight into the app.
-        await navigate({ to: '/dashboard' })
+        // No email confirmation required — new users go straight to Onboarding
+        // (the _authed gate would bounce them there anyway).
+        await navigate({ to: '/onboarding' })
       } else {
         // Email confirmation enabled: session arrives after the user confirms.
         setNotice('Check your email to confirm your account, then log in.')
