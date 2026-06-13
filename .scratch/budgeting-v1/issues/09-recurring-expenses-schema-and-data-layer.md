@@ -11,7 +11,7 @@ Type: AFK
 
 The persistence spine for Recurring Expenses. No UI yet.
 
-- Migration: drop `transactions.is_recurring`; add `transactions.recurring_expense_id uuid` FK (`references recurring_expenses(id) on delete cascade`).
+- Migration: drop `transactions.is_recurring`; add `transactions.recurring_expense_id uuid` FK (`references recurring_expenses(id) on delete set null`, so hard-deleting a template severs the link and preserves the transaction rather than cascade-deleting confirmed history — see ADR 0006).
 - New `recurring_expenses` table: `id`, `user_id` FK, `name`, `category_id` FK (**required**), `amount_cents int not null check (> 0)`, `frequency text check (frequency in ('weekly','monthly'))`, `anchor_day int`, `active bool not null default true`, `created_at`, `deactivated_at`. Row-level CHECK keyed on frequency: `(frequency='weekly' and anchor_day between 0 and 6) or (frequency='monthly' and anchor_day between 1 and 28)`.
 - New `recurring_expense_occurrences` table holding **only resolved** rows: `id`, `recurring_expense_id` FK, `occurrence_date date`, `status text check (status in ('confirmed','skipped'))`, `transaction_id uuid` (set when confirmed), `created_at`. Unique `(recurring_expense_id, occurrence_date)`.
 - RLS policies mirroring `transactions` (owner-only via `user_profiles`).
