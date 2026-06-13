@@ -7,6 +7,9 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import Footer from '#/components/Footer'
 import Header from '#/components/Header'
+import { NotFound } from '#/components/NotFound'
+import { RootErrorBoundary } from '#/components/RootErrorBoundary'
+import { Toaster } from '#/components/ui/sonner'
 import { AuthProvider } from '#/features/auth/auth-context'
 
 import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
@@ -42,6 +45,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
     ],
   }),
+  errorComponent: RootErrorBoundary,
+  notFoundComponent: NotFound,
   shellComponent: RootDocument,
 })
 
@@ -57,6 +62,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <Header />
           {children}
           <Footer />
+          <Toaster />
         </AuthProvider>
         <TanStackDevtools
           config={{
