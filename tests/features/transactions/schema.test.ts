@@ -2,6 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { quickAddSchema, today } from '#/features/transactions/schema.ts'
 
 describe('quickAddSchema', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('accepts a valid expense and coerces the amount string', () => {
     const result = quickAddSchema.safeParse({
       amount: '12.50',
@@ -69,8 +73,4 @@ describe('quickAddSchema', () => {
       expect(result.data.transactionDate).toBe(today())
     }
   })
-})
-
-afterEach(() => {
-  vi.useRealTimers()
 })

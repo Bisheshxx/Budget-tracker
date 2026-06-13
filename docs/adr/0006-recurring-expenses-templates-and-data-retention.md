@@ -46,8 +46,14 @@ has no resolved occurrence row yet. The occurrence table stores **only resolved*
 Templates are **deactivated, not deleted** (set inactive + `deactivated_at`), which stops
 them being computed/prompted while preserving all history. Editing a template's default
 amount affects only future occurrences; past confirmed transactions keep their logged amount.
-Hard deletion is reserved for genuinely *wrong* data (a template created by mistake), and then
-cascades to its occurrences/linked transactions. The driving constraint: **all payment
+Hard deletion is reserved for genuinely *wrong* data (a template created by mistake) and
+**never erases confirmed payment history**. It is only permitted when the template has **no
+confirmed linked transactions** — a template with no occurrences, or only `skipped` ones, is
+removed outright together with its own occurrence rows. If hard delete is invoked on a template
+that *does* have confirmed history, it instead **severs the template link** from those
+transactions — their rows and logged amounts are preserved — rather than cascade-deleting them,
+removing only the template's own (unconfirmed) occurrence rows. Ending a service instead uses
+deactivation (set inactive + `deactivated_at`). The driving constraint: **all payment
 history is retained for analytics**, distinguishing a one-off `skipped` window from ending a
 service entirely (template inactive).
 

@@ -41,5 +41,5 @@ This Period vs. the previous Period, reported as both a percentage change and an
 _Avoid_: Trend, delta (use "comparison")
 
 **Onboarding**:
-A one-screen setup gate shown after first signup, before the dashboard is reachable. Required: currency + Period start day. Everything else (display name, grocery day, target) is optional and editable later in Settings. A user is "onboarded" once `display_name` is set (the signup trigger leaves it null).
+A one-screen setup gate shown after first signup, before the dashboard is reachable. Required: currency + Period start day. Everything else (display name, grocery day, target) is optional and editable later in Settings. A user is "onboarded" once `onboarding_completed_at` is stamped (the signup trigger leaves it null; completing Onboarding sets it). Display name is optional and is **not** the completion signal.
 _Avoid_: Setup wizard, registration (that's auth/signup, a separate step)

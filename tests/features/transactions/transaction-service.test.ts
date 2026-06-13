@@ -13,6 +13,10 @@ import type { QuickAddInput } from '#/features/transactions/schema.ts'
 function makeFakeRepo(overrides: Partial<ITransactionRepository> = {}) {
   return {
     listRecent: vi.fn(async (_userId: string, _limit: number) => []),
+    listInRange: vi.fn(
+      async (_userId: string, _start: string, _end: string) =>
+        [] as Transaction[],
+    ),
     create: vi.fn(
       async (input: TransactionCreate): Promise<Transaction> => ({
         id: 'tx-1',
@@ -98,6 +102,117 @@ describe('TransactionService', () => {
         service.create('profile-1', { ...validExpense, amount: -5 }),
       ).rejects.toThrow('Amount must be greater than 0')
       expect(repo.create).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('getPeriodSummary', () => {
+    const range = { start: '2026-06-01', end: '2026-07-01' }
+
+    // Build a transaction with only the fields the summary reads.
+    function tx(
+      type: 'income' | 'expense',
+      amountCents: number,
+      categoryId: string | null = null,
+    ): Transaction {
+      return {
+        id: `tx-${Math.random()}`,
+        userId: 'profile-1',
+        categoryId,
+        type,
+        amountCents,
+        note: null,
+        transactionDate: '2026-06-10',
+        createdAt: '2026-06-10T00:00:00Z',
+      }
+    }
+
+    function makeRepoReturning(transactions: Transaction[]) {
+      return makeFakeRepo({
+        listInRange: vi.fn(async () => transactions),
+      })
+    }
+
+    it('queries the repository with the Period range', async () => {
+      const repo = makeFakeRepo()
+      const service = new TransactionService(repo)
+
+      await service.getPeriodSummary('profile-1', range)
+
+      expect(repo.listInRange).toHaveBeenCalledWith(
+        'profile-1',
+        '2026-06-01',
+        '2026-07-01',
+      )
+    })
+
+    it('totals income, expenses, and net from cents', async () => {
+      const repo = makeRepoReturning([
+        tx('income', 50000),
+        tx('income', 25000),
+        tx('expense', 12000),
+        tx('expense', 8000),
+      ])
+      const service = new TransactionService(repo)
+
+      const summary = await service.getPeriodSummary('profile-1', range)
+
+      expect(summary.incomeCents).toBe(75000)
+      expect(summary.expensesCents).toBe(20000)
+      expect(summary.netCents).toBe(55000)
+    })
+
+    it('reports a negative net when expenses exceed income', async () => {
+      const repo = makeRepoReturning([tx('income', 1000), tx('expense', 4000)])
+      const service = new TransactionService(repo)
+
+      const summary = await service.getPeriodSummary('profile-1', range)
+
+      expect(summary.netCents).toBe(-3000)
+    })
+
+    it('groups expense spend by category, most-spent first, excluding income', async () => {
+      const repo = makeRepoReturning([
+        tx('expense', 3000, 'food'),
+        tx('expense', 2000, 'food'),
+        tx('expense', 9000, 'rent'),
+        tx('income', 100000, 'salary'),
+      ])
+      const service = new TransactionService(repo)
+
+      const summary = await service.getPeriodSummary('profile-1', range)
+
+      expect(summary.byCategory).toEqual([
+        { categoryId: 'rent', amountCents: 9000 },
+        { categoryId: 'food', amountCents: 5000 },
+      ])
+    })
+
+    it('groups uncategorized expenses under a null categoryId', async () => {
+      const repo = makeRepoReturning([
+        tx('expense', 1500, null),
+        tx('expense', 500, null),
+      ])
+      const service = new TransactionService(repo)
+
+      const summary = await service.getPeriodSummary('profile-1', range)
+
+      expect(summary.byCategory).toEqual([
+        { categoryId: null, amountCents: 2000 },
+      ])
+    })
+
+    it('returns zeroed totals and an empty breakdown for an empty Period', async () => {
+      const repo = makeRepoReturning([])
+      const service = new TransactionService(repo)
+
+      const summary = await service.getPeriodSummary('profile-1', range)
+
+      expect(summary).toEqual({
+        incomeCents: 0,
+        expensesCents: 0,
+        netCents: 0,
+        byCategory: [],
+      })
     })
   })
 

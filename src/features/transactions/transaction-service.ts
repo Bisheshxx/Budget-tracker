@@ -1,7 +1,11 @@
 import { quickAddSchema } from './schema'
 import { toCents } from '#/lib/money'
 import type { QuickAddInput } from './schema'
-import type { Transaction } from '#/features/transactions/types'
+import type {
+  PeriodSummary,
+  Transaction,
+} from '#/features/transactions/types'
+import type { PeriodRange } from '#/shared/period'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 
 // Thin service over the transaction repository. Holds the app-level rules for
@@ -13,6 +17,51 @@ export class TransactionService {
 
   listRecent(userId: string, limit = 10): Promise<Transaction[]> {
     return this.repo.listRecent(userId, limit)
+  }
+
+  // Cashflow summary for a resolved Period range: total income, total expenses,
+  // net (income − expenses), and the expense spend-by-category breakdown. The
+  // caller resolves the range via the pure Period helpers (#/shared/period);
+  // keeping the date math out of here makes both sides independently testable.
+  // All arithmetic is on integer cents.
+  async getPeriodSummary(
+    userId: string,
+    range: PeriodRange,
+  ): Promise<PeriodSummary> {
+    const transactions = await this.repo.listInRange(
+      userId,
+      range.start,
+      range.end,
+    )
+
+    let incomeCents = 0
+    let expensesCents = 0
+    // Map keyed by categoryId (null = Uncategorized) so equal ids accumulate.
+    const spendByCategory = new Map<string | null, number>()
+
+    for (const tx of transactions) {
+      if (tx.type === 'income') {
+        incomeCents += tx.amountCents
+      } else {
+        expensesCents += tx.amountCents
+        spendByCategory.set(
+          tx.categoryId,
+          (spendByCategory.get(tx.categoryId) ?? 0) + tx.amountCents,
+        )
+      }
+    }
+
+    const byCategory = Array.from(spendByCategory, ([categoryId, amountCents]) => ({
+      categoryId,
+      amountCents,
+    })).sort((a, b) => b.amountCents - a.amountCents)
+
+    return {
+      incomeCents,
+      expensesCents,
+      netCents: incomeCents - expensesCents,
+      byCategory,
+    }
   }
 
   // Validates via the shared schema (the backstop, not just the UI), converts the

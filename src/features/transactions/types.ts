@@ -20,6 +20,24 @@ export interface Transaction {
   createdAt: string
 }
 
+// Expense spend for one category within a Period (the spend-by-category
+// breakdown). `categoryId` null = Uncategorized. Income is excluded — this
+// answers "where did my money go".
+export interface CategorySpend {
+  categoryId: string | null
+  amountCents: number
+}
+
+// The current Period's Cashflow at a glance: totals plus the expense breakdown.
+// All amounts are integer cents (see #/lib/money). Net = income − expenses.
+export interface PeriodSummary {
+  incomeCents: number
+  expensesCents: number
+  netCents: number
+  /** Expense spend per category, most-spent first. */
+  byCategory: CategorySpend[]
+}
+
 // The fields a create writes. Money is in cents; id/createdAt are DB-assigned.
 export interface TransactionCreate {
   userId: string

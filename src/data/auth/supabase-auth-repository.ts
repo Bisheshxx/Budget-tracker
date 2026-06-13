@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase'
+import { supabase } from '#/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 import type { AuthSession, Credentials } from '#/features/auth/types'
 import type { IAuthRepository } from './IAuthRepository'

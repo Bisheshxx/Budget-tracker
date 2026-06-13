@@ -79,6 +79,11 @@ export function useDeleteCategory() {
         queryClient.invalidateQueries({
           queryKey: ['transactions', 'recent', userId],
         }),
+        // The deleted category's expenses fall back to Uncategorized, shifting
+        // the spend-by-category breakdown.
+        queryClient.invalidateQueries({
+          queryKey: ['transactions', 'period-summary', userId],
+        }),
       ])
     },
   })
