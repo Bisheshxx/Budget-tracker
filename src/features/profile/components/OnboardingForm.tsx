@@ -151,6 +151,10 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
                   value={field.value as string}
                 />
               </FormControl>
+              <FormDescription>
+                The day each monthly Period begins (1–28) — match it to your pay
+                or billing rhythm.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
