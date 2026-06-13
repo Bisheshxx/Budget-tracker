@@ -14,13 +14,15 @@ export class ProfileService {
     return this.repo.getByAuthUserId(authUserId)
   }
 
-  /** A user is onboarded once their display name has been set. */
+  /** A user is onboarded once `onboarding_completed_at` has been stamped. */
   isOnboarded(profile: UserProfile | null): boolean {
-    return profile != null && profile.displayName != null
+    return profile != null && profile.onboardingCompletedAt != null
   }
 
-  // Completing Onboarding sets display_name (the marker) plus the required
-  // Period config and any optional fields, then returns the saved profile.
+  // Completing Onboarding stamps `onboarding_completed_at` (the marker) plus the
+  // required Period config and any optional fields (display name included), then
+  // returns the saved profile. Display name is optional — a skipped name persists
+  // as null without blocking completion.
   async completeOnboarding(
     authUserId: string,
     input: OnboardingInput,
@@ -31,20 +33,14 @@ export class ProfileService {
     }
     const v = result.data
 
-    const displayName = v.displayName?.trim()
-    if (!displayName) {
-      // The caller must supply a name (or a fallback) — without it the user
-      // would never be marked onboarded and would loop back here forever.
-      throw new Error('A display name is required to finish onboarding')
-    }
-
     return this.repo.update(authUserId, {
-      displayName,
+      displayName: v.displayName?.trim() || null,
       currency: v.currency,
       budgetPeriodStartDay: v.budgetPeriodStartDay,
       groceryDayOfWeek: v.groceryDayOfWeek ?? null,
       monthlyBudgetTargetCents:
         v.monthlyBudgetTarget != null ? toCents(v.monthlyBudgetTarget) : 0,
+      onboardingCompletedAt: new Date().toISOString(),
     })
   }
 }

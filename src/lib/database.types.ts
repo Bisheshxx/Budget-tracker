@@ -160,6 +160,7 @@ export type Database = {
           grocery_day_of_week: number | null
           id: string
           monthly_budget_target: number
+          onboarding_completed_at: string | null
         }
         Insert: {
           auth_user_id: string
@@ -170,6 +171,7 @@ export type Database = {
           grocery_day_of_week?: number | null
           id?: string
           monthly_budget_target?: number
+          onboarding_completed_at?: string | null
         }
         Update: {
           auth_user_id?: string
@@ -180,6 +182,7 @@ export type Database = {
           grocery_day_of_week?: number | null
           id?: string
           monthly_budget_target?: number
+          onboarding_completed_at?: string | null
         }
         Relationships: []
       }

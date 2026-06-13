@@ -68,7 +68,7 @@ A personal finance web app focused on **Cashflow awareness**. After a quick onbo
 
 **Schema** — use the schema from the project plan, with two amendments:
 - Drop the `Savings` row from the seeded system categories. Seeded categories: Housing, Food, Transport, Health, Entertainment, Uncategorized.
-- No new columns required. "Onboarded" is detected via `user_profiles.display_name IS NULL` (signup trigger leaves it null; Onboarding sets it). (Optional future: an explicit `onboarding_completed_at` — not in V1.)
+- "Onboarded" is the dedicated `user_profiles.onboarding_completed_at` timestamp (nullable; signup trigger leaves it null, completing Onboarding stamps it). It is the canonical completion flag — `display_name` stays optional and is never used to gate Onboarding.
 - Money stored as integer cents (`amount_cents`), converted to/from display units at the edges only.
 - A signup trigger auto-creates a blank `user_profiles` row; Onboarding fills required fields.
 - **Recurring Expenses** (delivered last, in issues 09–11): drop the `transactions.is_recurring` boolean and add a `transactions.recurring_expense_id` FK; add a `recurring_expenses` table (name, category FK, default `amount_cents`, `frequency` weekly/monthly, single `anchor_day` with a frequency-keyed CHECK, `active`, `created_at`, `deactivated_at`) and a `recurring_expense_occurrences` table holding only resolved rows (`confirmed`/`skipped`). RLS mirrors `transactions`.

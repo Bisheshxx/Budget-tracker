@@ -15,11 +15,14 @@ create table public.user_profiles (
   grocery_day_of_week     int check (grocery_day_of_week between 0 and 6),
   monthly_budget_target   int not null default 0,
   budget_period_start_day int not null default 1 check (budget_period_start_day between 1 and 28),
+  onboarding_completed_at timestamptz,
   created_at              timestamptz not null default now(),
   unique (auth_user_id)
 );
 
--- Auto-create a blank profile on signup. "Onboarded" is detected via display_name IS NULL.
+-- Auto-create a blank profile on signup. "Onboarded" is detected via
+-- onboarding_completed_at IS NULL (stamped when Onboarding completes); display_name
+-- stays optional.
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin

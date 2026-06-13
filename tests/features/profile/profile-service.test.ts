@@ -12,6 +12,7 @@ const blankProfile: UserProfile = {
   budgetPeriodStartDay: 1,
   groceryDayOfWeek: null,
   monthlyBudgetTargetCents: 0,
+  onboardingCompletedAt: null,
 }
 
 // Minimal in-memory fake — the whole point of ADR 0001's repository pattern.
@@ -36,16 +37,19 @@ const requiredOnly: OnboardingInput = {
 
 describe('ProfileService', () => {
   describe('isOnboarded', () => {
-    it('is false for a null profile or a null display name', () => {
+    it('is false for a null profile or an un-stamped onboarding marker', () => {
       const service = new ProfileService(makeFakeRepo())
       expect(service.isOnboarded(null)).toBe(false)
       expect(service.isOnboarded(blankProfile)).toBe(false)
     })
 
-    it('is true once a display name is set', () => {
+    it('is true once onboarding_completed_at is stamped (display name irrelevant)', () => {
       const service = new ProfileService(makeFakeRepo())
       expect(
-        service.isOnboarded({ ...blankProfile, displayName: 'Alex' }),
+        service.isOnboarded({
+          ...blankProfile,
+          onboardingCompletedAt: '2026-06-13T12:00:00.000Z',
+        }),
       ).toBe(true)
     })
   })
@@ -63,6 +67,7 @@ describe('ProfileService', () => {
         budgetPeriodStartDay: 15,
         groceryDayOfWeek: null,
         monthlyBudgetTargetCents: 0,
+        onboardingCompletedAt: expect.any(String),
       })
       expect(service.isOnboarded(saved)).toBe(true)
     })
@@ -125,17 +130,24 @@ describe('ProfileService', () => {
       expect(repo.update).not.toHaveBeenCalled()
     })
 
-    it('refuses to complete without a display name (the onboarded marker)', async () => {
+    it('completes without a display name and still marks the user onboarded', async () => {
       const repo = makeFakeRepo()
       const service = new ProfileService(repo)
 
-      await expect(
-        service.completeOnboarding('auth-1', {
-          currency: 'USD',
-          budgetPeriodStartDay: 1,
+      const saved = await service.completeOnboarding('auth-1', {
+        currency: 'USD',
+        budgetPeriodStartDay: 1,
+      })
+
+      expect(saved.displayName).toBeNull()
+      expect(service.isOnboarded(saved)).toBe(true)
+      expect(repo.update).toHaveBeenCalledWith(
+        'auth-1',
+        expect.objectContaining({
+          displayName: null,
+          onboardingCompletedAt: expect.any(String),
         }),
-      ).rejects.toThrow('display name is required')
-      expect(repo.update).not.toHaveBeenCalled()
+      )
     })
   })
 

@@ -16,6 +16,7 @@ function toUserProfile(row: ProfileRow): UserProfile {
     budgetPeriodStartDay: row.budget_period_start_day,
     groceryDayOfWeek: row.grocery_day_of_week,
     monthlyBudgetTargetCents: row.monthly_budget_target,
+    onboardingCompletedAt: row.onboarding_completed_at,
   }
 }
 
@@ -40,6 +41,7 @@ export class SupabaseProfileRepository implements IProfileRepository {
       budget_period_start_day: patch.budgetPeriodStartDay,
       grocery_day_of_week: patch.groceryDayOfWeek,
       monthly_budget_target: patch.monthlyBudgetTargetCents,
+      onboarding_completed_at: patch.onboardingCompletedAt,
     }
     const { data, error } = await supabase
       .from('user_profiles')
