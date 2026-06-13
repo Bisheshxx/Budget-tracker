@@ -12,6 +12,3 @@ dist-ssr
 __unconfig*
 todos.json
 .fallow/
-
-# Coverage reports
-coverage/

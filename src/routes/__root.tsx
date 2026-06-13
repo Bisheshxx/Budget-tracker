@@ -5,13 +5,12 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import Footer from '#/components/Footer'
-import Header from '#/components/Header'
-import { AuthProvider } from '#/features/auth/auth-context'
+import Footer from '../components/Footer'
+import Header from '../components/Header'
 
-import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
+import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
-import appCss from '#/styles.css?url'
+import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 
@@ -52,12 +51,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-primary/20">
-        <AuthProvider>
-          <Header />
-          {children}
-          <Footer />
-        </AuthProvider>
+      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
+        <Header />
+        {children}
+        <Footer />
         <TanStackDevtools
           config={{
             position: 'bottom-right',

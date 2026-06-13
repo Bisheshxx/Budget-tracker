@@ -5,13 +5,7 @@
     "src/main.{ts,tsx,js,jsx}",
     "src/lib/utils.ts"
   ],
-  "ignoreDependencies": [
-    "fallow",
-    "lucide-react",
-    "class-variance-authority",
-    "radix-ui"
-  ],
-  "ignorePatterns": ["src/lib/database.types.ts", "src/components/ui/**"],
+  "ignoreDependencies": ["fallow", "lucide-react", "class-variance-authority"],
   "ignoreExports": [
     {
       "file": "src/integrations/tanstack-query/root-provider.tsx",
