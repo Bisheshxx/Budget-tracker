@@ -14,6 +14,7 @@ import { DIALOG } from '#/shared/stores/ui-store'
 import { QuickAddForm } from '#/features/transactions/components/QuickAddForm'
 import { RecentTransactions } from '#/features/transactions/components/RecentTransactions'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
+import { CategoryManager } from '#/features/categories/components/CategoryManager'
 import type { QuickAddFormValues } from '#/features/transactions/schema'
 
 // Protected shell with quick-add + recent list (issue 03). Cashflow summary
@@ -27,6 +28,7 @@ function DashboardPage() {
   const navigate = useNavigate()
   const quickAdd = useDialog(DIALOG.quickAdd)
   const createCategory = useDialog(DIALOG.createCategory)
+  const manageCategories = useDialog(DIALOG.manageCategories)
   // Draft preserves the in-progress transaction across the create-category dialog
   // swap (quick-add unmounts while the category dialog is open).
   const [draft, setDraft] = useState<QuickAddFormValues | null>(null)
@@ -69,7 +71,12 @@ function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent transactions</CardTitle>
-            <Button onClick={openQuickAdd}>Add transaction</Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={manageCategories.open}>
+                Categories
+              </Button>
+              <Button onClick={openQuickAdd}>Add transaction</Button>
+            </div>
           </CardHeader>
           <CardContent>
             <RecentTransactions />
@@ -102,6 +109,10 @@ function DashboardPage() {
           }}
           onCancel={quickAdd.open}
         />
+      </Dialog>
+
+      <Dialog name={DIALOG.manageCategories} title="Categories">
+        <CategoryManager />
       </Dialog>
     </main>
   )

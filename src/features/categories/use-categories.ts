@@ -61,3 +61,25 @@ export function useCreateCategory() {
     },
   })
 }
+
+// Delete mutation. Invalidates the categories list and the recent-transactions
+// list, since deleting a category in use nulls those transactions' category
+// (they re-render as Uncategorized).
+export function useDeleteCategory() {
+  const { profile } = useProfile()
+  const userId = profile?.id ?? null
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (category: Category) => categoryService.delete(category),
+    onSuccess: () => {
+      if (!userId) return
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['categories', userId] }),
+        queryClient.invalidateQueries({
+          queryKey: ['transactions', 'recent', userId],
+        }),
+      ])
+    },
+  })
+}

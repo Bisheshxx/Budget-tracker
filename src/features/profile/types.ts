@@ -2,8 +2,6 @@
 // components, and the repository port all speak. The persistence port that
 // traffics in these lives in #/data/profile/IProfileRepository. See docs/adr/0004.
 
-export type PaydayFrequency = 'weekly' | 'biweekly' | 'monthly'
-
 export interface UserProfile {
   id: string
   authUserId: string
@@ -12,8 +10,6 @@ export interface UserProfile {
   currency: string
   /** Anchors the monthly Period (1–28). */
   budgetPeriodStartDay: number
-  paydayDayOfMonth: number | null
-  paydayFrequency: PaydayFrequency
   groceryDayOfWeek: number | null
   /** Budget Target, stored as integer cents. */
   monthlyBudgetTargetCents: number
@@ -24,8 +20,6 @@ export interface ProfileUpdate {
   displayName: string
   currency: string
   budgetPeriodStartDay: number
-  paydayDayOfMonth: number | null
-  paydayFrequency: PaydayFrequency
   groceryDayOfWeek: number | null
   monthlyBudgetTargetCents: number
 }

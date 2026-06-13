@@ -1,6 +1,6 @@
 # Categories management + picker
 
-Status: ready-for-agent
+Status: done
 Type: AFK
 
 ## Parent
@@ -19,12 +19,12 @@ Full category support end-to-end, plus integration into the add-transaction flow
 
 ## Acceptance criteria
 
-- [ ] A user sees system + own categories in the picker
-- [ ] A user can create a custom category with name, colour, and icon
-- [ ] A user can delete their own categories but not system categories
-- [ ] Deleting a category in use leaves its transactions intact, shown as Uncategorized
-- [ ] Transactions can be assigned a category at add time
-- [ ] Service-layer tests with a fake repository cover system-category delete protection and the delete→Uncategorized fallback
+- [x] A user sees system + own categories in the picker
+- [x] A user can create a custom category with name, colour, and icon
+- [x] A user can delete their own categories but not system categories
+- [x] Deleting a category in use leaves its transactions intact, shown as Uncategorized
+- [x] Transactions can be assigned a category at add time
+- [x] Service-layer tests with a fake repository cover system-category delete protection and the delete→Uncategorized fallback
 
 ## Blocked by
 

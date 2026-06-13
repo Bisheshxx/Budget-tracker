@@ -17,8 +17,22 @@ function makeFakeRepo(overrides: Partial<ICategoryRepository> = {}) {
         ...input,
       }),
     ),
+    delete: vi.fn(async (_categoryId: string) => {}),
     ...overrides,
   } satisfies ICategoryRepository
+}
+
+function makeCategory(overrides: Partial<Category> = {}): Category {
+  return {
+    id: 'cat-1',
+    userId: 'profile-1',
+    name: 'Groceries',
+    colorHex: '#639922',
+    icon: 'utensils',
+    isSystem: false,
+    isDefault: false,
+    ...overrides,
+  }
 }
 
 describe('CategoryService', () => {
@@ -74,6 +88,27 @@ describe('CategoryService', () => {
         service.create('profile-1', { name: '   ', colorHex: '#888780' }),
       ).rejects.toThrow('Enter a name')
       expect(repo.create).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('delete', () => {
+    it('deletes a non-system category by id', async () => {
+      const repo = makeFakeRepo()
+      const service = new CategoryService(repo)
+
+      await service.delete(makeCategory({ id: 'cat-9', isSystem: false }))
+
+      expect(repo.delete).toHaveBeenCalledWith('cat-9')
+    })
+
+    it('refuses to delete a system category and never hits the repo', async () => {
+      const repo = makeFakeRepo()
+      const service = new CategoryService(repo)
+
+      await expect(
+        service.delete(makeCategory({ isSystem: true, userId: null })),
+      ).rejects.toThrow('System categories cannot be deleted')
+      expect(repo.delete).not.toHaveBeenCalled()
     })
   })
 })

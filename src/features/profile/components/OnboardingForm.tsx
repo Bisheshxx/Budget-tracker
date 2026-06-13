@@ -160,28 +160,6 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
           )}
         />
 
-        <div className="h-px bg-border" />
-        <p className="text-sm font-medium text-muted-foreground">Optional</p>
-
-        <FormField
-          control={control}
-          name="displayName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Display name</FormLabel>
-              <FormControl>
-                <Input
-                  autoComplete="name"
-                  placeholder="How should we greet you?"
-                  {...field}
-                  value={field.value as string}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField
             control={control}

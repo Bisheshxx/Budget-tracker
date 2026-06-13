@@ -50,4 +50,14 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
     if (error) throw error
     return toCategory(data)
   }
+
+  async delete(categoryId: string): Promise<void> {
+    // Validate before filtering so a malformed id can't slip into the query.
+    const safeId = z.string().uuid().parse(categoryId)
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', safeId)
+    if (error) throw error
+  }
 }
