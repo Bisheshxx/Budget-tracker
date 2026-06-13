@@ -11,7 +11,7 @@ Type: AFK
 
 A one-screen Onboarding gate shown after first signup, before the Dashboard is reachable.
 
-- Required fields: currency + Period start day (`budget_period_start_day`, 1–28). Optional: display name, payday day/frequency, grocery day, Budget Target.
+- Required fields: currency + Period start day (`budget_period_start_day`, 1–28). Optional: display name, grocery day, Budget Target.
 - "Onboarded" is detected via `user_profiles.display_name IS NULL` (the signup trigger leaves it null; completing Onboarding sets it).
 - Routing rules: unauthenticated → login; authenticated but not onboarded → Onboarding; onboarded → app. An onboarded user cannot re-enter Onboarding.
 - Establishes the profile data path end-to-end (profile repository + service behind interfaces, per ADR 0001).

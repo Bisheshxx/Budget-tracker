@@ -12,8 +12,6 @@ create table public.user_profiles (
   auth_user_id            uuid not null references auth.users(id) on delete cascade,
   display_name            text,
   currency                text not null default 'USD',
-  payday_day_of_month     int check (payday_day_of_month between 1 and 31),
-  payday_frequency        text not null default 'monthly' check (payday_frequency in ('weekly', 'biweekly', 'monthly')),
   grocery_day_of_week     int check (grocery_day_of_week between 0 and 6),
   monthly_budget_target   int not null default 0,
   budget_period_start_day int not null default 1 check (budget_period_start_day between 1 and 28),
@@ -51,13 +49,14 @@ create table public.categories (
 );
 
 -- Seeded system categories (user_id null = visible to all). Savings intentionally omitted.
+-- Icons are stored as lucide icon names (see src/features/categories/CategoryIcon.tsx).
 insert into public.categories (user_id, name, color_hex, icon, is_system) values
-  (null, 'Housing',       '#378ADD', 'ti-home',          true),
-  (null, 'Food',          '#639922', 'ti-shopping-cart', true),
-  (null, 'Transport',     '#BA7517', 'ti-car',           true),
-  (null, 'Health',        '#D4537E', 'ti-heart',         true),
-  (null, 'Entertainment', '#7F77DD', 'ti-device-tv',     true),
-  (null, 'Uncategorized', '#888780', 'ti-tag',           true);
+  (null, 'Housing',       '#378ADD', 'home',     true),
+  (null, 'Food',          '#639922', 'utensils', true),
+  (null, 'Transport',     '#BA7517', 'car',      true),
+  (null, 'Health',        '#D4537E', 'heart',    true),
+  (null, 'Entertainment', '#7F77DD', 'tv',       true),
+  (null, 'Uncategorized', '#888780', 'tag',      true);
 
 -- ---------------------------------------------------------------------------
 -- transactions

@@ -11,8 +11,8 @@ Type: AFK
 
 A Settings screen to edit profile fields after Onboarding, reusing the profile repository/service.
 
-- Edit currency, Period start day, payday day/frequency, grocery day, display name, and Budget Target.
-- Changes are reflected wherever they're used (currency display, Period boundaries, payday context, soft target).
+- Edit currency, Period start day, grocery day, display name, and Budget Target.
+- Changes are reflected wherever they're used (currency display, Period boundaries, soft target).
 
 ## Acceptance criteria
 

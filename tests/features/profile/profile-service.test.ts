@@ -10,8 +10,6 @@ const blankProfile: UserProfile = {
   displayName: null,
   currency: 'USD',
   budgetPeriodStartDay: 1,
-  paydayDayOfMonth: null,
-  paydayFrequency: 'monthly',
   groceryDayOfWeek: null,
   monthlyBudgetTargetCents: 0,
 }
@@ -63,8 +61,6 @@ describe('ProfileService', () => {
         displayName: 'Alex',
         currency: 'USD',
         budgetPeriodStartDay: 15,
-        paydayDayOfMonth: null,
-        paydayFrequency: 'monthly',
         groceryDayOfWeek: null,
         monthlyBudgetTargetCents: 0,
       })
@@ -86,22 +82,18 @@ describe('ProfileService', () => {
       )
     })
 
-    it('passes optional payday/grocery fields through when provided', async () => {
+    it('passes the optional grocery day through when provided', async () => {
       const repo = makeFakeRepo()
       const service = new ProfileService(repo)
 
       await service.completeOnboarding('auth-1', {
         ...requiredOnly,
-        paydayDayOfMonth: 28,
-        paydayFrequency: 'biweekly',
         groceryDayOfWeek: 6,
       })
 
       expect(repo.update).toHaveBeenCalledWith(
         'auth-1',
         expect.objectContaining({
-          paydayDayOfMonth: 28,
-          paydayFrequency: 'biweekly',
           groceryDayOfWeek: 6,
         }),
       )
