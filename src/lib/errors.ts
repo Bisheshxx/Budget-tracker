@@ -5,12 +5,11 @@ import { toast } from 'sonner'
 // `notifyError` is the single client-side surface for unexpected failures, used
 // by the global TanStack Query cache handlers (see root-provider.tsx).
 
-export function getErrorMessage(err: unknown, fallback = 'Something went wrong'): string {
-export function getErrorMessage(err: unknown, fallback = 'Something went wrong'): string {
+export function getErrorMessage(
+  err: unknown,
+  fallback = 'Something went wrong',
+): string {
   if (err instanceof Error) return err.message || fallback
-  if (typeof err === 'string' && err.trim()) return err
-  return fallback
-}
   if (typeof err === 'string' && err.trim()) return err
   return fallback
 }
