@@ -151,6 +151,32 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
                   value={field.value as string}
                 />
               </FormControl>
+              <FormDescription>
+                The day each monthly Period begins (1–28) — match it to your pay
+                or billing rhythm.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="h-px bg-border" />
+        <p className="text-sm font-medium text-muted-foreground">Optional</p>
+
+        <FormField
+          control={control}
+          name="displayName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Display name</FormLabel>
+              <FormControl>
+                <Input
+                  autoComplete="name"
+                  placeholder="How should we greet you?"
+                  {...field}
+                  value={field.value as string}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
