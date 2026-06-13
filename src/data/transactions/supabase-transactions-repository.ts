@@ -50,6 +50,8 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
       .eq('user_id', userId)
       .gte('transaction_date', startInclusive)
       .lt('transaction_date', endExclusive)
+      .order('transaction_date', { ascending: true })
+      .order('id', { ascending: true })
     if (error) throw error
     return data.map(toTransaction)
   }
