@@ -18,6 +18,8 @@ const categoriesQueryOptions = (userId: string) =>
 interface CategoriesResult {
   categories: Category[]
   loading: boolean
+  isError: boolean
+  error: unknown
 }
 
 // System + own categories for the current user's profile. Disabled until the
@@ -34,6 +36,8 @@ export function useCategories(): CategoriesResult {
   return {
     categories: query.data ?? [],
     loading: profileLoading || query.isLoading,
+    isError: query.isError,
+    error: query.error,
   }
 }
 
@@ -48,9 +52,12 @@ export function useCreateCategory() {
       if (!userId) throw new Error('No profile loaded')
       return categoryService.create(userId, input)
     },
+    // Return the invalidation promise so mutateAsync resolves only after the
+    // categories cache has refreshed (CategoryCreateForm reopens the picker on
+    // resolve and must see the new row).
     onSuccess: () => {
       if (!userId) return
-      queryClient.invalidateQueries({ queryKey: ['categories', userId] })
+      return queryClient.invalidateQueries({ queryKey: ['categories', userId] })
     },
   })
 }
