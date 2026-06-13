@@ -28,18 +28,14 @@ export class SupabaseAuthRepository implements IAuthRepository {
   }
 
   async signIn(credentials: Credentials): Promise<AuthSession> {
-    const { data, error } =
-      await supabase.auth.signInWithPassword(credentials)
+    const { data, error } = await supabase.auth.signInWithPassword(credentials)
     if (error) throw error
     const session = toAuthSession(data.session)
     if (!session) throw new Error('Sign in succeeded but no session returned')
     return session
   }
 
-  async signInWithOAuth(
-    provider: 'google',
-    redirectTo: string,
-  ): Promise<void> {
+  async signInWithOAuth(provider: 'google', redirectTo: string): Promise<void> {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo },
@@ -63,10 +59,6 @@ export class SupabaseAuthRepository implements IAuthRepository {
   ): () => void {
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       callback(toAuthSession(session))
-import { supabase } from '`#/lib/supabase`'
-import type { Session } from '`@supabase/supabase-js`'
-import type { AuthSession, Credentials } from '`#/features/auth/types`'
-import type { IAuthRepository } from './IAuthRepository'
     })
     return () => data.subscription.unsubscribe()
   }
