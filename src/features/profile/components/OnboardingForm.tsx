@@ -152,8 +152,7 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
                 />
               </FormControl>
               <FormDescription>
-                The day each monthly Period begins (1–28) — match it to your pay
-                or billing rhythm.
+                What we&apos;ll call you in the app — you can change this later.
               </FormDescription>
               <FormMessage />
             </FormItem>
