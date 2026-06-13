@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { supabase } from '#/lib/supabase'
 import type { Database } from '#/lib/database.types'
 import type { Category, CategoryCreate } from '#/features/categories/types'
@@ -21,10 +22,13 @@ function toCategory(row: CategoryRow): Category {
 
 export class SupabaseCategoryRepository implements ICategoryRepository {
   async listAvailable(userId: string): Promise<Category[]> {
+    // Validate before interpolating into the PostgREST `.or` filter string so a
+    // malformed id can't inject filter syntax (comma/paren) into the query.
+    const safeUserId = z.string().uuid().parse(userId)
     const { data, error } = await supabase
       .from('categories')
       .select('*')
-      .or(`user_id.is.null,user_id.eq.${userId}`)
+      .or(`user_id.is.null,user_id.eq.${safeUserId}`)
       .order('name', { ascending: true })
     if (error) throw error
     return data.map(toCategory)
