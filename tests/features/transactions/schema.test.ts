@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { quickAddSchema, today } from '#/features/transactions/schema.ts'
 
 describe('quickAddSchema', () => {
@@ -55,6 +55,10 @@ describe('quickAddSchema', () => {
   })
 
   it('defaults a blank date to today', () => {
+    // Freeze the clock so the schema's internal today() and the assertion's
+    // today() can't straddle midnight.
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-13T12:00:00'))
     const result = quickAddSchema.safeParse({
       amount: '5',
       type: 'income',
@@ -65,4 +69,8 @@ describe('quickAddSchema', () => {
       expect(result.data.transactionDate).toBe(today())
     }
   })
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
