@@ -39,6 +39,21 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
     return data.map(toTransaction)
   }
 
+  async listInRange(
+    userId: string,
+    startInclusive: string,
+    endExclusive: string,
+  ): Promise<Transaction[]> {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('transaction_date', startInclusive)
+      .lt('transaction_date', endExclusive)
+    if (error) throw error
+    return data.map(toTransaction)
+  }
+
   async create(input: TransactionCreate): Promise<Transaction> {
     const dbInsert: Database['public']['Tables']['transactions']['Insert'] = {
       user_id: input.userId,

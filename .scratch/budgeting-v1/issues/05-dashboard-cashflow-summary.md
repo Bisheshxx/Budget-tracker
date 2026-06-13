@@ -1,6 +1,6 @@
 # Dashboard cashflow summary
 
-Status: ready-for-agent
+Status: done
 Type: AFK
 
 ## Parent
@@ -18,13 +18,13 @@ The primary surface: the current Period at a glance.
 
 ## Acceptance criteria
 
-- [ ] Period range resolves correctly for start days across month boundaries (e.g. start day 25)
-- [ ] Dashboard shows current-Period income, expenses, and net
-- [ ] Days-into-Period is shown
-- [ ] Spend-by-category breakdown and recent transactions render
-- [ ] Budget Target is presented as a soft anchor, not a verdict
-- [ ] Pure unit tests cover Period-boundary math, `getPeriodKey`, and cents↔display formatting
-- [ ] Service-layer tests with a fake repository cover the income/expenses/net summary
+- [x] Period range resolves correctly for start days across month boundaries (e.g. start day 25)
+- [x] Dashboard shows current-Period income, expenses, and net
+- [x] Days-into-Period is shown
+- [x] Spend-by-category breakdown and recent transactions render
+- [x] Budget Target is presented as a soft anchor, not a verdict
+- [x] Pure unit tests cover Period-boundary math, `getPeriodKey`, and cents↔display formatting
+- [x] Service-layer tests with a fake repository cover the income/expenses/net summary
 
 ## Blocked by
 

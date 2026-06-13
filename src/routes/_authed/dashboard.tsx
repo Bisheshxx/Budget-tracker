@@ -12,13 +12,14 @@ import { Dialog } from '#/shared/components/Dialog'
 import { useDialog } from '#/shared/hooks/use-dialog'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { QuickAddForm } from '#/features/transactions/components/QuickAddForm'
+import { CashflowSummary } from '#/features/transactions/components/CashflowSummary'
 import { RecentTransactions } from '#/features/transactions/components/RecentTransactions'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { CategoryManager } from '#/features/categories/components/CategoryManager'
 import type { QuickAddFormValues } from '#/features/transactions/schema'
 
-// Protected shell with quick-add + recent list (issue 03). Cashflow summary
-// math lands in issue 05.
+// Protected shell: the current-Period Cashflow summary (issue 05) plus
+// quick-add + recent list (issue 03).
 export const Route = createFileRoute('/_authed/dashboard')({
   component: DashboardPage,
 })
@@ -68,6 +69,7 @@ function DashboardPage() {
       </p>
 
       <div className="mt-8 flex flex-col gap-6">
+        <CashflowSummary />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent transactions</CardTitle>
