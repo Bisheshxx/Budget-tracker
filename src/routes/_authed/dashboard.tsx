@@ -106,7 +106,12 @@ function DashboardPage() {
         <CategoryCreateForm
           onSuccess={(category) => {
             // Restore the draft with the new category pre-selected, reopen quick-add.
-            setDraft((d) => ({ ...(d ?? ({} as QuickAddFormValues)), categoryId: category.id }))
+            // The draft was stashed in onCreateCategory before this dialog opened,
+            // so it must exist here.
+            setDraft((d) => {
+              if (!d) throw new Error('expected a stashed quick-add draft')
+              return { ...d, categoryId: category.id }
+            })
             quickAdd.open()
           }}
           onCancel={quickAdd.open}
