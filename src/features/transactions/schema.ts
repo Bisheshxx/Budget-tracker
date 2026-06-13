@@ -24,15 +24,23 @@ export function today(): string {
 }
 
 export const quickAddSchema = z.object({
-  amount: z.coerce
-    .number({ message: 'Enter an amount' })
-    .positive('Amount must be greater than 0'),
+  // Map a blank string to undefined first so an empty input reads as the
+  // "Enter an amount" type error rather than coercing to 0 ('Amount must be
+  // greater than 0').
+  amount: z.preprocess(
+    blankToUndefined,
+    z.coerce
+      .number({ message: 'Enter an amount' })
+      .positive('Amount must be greater than 0'),
+  ),
   type: z.enum(TRANSACTION_TYPES, { message: 'Pick income or expense' }),
   // A category id, or '' / undefined for Uncategorized (stored as null).
   categoryId: z.preprocess(blankToUndefined, z.string().optional()),
+  // Blank defaults to today; otherwise must be a valid ISO YYYY-MM-DD date so
+  // malformed strings can't reach the service/DB.
   transactionDate: z.preprocess(
     (v) => (typeof v === 'string' && v.trim() === '' ? today() : v),
-    z.string(),
+    z.iso.date('Enter a valid date'),
   ),
   note: z.preprocess(
     blankToUndefined,
