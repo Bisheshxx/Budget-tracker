@@ -6,7 +6,11 @@ import { toast } from 'sonner'
 // by the global TanStack Query cache handlers (see root-provider.tsx).
 
 export function getErrorMessage(err: unknown, fallback = 'Something went wrong'): string {
-  if (err instanceof Error && err.message) return err.message
+export function getErrorMessage(err: unknown, fallback = 'Something went wrong'): string {
+  if (err instanceof Error) return err.message || fallback
+  if (typeof err === 'string' && err.trim()) return err
+  return fallback
+}
   if (typeof err === 'string' && err.trim()) return err
   return fallback
 }
