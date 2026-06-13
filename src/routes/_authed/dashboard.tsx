@@ -17,6 +17,7 @@ import { RecentTransactions } from '#/features/transactions/components/RecentTra
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { CategoryManager } from '#/features/categories/components/CategoryManager'
 import type { QuickAddFormValues } from '#/features/transactions/schema'
+import type { Transaction } from '#/features/transactions/types'
 
 // Protected shell: the current-Period Cashflow summary (issue 05) plus
 // quick-add + recent list (issue 03).
@@ -28,17 +29,34 @@ function DashboardPage() {
   const { session, signOut } = useAuth()
   const navigate = useNavigate()
   const quickAdd = useDialog(DIALOG.quickAdd)
+  const editTransaction = useDialog(DIALOG.editTransaction)
   const createCategory = useDialog(DIALOG.createCategory)
   const manageCategories = useDialog(DIALOG.manageCategories)
   // Draft preserves the in-progress transaction across the create-category dialog
-  // swap (quick-add unmounts while the category dialog is open).
+  // swap (the add/edit form unmounts while the category dialog is open).
   const [draft, setDraft] = useState<QuickAddFormValues | null>(null)
+  // The transaction being edited; null means the quick-add (create) flow. Also
+  // decides which dialog the create-category swap returns to.
+  const [editing, setEditing] = useState<Transaction | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [signingOut, setSigningOut] = useState(false)
 
   function openQuickAdd() {
     setDraft(null)
+    setEditing(null)
     quickAdd.open()
+  }
+
+  function openEdit(tx: Transaction) {
+    setDraft(null)
+    setEditing(tx)
+    editTransaction.open()
+  }
+
+  // After creating a category mid-edit/add, reopen whichever form was active.
+  function reopenTransactionForm() {
+    if (editing) editTransaction.open()
+    else quickAdd.open()
   }
 
   async function onSignOut() {
@@ -81,7 +99,7 @@ function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <RecentTransactions />
+            <RecentTransactions onEdit={openEdit} />
           </CardContent>
         </Card>
       </div>
@@ -102,19 +120,37 @@ function DashboardPage() {
         />
       </Dialog>
 
+      <Dialog name={DIALOG.editTransaction} title="Edit transaction">
+        {editing && (
+          <QuickAddForm
+            transaction={editing}
+            defaultValues={draft ?? undefined}
+            onSuccess={() => {
+              setDraft(null)
+              setEditing(null)
+              editTransaction.close()
+            }}
+            onCreateCategory={(current) => {
+              setDraft(current)
+              createCategory.open()
+            }}
+          />
+        )}
+      </Dialog>
+
       <Dialog name={DIALOG.createCategory} title="New category">
         <CategoryCreateForm
           onSuccess={(category) => {
-            // Restore the draft with the new category pre-selected, reopen quick-add.
-            // The draft was stashed in onCreateCategory before this dialog opened,
-            // so it must exist here.
+            // Restore the draft with the new category pre-selected, then reopen
+            // whichever form (add/edit) was active. The draft was stashed in
+            // onCreateCategory before this dialog opened, so it must exist here.
             setDraft((d) => {
-              if (!d) throw new Error('expected a stashed quick-add draft')
+              if (!d) throw new Error('expected a stashed transaction draft')
               return { ...d, categoryId: category.id }
             })
-            quickAdd.open()
+            reopenTransactionForm()
           }}
-          onCancel={quickAdd.open}
+          onCancel={reopenTransactionForm}
         />
       </Dialog>
 

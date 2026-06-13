@@ -1,11 +1,20 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCreateTransaction } from '#/features/transactions/use-transactions'
-import { TRANSACTION_TYPES, quickAddSchema, today } from '#/features/transactions/schema'
+import {
+  useCreateTransaction,
+  useUpdateTransaction,
+} from '#/features/transactions/use-transactions'
+import {
+  TRANSACTION_TYPES,
+  quickAddSchema,
+  today,
+  transactionToFormValues,
+} from '#/features/transactions/schema'
 import type {
   QuickAddFormValues,
   QuickAddInput,
 } from '#/features/transactions/schema'
+import type { Transaction } from '#/features/transactions/types'
 import { CategoryPicker } from '#/features/categories/components/CategoryPicker'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -27,32 +36,46 @@ const BLANK: QuickAddFormValues = {
   note: '',
 }
 
-// The one-tap quick-add: log an income/expense. Owns its own form state; on
-// success it persists via the create mutation (which refreshes the recent list),
-// resets, then calls `onSuccess` (the parent uses this to close the dialog).
-// `defaultValues` restores a draft after the create-category dialog swap;
-// `onCreateCategory` hands the current values up so the parent can preserve them.
+// The transaction form: logs a new income/expense, or edits an existing one when
+// `transaction` is passed (edit mode also exposes a Delete button). Owns its own
+// form state; on success it persists via the create/update mutation (which
+// refreshes the recent list and Cashflow totals), then calls `onSuccess` (the
+// parent uses this to close the dialog). `defaultValues` restores a draft after
+// the create-category dialog swap; `onCreateCategory` hands the current values up
+// so the parent can preserve them.
 export function QuickAddForm({
+  transaction,
   defaultValues,
   onSuccess,
   onCreateCategory,
 }: {
+  transaction?: Transaction
   defaultValues?: QuickAddFormValues
   onSuccess?: () => void
   onCreateCategory?: (current: QuickAddFormValues) => void
 }) {
   const createTransaction = useCreateTransaction()
+  const updateTransaction = useUpdateTransaction()
+  const isEdit = !!transaction
 
   const form = useForm<QuickAddFormValues, unknown, QuickAddInput>({
     resolver: zodResolver(quickAddSchema),
-    defaultValues: defaultValues ?? BLANK,
+    // A preserved draft (category-create swap) wins; otherwise seed from the
+    // transaction being edited, falling back to a blank add form.
+    defaultValues:
+      defaultValues ??
+      (transaction ? transactionToFormValues(transaction) : BLANK),
   })
   const { control, handleSubmit, formState, setError, reset, getValues } = form
 
   async function onSubmit(values: QuickAddInput) {
     try {
-      await createTransaction.mutateAsync(values)
-      reset(BLANK)
+      if (transaction) {
+        await updateTransaction.mutateAsync({ id: transaction.id, input: values })
+      } else {
+        await createTransaction.mutateAsync(values)
+        reset(BLANK)
+      }
       onSuccess?.()
     } catch (err) {
       setError('root', {
@@ -61,6 +84,7 @@ export function QuickAddForm({
       })
     }
   }
+
 
   return (
     <Form {...form}>
@@ -171,7 +195,11 @@ export function QuickAddForm({
         )}
 
         <Button type="submit" disabled={formState.isSubmitting}>
-          {formState.isSubmitting ? 'Adding…' : 'Add transaction'}
+          {formState.isSubmitting
+            ? 'Saving…'
+            : isEdit
+              ? 'Save changes'
+              : 'Add transaction'}
         </Button>
       </form>
     </Form>

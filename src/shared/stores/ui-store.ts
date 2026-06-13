@@ -12,6 +12,8 @@ import { create } from 'zustand'
 // code, matching the codebase's TRANSACTION_TYPES/CURRENCIES style.
 export const DIALOG = {
   quickAdd: 'quickAdd',
+  editTransaction: 'editTransaction',
+  confirmDeleteTransaction: 'confirmDeleteTransaction',
   createCategory: 'createCategory',
   manageCategories: 'manageCategories',
 } as const

@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { fromCents } from '#/lib/money'
+import type { Transaction } from './types'
 
 // Single source of truth for the quick-add form. Used by the form (via
 // @hookform/resolvers' zodResolver) AND by TransactionService as a backstop, so
@@ -51,3 +53,16 @@ export const quickAddSchema = z.object({
 export type QuickAddInput = z.infer<typeof quickAddSchema>
 // Pre-coercion shape the form binds to (all inputs start as strings).
 export type QuickAddFormValues = z.input<typeof quickAddSchema>
+
+// Seed the form from an existing transaction for edit mode. Cents → display
+// units for the amount input; null category/note become '' for the controlled
+// inputs (Uncategorized / blank note).
+export function transactionToFormValues(tx: Transaction): QuickAddFormValues {
+  return {
+    amount: String(fromCents(tx.amountCents)),
+    type: tx.type,
+    categoryId: tx.categoryId ?? '',
+    transactionDate: tx.transactionDate,
+    note: tx.note ?? '',
+  }
+}

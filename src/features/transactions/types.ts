@@ -47,3 +47,14 @@ export interface TransactionCreate {
   note: string | null
   transactionDate: string
 }
+
+// The editable fields an update writes. The id targets the row (passed
+// separately); userId/createdAt never change so they're omitted. Money is in
+// cents, mirroring TransactionCreate.
+export interface TransactionUpdate {
+  categoryId: string | null
+  type: TransactionType
+  amountCents: number
+  note: string | null
+  transactionDate: string
+}
