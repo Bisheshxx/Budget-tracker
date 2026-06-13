@@ -20,6 +20,8 @@ const recentTransactionsQueryOptions = (userId: string) =>
 interface RecentTransactionsResult {
   transactions: Transaction[]
   loading: boolean
+  isError: boolean
+  error: unknown
 }
 
 // The recent-transactions list, scoped to the current user's profile id (which
@@ -37,6 +39,8 @@ export function useRecentTransactions(): RecentTransactionsResult {
   return {
     transactions: query.data ?? [],
     loading: profileLoading || query.isLoading,
+    isError: query.isError,
+    error: query.error,
   }
 }
 
@@ -52,9 +56,11 @@ export function useCreateTransaction() {
       if (!userId) throw new Error('No profile loaded')
       return transactionService.create(userId, input)
     },
+    // Return the invalidation promise so mutateAsync resolves only after the
+    // recent list has refreshed (QuickAddForm closes on resolve).
     onSuccess: () => {
       if (!userId) return
-      queryClient.invalidateQueries({
+      return queryClient.invalidateQueries({
         queryKey: ['transactions', 'recent', userId],
       })
     },
