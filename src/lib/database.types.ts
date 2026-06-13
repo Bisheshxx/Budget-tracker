@@ -160,8 +160,6 @@ export type Database = {
           grocery_day_of_week: number | null
           id: string
           monthly_budget_target: number
-          payday_day_of_month: number | null
-          payday_frequency: string
         }
         Insert: {
           auth_user_id: string
@@ -172,8 +170,6 @@ export type Database = {
           grocery_day_of_week?: number | null
           id?: string
           monthly_budget_target?: number
-          payday_day_of_month?: number | null
-          payday_frequency?: string
         }
         Update: {
           auth_user_id?: string
@@ -184,8 +180,6 @@ export type Database = {
           grocery_day_of_week?: number | null
           id?: string
           monthly_budget_target?: number
-          payday_day_of_month?: number | null
-          payday_frequency?: string
         }
         Relationships: []
       }

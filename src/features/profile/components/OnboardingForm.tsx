@@ -5,7 +5,6 @@ import { useProfile } from '#/features/profile/use-profile'
 import { profileService } from '#/features/profile'
 import {
   CURRENCIES,
-  PAYDAY_FREQUENCIES,
   onboardingSchema,
   resolveDisplayName,
 } from '#/features/profile/schema'
@@ -54,8 +53,6 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
       currency: 'USD',
       budgetPeriodStartDay: '1',
       displayName: '',
-      paydayDayOfMonth: '',
-      paydayFrequency: '',
       groceryDayOfWeek: '',
       monthlyBudgetTarget: '',
     },
@@ -154,53 +151,36 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
                   value={field.value as string}
                 />
               </FormControl>
+              <FormDescription>
+                The day each monthly Period begins (1–28) — match it to your pay
+                or billing rhythm.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            control={control}
-            name="paydayDayOfMonth"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Payday (day of month)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={31}
-                    {...field}
-                    value={field.value as string}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="h-px bg-border" />
+        <p className="text-sm font-medium text-muted-foreground">Optional</p>
 
-          <FormField
-            control={control}
-            name="paydayFrequency"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Payday frequency</FormLabel>
-                <FormControl>
-                  <Select {...field} value={field.value as string}>
-                    <option value="">—</option>
-                    {PAYDAY_FREQUENCIES.map((f) => (
-                      <option key={f} value={f}>
-                        {f[0].toUpperCase() + f.slice(1)}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={control}
+          name="displayName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Display name</FormLabel>
+              <FormControl>
+                <Input
+                  autoComplete="name"
+                  placeholder="How should we greet you?"
+                  {...field}
+                  value={field.value as string}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField

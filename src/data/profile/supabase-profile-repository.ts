@@ -1,10 +1,6 @@
-import { supabase } from '../../lib/supabase'
-import type { Database } from '../../lib/database.types'
-import type {
-  PaydayFrequency,
-  ProfileUpdate,
-  UserProfile,
-} from '#/features/profile/types'
+import { supabase } from '#/lib/supabase'
+import type { Database } from '#/lib/database.types'
+import type { ProfileUpdate, UserProfile } from '#/features/profile/types'
 import type { IProfileRepository } from './IProfileRepository'
 
 type ProfileRow = Database['public']['Tables']['user_profiles']['Row']
@@ -18,8 +14,6 @@ function toUserProfile(row: ProfileRow): UserProfile {
     displayName: row.display_name,
     currency: row.currency,
     budgetPeriodStartDay: row.budget_period_start_day,
-    paydayDayOfMonth: row.payday_day_of_month,
-    paydayFrequency: row.payday_frequency as PaydayFrequency,
     groceryDayOfWeek: row.grocery_day_of_week,
     monthlyBudgetTargetCents: row.monthly_budget_target,
   }
@@ -44,8 +38,6 @@ export class SupabaseProfileRepository implements IProfileRepository {
       display_name: patch.displayName,
       currency: patch.currency,
       budget_period_start_day: patch.budgetPeriodStartDay,
-      payday_day_of_month: patch.paydayDayOfMonth,
-      payday_frequency: patch.paydayFrequency,
       grocery_day_of_week: patch.groceryDayOfWeek,
       monthly_budget_target: patch.monthlyBudgetTargetCents,
     }

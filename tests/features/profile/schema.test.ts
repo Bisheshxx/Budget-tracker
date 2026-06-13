@@ -43,15 +43,13 @@ describe('onboardingSchema', () => {
       currency: 'EUR',
       budgetPeriodStartDay: '1',
       displayName: '',
-      paydayDayOfMonth: '',
-      paydayFrequency: '',
       groceryDayOfWeek: '',
       monthlyBudgetTarget: '',
     })
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.displayName).toBeUndefined()
-      expect(result.data.paydayDayOfMonth).toBeUndefined()
+      expect(result.data.groceryDayOfWeek).toBeUndefined()
       expect(result.data.monthlyBudgetTarget).toBeUndefined()
     }
   })
@@ -61,15 +59,12 @@ describe('onboardingSchema', () => {
       currency: 'GBP',
       budgetPeriodStartDay: '25',
       displayName: '  Alex  ',
-      paydayDayOfMonth: '28',
-      paydayFrequency: 'monthly',
       groceryDayOfWeek: '6',
       monthlyBudgetTarget: '1500.50',
     })
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.displayName).toBe('Alex')
-      expect(result.data.paydayDayOfMonth).toBe(28)
       expect(result.data.groceryDayOfWeek).toBe(6)
       expect(result.data.monthlyBudgetTarget).toBe(1500.5)
     }

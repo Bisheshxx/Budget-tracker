@@ -13,3 +13,23 @@ export function toCents(amount: number): number {
 export function fromCents(cents: number): number {
   return cents / 100
 }
+
+/**
+ * Integer cents → a localized currency string (e.g. 137000 + 'USD' → "$1,370.00").
+ * The display boundary for stored amounts. Pass the user's profile currency.
+ * `signDisplay` defaults to 'auto' (only negatives get a sign); pass 'always' to
+ * force a leading + on positives.
+ */
+export function formatMoney(
+  cents: number,
+  currency: string,
+  options?: { signDisplay?: 'auto' | 'always' | 'never' },
+): string {
+  // Pin the locale so SSR (Node) and the client format identically — a resolved
+  // default locale can differ between the two and break hydration.
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    signDisplay: options?.signDisplay ?? 'auto',
+  }).format(fromCents(cents))
+}
