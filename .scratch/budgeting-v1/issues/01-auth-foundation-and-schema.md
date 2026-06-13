@@ -1,6 +1,6 @@
 # Auth foundation + schema
 
-Status: ready-for-agent
+Status: done
 Type: HITL
 
 ## Parent

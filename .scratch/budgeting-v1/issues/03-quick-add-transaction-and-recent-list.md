@@ -1,6 +1,6 @@
 # Quick-add transaction + recent list
 
-Status: ready-for-agent
+Status: done
 Type: AFK
 
 ## Parent

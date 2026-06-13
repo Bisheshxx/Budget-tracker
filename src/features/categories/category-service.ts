@@ -27,4 +27,15 @@ export class CategoryService {
       icon: v.icon ?? null,
     })
   }
+
+  // Delete one of the user's own categories. System categories are refused here
+  // (the backstop, mirrored by RLS), so the guard holds even if the UI lets one
+  // through. Any transactions in the deleted category fall back to Uncategorized
+  // via the DB FK (`on delete set null`) — nothing to reassign in app code.
+  async delete(category: Category): Promise<void> {
+    if (category.isSystem) {
+      throw new Error('System categories cannot be deleted')
+    }
+    await this.repo.delete(category.id)
+  }
 }

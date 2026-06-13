@@ -13,6 +13,7 @@ import { create } from 'zustand'
 export const DIALOG = {
   quickAdd: 'quickAdd',
   createCategory: 'createCategory',
+  manageCategories: 'manageCategories',
 } as const
 
 export type DialogName = (typeof DIALOG)[keyof typeof DIALOG]
