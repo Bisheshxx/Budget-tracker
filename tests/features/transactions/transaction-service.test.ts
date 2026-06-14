@@ -3,6 +3,7 @@ import { TransactionService } from '#/features/transactions/transaction-service.
 import type {
   Transaction,
   TransactionCreate,
+  TransactionUpdate,
 } from '#/features/transactions/types.ts'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository.ts'
 import type { QuickAddInput } from '#/features/transactions/schema.ts'
@@ -24,6 +25,15 @@ function makeFakeRepo(overrides: Partial<ITransactionRepository> = {}) {
         ...input,
       }),
     ),
+    update: vi.fn(
+      async (id: string, input: TransactionUpdate): Promise<Transaction> => ({
+        id,
+        userId: 'profile-1',
+        createdAt: '2026-06-12T00:00:00Z',
+        ...input,
+      }),
+    ),
+    delete: vi.fn(async (_id: string) => undefined),
     ...overrides,
   } satisfies ITransactionRepository
 }
@@ -102,6 +112,76 @@ describe('TransactionService', () => {
         service.create('profile-1', { ...validExpense, amount: -5 }),
       ).rejects.toThrow('Amount must be greater than 0')
       expect(repo.create).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('update', () => {
+    it('targets the row id and converts the amount to integer cents', async () => {
+      const repo = makeFakeRepo()
+      const service = new TransactionService(repo)
+
+      await service.update('tx-7', { ...validExpense, amount: 50.5 })
+
+      expect(repo.update).toHaveBeenCalledWith(
+        'tx-7',
+        expect.objectContaining({ amountCents: 5050 }),
+      )
+    })
+
+    it('passes the edited fields through; never writes userId/createdAt', async () => {
+      const repo = makeFakeRepo()
+      const service = new TransactionService(repo)
+
+      await service.update('tx-7', { ...validExpense, categoryId: 'cat-9' })
+
+      expect(repo.update).toHaveBeenCalledWith('tx-7', {
+        categoryId: 'cat-9',
+        type: 'expense',
+        amountCents: 1250,
+        note: 'Lunch',
+        transactionDate: '2026-06-12',
+      })
+    })
+
+    it('stores a blank note and blank category as null', async () => {
+      const repo = makeFakeRepo()
+      const service = new TransactionService(repo)
+
+      await service.update('tx-7', {
+        amount: 5,
+        type: 'income',
+        transactionDate: '2026-06-12',
+        note: undefined,
+      })
+
+      expect(repo.update).toHaveBeenCalledWith(
+        'tx-7',
+        expect.objectContaining({ note: null, categoryId: null }),
+      )
+    })
+
+    it('rejects a zero or negative amount and never hits the repo', async () => {
+      const repo = makeFakeRepo()
+      const service = new TransactionService(repo)
+
+      await expect(
+        service.update('tx-7', { ...validExpense, amount: 0 }),
+      ).rejects.toThrow('Amount must be greater than 0')
+      await expect(
+        service.update('tx-7', { ...validExpense, amount: -5 }),
+      ).rejects.toThrow('Amount must be greater than 0')
+      expect(repo.update).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('delete', () => {
+    it('delegates to the repository with the transaction id', async () => {
+      const repo = makeFakeRepo()
+      const service = new TransactionService(repo)
+
+      await service.delete('tx-7')
+
+      expect(repo.delete).toHaveBeenCalledWith('tx-7')
     })
   })
 

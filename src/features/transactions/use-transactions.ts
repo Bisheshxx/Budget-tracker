@@ -85,8 +85,26 @@ export function usePeriodSummary(): PeriodSummaryResult {
   }
 }
 
-// Create mutation that invalidates the recent list and the Period summary on
-// success so both the list and the Cashflow totals reflect the new entry.
+// Refresh both the recent list and the Period summary so every mutation
+// (create/update/delete) reflects in the list and the Cashflow totals. The
+// period-summary key omits the period start so the prefix match invalidates
+// every cached Period. Returns the promise so mutateAsync resolves only after
+// the caches have refreshed (the dialog closes on resolve).
+function invalidateTransactionCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  userId: string,
+) {
+  return Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: ['transactions', 'recent', userId],
+    }),
+    queryClient.invalidateQueries({
+      queryKey: ['transactions', 'period-summary', userId],
+    }),
+  ])
+}
+
+// Create mutation that refreshes the recent list and Period summary on success.
 export function useCreateTransaction() {
   const { profile } = useProfile()
   const userId = profile?.id ?? null
@@ -97,19 +115,42 @@ export function useCreateTransaction() {
       if (!userId) throw new Error('No profile loaded')
       return transactionService.create(userId, input)
     },
-    // Return the invalidation promise so mutateAsync resolves only after the
-    // caches have refreshed (QuickAddForm closes on resolve). The period-summary
-    // key omits the period start so the prefix match invalidates every Period.
     onSuccess: () => {
       if (!userId) return
-      return Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ['transactions', 'recent', userId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ['transactions', 'period-summary', userId],
-        }),
-      ])
+      return invalidateTransactionCaches(queryClient, userId)
+    },
+  })
+}
+
+// Edit mutation. Refreshes the recent list and Period summary so an edited
+// amount/type/category/date is reflected in both the list and the totals.
+export function useUpdateTransaction() {
+  const { profile } = useProfile()
+  const userId = profile?.id ?? null
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: QuickAddInput }) =>
+      transactionService.update(id, input),
+    onSuccess: () => {
+      if (!userId) return
+      return invalidateTransactionCaches(queryClient, userId)
+    },
+  })
+}
+
+// Delete mutation. Refreshes the recent list and Period summary so a deleted
+// transaction disappears from both.
+export function useDeleteTransaction() {
+  const { profile } = useProfile()
+  const userId = profile?.id ?? null
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => transactionService.delete(id),
+    onSuccess: () => {
+      if (!userId) return
+      return invalidateTransactionCaches(queryClient, userId)
     },
   })
 }

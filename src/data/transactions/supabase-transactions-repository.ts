@@ -4,6 +4,7 @@ import type {
   Transaction,
   TransactionCreate,
   TransactionType,
+  TransactionUpdate,
 } from '#/features/transactions/types'
 import type { ITransactionRepository } from './ITransactionRepository'
 
@@ -72,5 +73,28 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
       .single()
     if (error) throw error
     return toTransaction(data)
+  }
+
+  async update(id: string, input: TransactionUpdate): Promise<Transaction> {
+    const dbUpdate: Database['public']['Tables']['transactions']['Update'] = {
+      category_id: input.categoryId,
+      type: input.type,
+      amount_cents: input.amountCents,
+      note: input.note,
+      transaction_date: input.transactionDate,
+    }
+    const { data, error } = await supabase
+      .from('transactions')
+      .update(dbUpdate)
+      .eq('id', id)
+      .select('*')
+      .single()
+    if (error) throw error
+    return toTransaction(data)
+  }
+
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase.from('transactions').delete().eq('id', id)
+    if (error) throw error
   }
 }

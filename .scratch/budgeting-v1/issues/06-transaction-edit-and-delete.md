@@ -1,6 +1,6 @@
 # Transaction edit + delete
 
-Status: ready-for-agent
+Status: done
 Type: AFK
 
 ## Parent
@@ -17,11 +17,11 @@ Complete transaction CRUD by adding edit and delete to the existing add/list flo
 
 ## Acceptance criteria
 
-- [ ] A user can edit any field of an existing transaction and see the change reflected
-- [ ] Edited amounts remain stored as integer cents and reject non-positive values
-- [ ] A user can delete a transaction and it disappears from lists/summaries
-- [ ] Edit/delete go through the repository interface; no data client in components
-- [ ] Service-layer tests with a fake repository cover update and delete behavior
+- [x] A user can edit any field of an existing transaction and see the change reflected
+- [x] Edited amounts remain stored as integer cents and reject non-positive values
+- [x] A user can delete a transaction and it disappears from lists/summaries
+- [x] Edit/delete go through the repository interface; no data client in components
+- [x] Service-layer tests with a fake repository cover update and delete behavior
 
 ## Blocked by
 

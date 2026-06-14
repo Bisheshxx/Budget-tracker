@@ -83,4 +83,28 @@ export class TransactionService {
       transactionDate: v.transactionDate,
     })
   }
+
+  // Edit an existing transaction. Re-validates through the same schema as create
+  // (so a non-positive amount can never be saved) and converts to integer cents.
+  // The id targets the row; userId/createdAt are immutable and not written.
+  async update(id: string, input: QuickAddInput): Promise<Transaction> {
+    const result = quickAddSchema.safeParse(input)
+    if (!result.success) {
+      throw new Error(result.error.issues[0].message)
+    }
+    const v = result.data
+
+    return this.repo.update(id, {
+      categoryId: v.categoryId ?? null,
+      type: v.type,
+      amountCents: toCents(v.amount),
+      note: v.note ?? null,
+      transactionDate: v.transactionDate,
+    })
+  }
+
+  // Delete a transaction by id. RLS scopes the row to the owning user.
+  delete(id: string): Promise<void> {
+    return this.repo.delete(id)
+  }
 }
