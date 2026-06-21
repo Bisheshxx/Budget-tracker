@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   daysIntoPeriod,
   getPeriodKey,
+  previousPeriod,
   resolvePeriod,
   todayYmd,
 } from '#/shared/period.ts'
@@ -65,6 +66,39 @@ describe('period', () => {
       expect(getPeriodKey('2026-06-24', 25)).toBe('2026-05-25')
       // Crossing the anchor lands in a new Period with a new key.
       expect(getPeriodKey('2026-06-25', 25)).toBe('2026-06-25')
+    })
+  })
+
+  describe('previousPeriod', () => {
+    it('is the Period immediately before, ending where the current one starts', () => {
+      // Start day 1: current Period June → previous is May.
+      expect(previousPeriod('2026-06-13', 1)).toEqual({
+        start: '2026-05-01',
+        end: '2026-06-01',
+      })
+    })
+
+    it('inherits the month-flip: previous of an anchored mid-month Period', () => {
+      // Today 06-13, anchor 25 → current is May 25–June 25, previous Apr 25–May 25.
+      expect(previousPeriod('2026-06-13', 25)).toEqual({
+        start: '2026-04-25',
+        end: '2026-05-25',
+      })
+    })
+
+    it('rolls the year backward across the January boundary', () => {
+      // Today 01-10, anchor 25 → current Dec 25–Jan 25, previous Nov 25–Dec 25.
+      expect(previousPeriod('2026-01-10', 25)).toEqual({
+        start: '2025-11-25',
+        end: '2025-12-25',
+      })
+    })
+
+    it('clamps an out-of-range start day to 1–28', () => {
+      expect(previousPeriod('2026-02-15', 31)).toEqual({
+        start: '2025-12-28',
+        end: '2026-01-28',
+      })
     })
   })
 

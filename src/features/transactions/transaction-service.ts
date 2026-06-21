@@ -1,10 +1,8 @@
 import { quickAddSchema } from './schema'
+import { rollup } from './summary'
 import { toCents } from '#/lib/money'
 import type { QuickAddInput } from './schema'
-import type {
-  PeriodSummary,
-  Transaction,
-} from '#/features/transactions/types'
+import type { PeriodSummary, Transaction } from '#/features/transactions/types'
 import type { PeriodRange } from '#/shared/period'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 
@@ -34,34 +32,9 @@ export class TransactionService {
       range.end,
     )
 
-    let incomeCents = 0
-    let expensesCents = 0
-    // Map keyed by categoryId (null = Uncategorized) so equal ids accumulate.
-    const spendByCategory = new Map<string | null, number>()
-
-    for (const tx of transactions) {
-      if (tx.type === 'income') {
-        incomeCents += tx.amountCents
-      } else {
-        expensesCents += tx.amountCents
-        spendByCategory.set(
-          tx.categoryId,
-          (spendByCategory.get(tx.categoryId) ?? 0) + tx.amountCents,
-        )
-      }
-    }
-
-    const byCategory = Array.from(spendByCategory, ([categoryId, amountCents]) => ({
-      categoryId,
-      amountCents,
-    })).sort((a, b) => b.amountCents - a.amountCents)
-
-    return {
-      incomeCents,
-      expensesCents,
-      netCents: incomeCents - expensesCents,
-      byCategory,
-    }
+    // Shared with the Reports comparison so the Dashboard and Reports never drift
+    // in how they total a Period. PeriodSummary is structurally PeriodRollup.
+    return rollup(transactions)
   }
 
   // Validates via the shared schema (the backstop, not just the UI), converts the
