@@ -36,10 +36,14 @@ function formatYmd(year: number, month: number, day: number): string {
 
 // Shift a (year, month) pair by `delta` months, keeping month in 1–12 and
 // rolling the year. `month` is 1-based.
-function addMonths(year: number, month: number, delta: number): [number, number] {
+function addMonths(
+  year: number,
+  month: number,
+  delta: number,
+): [number, number] {
   const index = month - 1 + delta
   const newYear = year + Math.floor(index / 12)
-  const newMonth = ((index % 12) + 12) % 12 + 1
+  const newMonth = (((index % 12) + 12) % 12) + 1
   return [newYear, newMonth]
 }
 
@@ -72,6 +76,22 @@ export function resolvePeriod(today: string, startDay: number): PeriodRange {
  */
 export function getPeriodKey(today: string, startDay: number): string {
   return resolvePeriod(today, startDay).start
+}
+
+/**
+ * The Period immediately before the one containing `today` — the comparison
+ * baseline for Reports (this Period vs. last). Resolved by stepping the start
+ * anchor back one month, so it inherits the same month-flip/clamp rules and
+ * stays adjacent (its `end` equals the current Period's `start`).
+ */
+export function previousPeriod(today: string, startDay: number): PeriodRange {
+  const current = resolvePeriod(today, startDay)
+  const { year, month } = parseYmd(current.start)
+  const [prevYear, prevMonth] = addMonths(year, month, -1)
+  return {
+    start: formatYmd(prevYear, prevMonth, clampStartDay(startDay)),
+    end: current.start,
+  }
 }
 
 // Whole-day difference between two 'YYYY-MM-DD' dates (b - a), via UTC epoch

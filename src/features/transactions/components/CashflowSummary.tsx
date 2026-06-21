@@ -1,11 +1,10 @@
 import { usePeriodSummary } from '#/features/transactions/use-transactions'
 import { useProfile } from '#/features/profile/use-profile'
-import { useCategories } from '#/features/categories/use-categories'
+import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
 import { Money } from '#/shared/components/Money'
 import { MoneyBadge } from '#/shared/components/MoneyBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
-import type { Category } from '#/features/categories/types'
 import type {
   CategorySpend,
   PeriodSummary,
@@ -145,13 +144,7 @@ function CategoryBreakdown({
   breakdown: CategorySpend[]
   currency: string
 }) {
-  const { categories } = useCategories()
-
-  const byId = new Map(categories.map((c) => [c.id, c]))
-  const uncategorized =
-    categories.find((c) => c.isSystem && c.name === 'Uncategorized') ?? null
-  const categoryFor = (categoryId: string | null): Category | null =>
-    categoryId ? (byId.get(categoryId) ?? uncategorized) : uncategorized
+  const { categoryFor } = useCategoryLookup()
 
   if (breakdown.length === 0) {
     return (

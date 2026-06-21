@@ -5,7 +5,7 @@ import {
   useRecentTransactions,
 } from '#/features/transactions/use-transactions'
 import { useProfile } from '#/features/profile/use-profile'
-import { useCategories } from '#/features/categories/use-categories'
+import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
 import { Money } from '#/shared/components/Money'
 import { Dialog } from '#/shared/components/Dialog'
@@ -14,18 +14,6 @@ import { DIALOG } from '#/shared/stores/ui-store'
 import { Button } from '#/components/ui/button'
 import type { Transaction } from '#/features/transactions/types'
 import type { Category } from '#/features/categories/types'
-
-// Resolve a transaction's category to a real row. A null category_id falls back
-// to the seeded Uncategorized system category — never a hardcoded string.
-function useCategoryResolver() {
-  const { categories, loading } = useCategories()
-  const byId = new Map(categories.map((c) => [c.id, c]))
-  const uncategorized =
-    categories.find((c) => c.isSystem && c.name === 'Uncategorized') ?? null
-  const resolve = (tx: Transaction): Category | null =>
-    tx.categoryId ? (byId.get(tx.categoryId) ?? uncategorized) : uncategorized
-  return { resolve, loading }
-}
 
 // The recent-transactions list. Each row shows the transaction's category, the
 // note, and the amount. Edit (pencil) and delete (trash) buttons are revealed on
@@ -37,7 +25,7 @@ export function RecentTransactions({
   onEdit?: (tx: Transaction) => void
 }) {
   const { transactions, loading } = useRecentTransactions()
-  const { resolve, loading: categoriesLoading } = useCategoryResolver()
+  const { categoryFor, loading: categoriesLoading } = useCategoryLookup()
   const { profile } = useProfile()
   const confirmDelete = useDialog(DIALOG.confirmDeleteTransaction)
   const currency = profile?.currency ?? 'USD'
@@ -63,7 +51,7 @@ export function RecentTransactions({
           <TransactionRow
             key={tx.id}
             tx={tx}
-            category={resolve(tx)}
+            category={categoryFor(tx.categoryId)}
             currency={currency}
             onEdit={onEdit}
             onRequestDelete={() => {
