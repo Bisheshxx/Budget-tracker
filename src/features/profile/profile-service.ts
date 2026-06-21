@@ -43,4 +43,36 @@ export class ProfileService {
       onboardingCompletedAt: new Date().toISOString(),
     })
   }
+
+  // Settings edits an already-onboarded profile, so it reuses the same validation
+  // (onboardingSchema) but must NOT re-stamp the onboarded marker — it reads the
+  // current row and writes back its existing onboarding_completed_at unchanged.
+  // Every consumer reads these fields via useProfile, so refreshing that query
+  // after this write propagates currency / Period / Budget Target app-wide.
+  async updateProfile(
+    authUserId: string,
+    input: OnboardingInput,
+  ): Promise<UserProfile> {
+    const result = onboardingSchema.safeParse(input)
+    if (!result.success) {
+      throw new Error(result.error.issues[0].message)
+    }
+    const v = result.data
+
+    const current = await this.repo.getByAuthUserId(authUserId)
+    if (!current) {
+      throw new Error('No profile to update')
+    }
+
+    return this.repo.update(authUserId, {
+      displayName: v.displayName?.trim() || null,
+      currency: v.currency,
+      budgetPeriodStartDay: v.budgetPeriodStartDay,
+      groceryDayOfWeek: v.groceryDayOfWeek ?? null,
+      monthlyBudgetTargetCents:
+        v.monthlyBudgetTarget != null ? toCents(v.monthlyBudgetTarget) : 0,
+      // Preserve the marker — Settings never un-onboards or re-stamps.
+      onboardingCompletedAt: current.onboardingCompletedAt,
+    })
+  }
 }

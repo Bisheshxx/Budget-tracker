@@ -1,6 +1,6 @@
 # Settings
 
-Status: ready-for-agent
+Status: done
 Type: AFK
 
 ## Parent
