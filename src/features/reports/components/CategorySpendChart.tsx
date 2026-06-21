@@ -20,6 +20,9 @@ export function CategorySpendChart({
   const data = breakdown.map((spend) => {
     const category = categoryFor(spend.categoryId)
     return {
+      // categoryId is unique per slice (rollup dedupes by it); names are not,
+      // since deleted/null categories collapse to the Uncategorized fallback.
+      key: spend.categoryId ?? 'uncategorized',
       name: category?.name ?? 'Uncategorized',
       value: spend.amountCents,
       color: category?.colorHex ?? 'var(--primary)',
@@ -52,7 +55,7 @@ export function CategorySpendChart({
                 stroke="var(--card)"
               >
                 {data.map((slice) => (
-                  <Cell key={slice.name} fill={slice.color} />
+                  <Cell key={slice.key} fill={slice.color} />
                 ))}
               </Pie>
               <Tooltip
