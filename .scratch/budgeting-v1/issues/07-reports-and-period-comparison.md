@@ -1,6 +1,6 @@
 # Reports + Period Comparison
 
-Status: ready-for-agent
+Status: done
 Type: AFK
 
 ## Parent
