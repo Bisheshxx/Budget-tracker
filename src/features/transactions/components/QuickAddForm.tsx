@@ -49,11 +49,20 @@ export function QuickAddForm({
   defaultValues,
   onSuccess,
   onCreateCategory,
+  onConfirm,
+  submitLabel,
 }: {
   transaction?: Transaction
   defaultValues?: QuickAddFormValues
   onSuccess?: () => void
   onCreateCategory?: (current: QuickAddFormValues) => void
+  /**
+   * Confirm-a-Recurring-Expense path: when provided, submitting hands the
+   * validated values here (which creates the linked transaction + occurrence)
+   * instead of the plain create/update — see the Dashboard Due flow.
+   */
+  onConfirm?: (values: QuickAddInput) => Promise<void>
+  submitLabel?: string
 }) {
   const createTransaction = useCreateTransaction()
   const updateTransaction = useUpdateTransaction()
@@ -71,7 +80,9 @@ export function QuickAddForm({
 
   async function onSubmit(values: QuickAddInput) {
     try {
-      if (transaction) {
+      if (onConfirm) {
+        await onConfirm(values)
+      } else if (transaction) {
         await updateTransaction.mutateAsync({
           id: transaction.id,
           input: values,
@@ -90,6 +101,8 @@ export function QuickAddForm({
       })
     }
   }
+
+  const busyLabel = submitLabel ?? (isEdit ? 'Save changes' : 'Add transaction')
 
   return (
     <Form {...form}>
@@ -181,11 +194,7 @@ export function QuickAddForm({
         )}
 
         <Button type="submit" disabled={formState.isSubmitting}>
-          {formState.isSubmitting
-            ? 'Saving…'
-            : isEdit
-              ? 'Save changes'
-              : 'Add transaction'}
+          {formState.isSubmitting ? 'Saving…' : busyLabel}
         </Button>
       </form>
     </Form>

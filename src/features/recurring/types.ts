@@ -5,8 +5,10 @@
 
 export type RecurringFrequency = 'weekly' | 'monthly'
 
+export type RecurringOccurrenceStatus = 'confirmed' | 'skipped'
+
 // A first-class, expense-only template (rent, gym, …). "Due" occurrences are
-// computed on read from the active templates (issue 11), never stored here.
+// computed on read from the active templates, never stored here.
 export interface RecurringExpense {
   id: string
   /** References user_profiles.id (NOT the auth user id). */
@@ -44,4 +46,25 @@ export interface RecurringExpenseUpdate {
   amountCents: number
   frequency: RecurringFrequency
   anchorDay: number
+}
+
+// A resolved occurrence — only confirmed or skipped rows exist. Unresolved "Due"
+// items are derived (see due.ts), never persisted.
+export interface RecurringOccurrence {
+  id: string
+  recurringExpenseId: string
+  /** SQL date as 'YYYY-MM-DD'. */
+  occurrenceDate: string
+  status: RecurringOccurrenceStatus
+  /** The transaction created on confirm; null for skipped occurrences. */
+  transactionId: string | null
+  createdAt: string
+}
+
+// A computed Due item: a template that has come due on a given date in the
+// current window and has no resolved occurrence yet. Derived, never stored.
+export interface DueOccurrence {
+  recurringExpense: RecurringExpense
+  /** SQL date as 'YYYY-MM-DD' the template came due on. */
+  occurrenceDate: string
 }

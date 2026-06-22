@@ -46,6 +46,11 @@ export interface TransactionCreate {
   amountCents: number
   note: string | null
   transactionDate: string
+  /**
+   * Links this transaction to the Recurring Expense it confirmed (see ADR 0006);
+   * omitted/null for ordinary transactions. "Recurring" is derived from this FK.
+   */
+  recurringExpenseId?: string | null
 }
 
 // The editable fields an update writes. The id targets the row (passed
