@@ -23,12 +23,18 @@ function clampStartDay(day: number): number {
   return Math.min(MAX_START_DAY, Math.max(MIN_START_DAY, Math.trunc(day)))
 }
 
-function parseYmd(date: string): { year: number; month: number; day: number } {
+/** Split a 'YYYY-MM-DD' string into numeric parts. Shared date primitive. */
+export function parseYmd(date: string): {
+  year: number
+  month: number
+  day: number
+} {
   const [year, month, day] = date.split('-').map(Number)
   return { year, month, day }
 }
 
-function formatYmd(year: number, month: number, day: number): string {
+/** Format numeric parts back into a zero-padded 'YYYY-MM-DD' string. */
+export function formatYmd(year: number, month: number, day: number): string {
   const mm = String(month).padStart(2, '0')
   const dd = String(day).padStart(2, '0')
   return `${year}-${mm}-${dd}`
@@ -36,7 +42,7 @@ function formatYmd(year: number, month: number, day: number): string {
 
 // Shift a (year, month) pair by `delta` months, keeping month in 1–12 and
 // rolling the year. `month` is 1-based.
-function addMonths(
+export function addMonths(
   year: number,
   month: number,
   delta: number,

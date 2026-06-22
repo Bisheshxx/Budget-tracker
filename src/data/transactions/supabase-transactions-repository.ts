@@ -65,6 +65,7 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
       amount_cents: input.amountCents,
       note: input.note,
       transaction_date: input.transactionDate,
+      recurring_expense_id: input.recurringExpenseId ?? null,
     }
     const { data, error } = await supabase
       .from('transactions')

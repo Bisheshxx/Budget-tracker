@@ -2,18 +2,14 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useAuth } from '#/features/auth/auth-context'
 import { Button } from '#/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Dialog } from '#/shared/components/Dialog'
 import { useDialog } from '#/shared/hooks/use-dialog'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { QuickAddForm } from '#/features/transactions/components/QuickAddForm'
 import { CashflowSummary } from '#/features/transactions/components/CashflowSummary'
 import { RecentTransactions } from '#/features/transactions/components/RecentTransactions'
+import { DueNow } from '#/features/recurring/components/DueNow'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { CategoryManager } from '#/features/categories/components/CategoryManager'
 import type { QuickAddFormValues } from '#/features/transactions/schema'
@@ -88,6 +84,7 @@ function DashboardPage() {
 
       <div className="mt-8 flex flex-col gap-6">
         <CashflowSummary />
+        <DueNow />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent transactions</CardTitle>

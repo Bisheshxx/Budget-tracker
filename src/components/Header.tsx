@@ -37,6 +37,13 @@ export default function Header() {
                   Reports
                 </Link>
                 <Link
+                  to="/recurring"
+                  className="nav-link"
+                  activeProps={{ className: 'nav-link is-active' }}
+                >
+                  Recurring
+                </Link>
+                <Link
                   to="/settings"
                   className="nav-link"
                   activeProps={{ className: 'nav-link is-active' }}
