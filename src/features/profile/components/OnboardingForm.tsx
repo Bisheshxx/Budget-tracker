@@ -12,6 +12,7 @@ import type {
   OnboardingFormValues,
   OnboardingInput,
 } from '#/features/profile/schema'
+import { MoneyAmountField } from '#/shared/components/MoneyAmountField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Select } from '#/components/ui/select'
@@ -181,25 +182,10 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
             )}
           />
 
-          <FormField
+          <MoneyAmountField
             control={control}
             name="monthlyBudgetTarget"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Budget Target</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    placeholder="0.00"
-                    {...field}
-                    value={field.value as string}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Budget Target"
           />
         </div>
 

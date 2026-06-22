@@ -16,6 +16,7 @@ import type {
 } from '#/features/transactions/schema'
 import type { Transaction } from '#/features/transactions/types'
 import { CategoryPicker } from '#/features/categories/components/CategoryPicker'
+import { MoneyAmountField } from '#/shared/components/MoneyAmountField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Select } from '#/components/ui/select'
@@ -71,7 +72,10 @@ export function QuickAddForm({
   async function onSubmit(values: QuickAddInput) {
     try {
       if (transaction) {
-        await updateTransaction.mutateAsync({ id: transaction.id, input: values })
+        await updateTransaction.mutateAsync({
+          id: transaction.id,
+          input: values,
+        })
       } else {
         await createTransaction.mutateAsync(values)
         reset(BLANK)
@@ -80,11 +84,12 @@ export function QuickAddForm({
     } catch (err) {
       setError('root', {
         message:
-          err instanceof Error ? err.message : 'Could not save your transaction',
+          err instanceof Error
+            ? err.message
+            : 'Could not save your transaction',
       })
     }
   }
-
 
   return (
     <Form {...form}>
@@ -94,26 +99,7 @@ export function QuickAddForm({
         className="flex flex-col gap-4"
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            control={control}
-            name="amount"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Amount</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    placeholder="0.00"
-                    {...field}
-                    value={field.value as string}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <MoneyAmountField control={control} name="amount" label="Amount" />
 
           <FormField
             control={control}
