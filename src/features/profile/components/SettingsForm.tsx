@@ -69,7 +69,12 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
   const { control, handleSubmit, formState, setError, reset, getValues } = form
 
   async function onSubmit(values: OnboardingInput) {
-    if (!session) return
+    if (!session) {
+      // _authed guarantees a session, so this is defensive — but surface it
+      // rather than letting the Save click do nothing.
+      setError('root', { message: 'You need to be signed in to save changes' })
+      return
+    }
     setSaved(false)
     try {
       await profileService.updateProfile(session.user.id, values)
