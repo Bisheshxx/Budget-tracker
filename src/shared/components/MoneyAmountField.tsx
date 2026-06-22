@@ -36,6 +36,7 @@ export function MoneyAmountField<T extends FieldValues>({
               step="0.01"
               placeholder="0.00"
               {...field}
+              value={field.value as string}
             />
           </FormControl>
           <FormMessage />
