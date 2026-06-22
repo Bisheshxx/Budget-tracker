@@ -151,6 +151,94 @@ describe('ProfileService', () => {
     })
   })
 
+  describe('updateProfile', () => {
+    // An already-onboarded profile — Settings edits this, never an un-onboarded one.
+    const onboardedProfile: UserProfile = {
+      ...blankProfile,
+      displayName: 'Alex',
+      onboardingCompletedAt: '2026-06-13T12:00:00.000Z',
+    }
+    const onboardedRepo = () =>
+      makeFakeRepo({
+        getByAuthUserId: vi.fn(async (_id: string) => onboardedProfile),
+        update: vi.fn(async (_id: string, patch: ProfileUpdate) => ({
+          ...onboardedProfile,
+          ...patch,
+        })),
+      })
+
+    it('persists edited fields and converts the Budget Target to cents', async () => {
+      const repo = onboardedRepo()
+      const service = new ProfileService(repo)
+
+      await service.updateProfile('auth-1', {
+        currency: 'EUR',
+        budgetPeriodStartDay: 5,
+        displayName: 'Alexandra',
+        groceryDayOfWeek: 6,
+        monthlyBudgetTarget: 1500.5,
+      })
+
+      expect(repo.update).toHaveBeenCalledWith('auth-1', {
+        displayName: 'Alexandra',
+        currency: 'EUR',
+        budgetPeriodStartDay: 5,
+        groceryDayOfWeek: 6,
+        monthlyBudgetTargetCents: 150050,
+        onboardingCompletedAt: '2026-06-13T12:00:00.000Z',
+      })
+    })
+
+    it('preserves the onboarded marker rather than re-stamping it', async () => {
+      const repo = onboardedRepo()
+      const service = new ProfileService(repo)
+
+      const saved = await service.updateProfile('auth-1', {
+        currency: 'USD',
+        budgetPeriodStartDay: 1,
+        displayName: 'Alex',
+      })
+
+      expect(saved.onboardingCompletedAt).toBe('2026-06-13T12:00:00.000Z')
+      expect(repo.update).toHaveBeenCalledWith(
+        'auth-1',
+        expect.objectContaining({
+          onboardingCompletedAt: '2026-06-13T12:00:00.000Z',
+        }),
+      )
+    })
+
+    it('rejects invalid input and never hits update', async () => {
+      const repo = onboardedRepo()
+      const service = new ProfileService(repo)
+
+      await expect(
+        service.updateProfile('auth-1', {
+          currency: 'USD',
+          budgetPeriodStartDay: 31,
+          displayName: 'Alex',
+        }),
+      ).rejects.toThrow('Day must be between 1 and 28')
+      expect(repo.update).not.toHaveBeenCalled()
+    })
+
+    it('throws when no profile exists for the user', async () => {
+      const repo = makeFakeRepo({
+        getByAuthUserId: vi.fn(async (_id: string) => null),
+      })
+      const service = new ProfileService(repo)
+
+      await expect(
+        service.updateProfile('auth-1', {
+          currency: 'USD',
+          budgetPeriodStartDay: 1,
+          displayName: 'Alex',
+        }),
+      ).rejects.toThrow('No profile to update')
+      expect(repo.update).not.toHaveBeenCalled()
+    })
+  })
+
   describe('getProfile', () => {
     it('delegates to the repository', async () => {
       const repo = makeFakeRepo()
