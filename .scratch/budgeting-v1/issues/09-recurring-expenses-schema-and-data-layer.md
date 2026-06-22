@@ -1,6 +1,6 @@
 # Recurring Expenses schema + data layer
 
-Status: ready-for-agent
+Status: done
 Type: AFK
 
 ## Parent

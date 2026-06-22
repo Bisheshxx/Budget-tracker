@@ -1,6 +1,6 @@
 # Recurring Expense template CRUD + Recurring screen
 
-Status: ready-for-agent
+Status: done
 Type: AFK
 
 ## Parent
