@@ -353,3 +353,12 @@ a {
     color: var(--foreground);
   }
 }
+
+/* Recharts focuses sectors/the surface on click, painting a default browser
+   focus ring. Kill it across all charts. */
+.recharts-wrapper svg:focus,
+.recharts-wrapper svg :focus,
+.recharts-sector:focus,
+.recharts-surface:focus {
+  outline: none;
+}
