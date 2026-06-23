@@ -96,6 +96,10 @@ describe('CashflowSummary', () => {
     // Breakdown resolves the category name and the null bucket → Uncategorized.
     expect(screen.getByText('Food')).toBeDefined()
     expect(screen.getByText('Uncategorized')).toBeDefined()
+    // Each category shows its share of total spend: 30000/35000 → 86%,
+    // 5000/35000 → 14%.
+    expect(screen.getByText('86%')).toBeDefined()
+    expect(screen.getByText('14%')).toBeDefined()
     // Budget Target is shown as a soft reference (a progress bar, no verdict).
     expect(screen.getByRole('progressbar')).toBeDefined()
   })

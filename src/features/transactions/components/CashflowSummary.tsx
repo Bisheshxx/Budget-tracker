@@ -128,7 +128,10 @@ function BudgetTargetReference({
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+        <div
+          className="h-full rounded-full bg-primary"
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   )
@@ -136,7 +139,8 @@ function BudgetTargetReference({
 
 // Spend-by-category breakdown. Resolves each categoryId to a real Category
 // (null → the seeded Uncategorized row, mirroring RecentTransactions) and shows
-// a proportional bar against the largest category.
+// a single stacked bar — one colored segment per category, sized by its share of
+// total spend — over a legend listing each category's amount and % of total.
 function CategoryBreakdown({
   breakdown,
   currency,
@@ -157,31 +161,51 @@ function CategoryBreakdown({
     )
   }
 
-  const max = breakdown[0].amountCents // sorted most-spent first by the service
+  // Share of total spend is the meaningful number here (not size relative to the
+  // top category). breakdown is pre-sorted most-spent-first by the service.
+  const total = breakdown.reduce((sum, spend) => sum + spend.amountCents, 0)
+  const segments = breakdown.map((spend) => {
+    const category = categoryFor(spend.categoryId)
+    return {
+      key: spend.categoryId ?? 'uncategorized',
+      category,
+      amountCents: spend.amountCents,
+      // colorHex is runtime data, not a source literal — it clears the raw-color
+      // ESLint guard; a category with no color falls back to the teal accent.
+      color: category?.colorHex ?? 'var(--primary)',
+      pct: Math.round((spend.amountCents / total) * 100),
+    }
+  })
 
   return (
     <div>
       <h3 className="text-sm font-semibold">Spend by category</h3>
-      <ul className="mt-3 flex flex-col gap-3">
-        {breakdown.map((spend) => (
-          <li key={spend.categoryId ?? 'uncategorized'}>
-            <div className="flex items-center justify-between gap-4">
-              <CategoryChip
-                category={categoryFor(spend.categoryId)}
-                className="text-sm"
-              />
+      <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-muted">
+        {segments.map((segment) => (
+          <div
+            key={segment.key}
+            className="h-full"
+            style={{ width: `${segment.pct}%`, backgroundColor: segment.color }}
+          />
+        ))}
+      </div>
+      <ul className="mt-4 flex flex-col gap-2">
+        {segments.map((segment) => (
+          <li
+            key={segment.key}
+            className="flex items-center justify-between gap-4"
+          >
+            <CategoryChip category={segment.category} className="text-sm" />
+            <div className="flex items-center gap-3">
               <Money
-                cents={spend.amountCents}
+                cents={segment.amountCents}
                 currency={currency}
                 tone="expense"
                 className="text-sm font-medium"
               />
-            </div>
-            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary"
-                style={{ width: `${Math.round((spend.amountCents / max) * 100)}%` }}
-              />
+              <span className="w-9 text-right text-sm text-muted-foreground">
+                {segment.pct}%
+              </span>
             </div>
           </li>
         ))}

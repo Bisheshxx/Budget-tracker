@@ -22,7 +22,6 @@ export const Route = createFileRoute('/_authed/dashboard')({
 })
 
 function DashboardPage() {
-  const { session } = useAuth()
   const quickAdd = useDialog(DIALOG.quickAdd)
   const editTransaction = useDialog(DIALOG.editTransaction)
   const createCategory = useDialog(DIALOG.createCategory)
@@ -57,9 +56,6 @@ function DashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
       </div>
-      <p className="mt-4 text-muted-foreground">
-        You're signed in as {session?.user.email ?? 'your account'}.
-      </p>
 
       <div className="mt-8 flex flex-col gap-6">
         <CashflowSummary />
