@@ -22,8 +22,7 @@ export const Route = createFileRoute('/_authed/dashboard')({
 })
 
 function DashboardPage() {
-  const { session, signOut } = useAuth()
-  const navigate = useNavigate()
+  const { session } = useAuth()
   const quickAdd = useDialog(DIALOG.quickAdd)
   const editTransaction = useDialog(DIALOG.editTransaction)
   const createCategory = useDialog(DIALOG.createCategory)
@@ -34,8 +33,6 @@ function DashboardPage() {
   // The transaction being edited; null means the quick-add (create) flow. Also
   // decides which dialog the create-category swap returns to.
   const [editing, setEditing] = useState<Transaction | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [signingOut, setSigningOut] = useState(false)
 
   function openQuickAdd() {
     setDraft(null)
@@ -55,29 +52,11 @@ function DashboardPage() {
     else quickAdd.open()
   }
 
-  async function onSignOut() {
-    if (signingOut) return
-    setError(null)
-    setSigningOut(true)
-    try {
-      await signOut()
-      await navigate({ to: '/login', replace: true })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not sign out')
-    } finally {
-      setSigningOut(false)
-    }
-  }
-
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-10">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <Button variant="outline" onClick={onSignOut} disabled={signingOut}>
-          {signingOut ? 'Logging out…' : 'Log out'}
-        </Button>
       </div>
-      {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
       <p className="mt-4 text-muted-foreground">
         You're signed in as {session?.user.email ?? 'your account'}.
       </p>
