@@ -214,7 +214,11 @@ body {
 @layer base {
   a {
     color: var(--paper-accent);
-    text-decoration-color: color-mix(in oklab, var(--paper-accent) 40%, transparent);
+    text-decoration-color: color-mix(
+      in oklab,
+      var(--paper-accent) 40%,
+      transparent
+    );
     text-decoration-thickness: 1px;
     text-underline-offset: 2px;
   }
@@ -268,7 +272,11 @@ pre code {
 }
 
 .feature-card {
-  background: linear-gradient(165deg, color-mix(in oklab, var(--surface-strong) 93%, white 7%), var(--surface));
+  background: linear-gradient(
+    165deg,
+    color-mix(in oklab, var(--surface-strong) 93%, white 7%),
+    var(--surface)
+  );
   box-shadow:
     0 1px 0 var(--inset-glint) inset,
     0 18px 34px rgba(30, 90, 72, 0.1),
@@ -283,7 +291,10 @@ pre code {
 button,
 .island-shell,
 a {
-  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease,
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
     transform 180ms ease;
 }
 
