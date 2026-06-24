@@ -124,3 +124,18 @@ export function daysIntoPeriod(today: string, startDay: number): number {
 export function todayYmd(now: Date = new Date()): string {
   return formatYmd(now.getFullYear(), now.getMonth() + 1, now.getDate())
 }
+
+/**
+ * Shift a 'YYYY-MM-DD' date by `delta` whole days, via UTC epoch math so DST
+ * never shifts the result. Used for relative date labels (yesterday) and to
+ * convert an inclusive end date into the half-open exclusive bound.
+ */
+export function addDays(date: string, delta: number): string {
+  const { year, month, day } = parseYmd(date)
+  const shifted = new Date(Date.UTC(year, month - 1, day) + delta * 86_400_000)
+  return formatYmd(
+    shifted.getUTCFullYear(),
+    shifted.getUTCMonth() + 1,
+    shifted.getUTCDate(),
+  )
+}

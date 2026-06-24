@@ -1,5 +1,5 @@
 import {
-  queryOptions,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -11,40 +11,69 @@ import type { QuickAddInput } from './schema'
 import type {
   PeriodSummary,
   Transaction,
+  TransactionPageCursor,
 } from '#/features/transactions/types'
 
-const RECENT_LIMIT = 10
+// Infinite-scroll page size for the Dashboard transaction list (see PRD A).
+const PAGE_SIZE = 25
 
-const recentTransactionsQueryOptions = (userId: string) =>
-  queryOptions({
-    queryKey: ['transactions', 'recent', userId] as const,
-    queryFn: () => transactionService.listRecent(userId, RECENT_LIMIT),
-  })
-
-interface RecentTransactionsResult {
+interface InfiniteTransactionsResult {
   transactions: Transaction[]
   loading: boolean
   isError: boolean
   error: unknown
+  hasNextPage: boolean
+  isFetchingNextPage: boolean
+  fetchNextPage: () => void
 }
 
-// The recent-transactions list, scoped to the current user's profile id (which
-// is transactions.user_id — NOT the auth user id). Disabled until the profile
-// resolves.
-export function useRecentTransactions(): RecentTransactionsResult {
+// The Dashboard transaction list as an infinite, keyset-paginated query, scoped
+// to the user's profile id (transactions.user_id — NOT the auth user id). The
+// optional `bounds` is a half-open [from, to) date window; when omitted the list
+// defaults to the current Period (so it matches the "This Period" card). PRD B
+// passes an explicit Range here to re-scope both. Disabled until the profile
+// resolves; the date window is part of the cache key so each Range caches apart.
+export function useTransactionsInfinite(bounds?: {
+  from?: string
+  to?: string
+}): InfiniteTransactionsResult {
   const { profile, loading: profileLoading } = useProfile()
   const userId = profile?.id ?? null
+  const startDay = profile?.budgetPeriodStartDay ?? 1
 
-  const query = useQuery({
-    ...recentTransactionsQueryOptions(userId ?? ''),
+  const period = resolvePeriod(todayYmd(), startDay)
+  const from = bounds?.from ?? period.start
+  const to = bounds?.to ?? period.end
+  const id = userId ?? ''
+
+  const query = useInfiniteQuery({
+    queryKey: ['transactions', 'infinite', id, from, to],
+    queryFn: ({ pageParam }) =>
+      transactionService.listPage(id, {
+        from,
+        to,
+        limit: PAGE_SIZE,
+        cursor: pageParam ?? undefined,
+      }),
+    initialPageParam: null as TransactionPageCursor | null,
+    // A short page means there's nothing after it. Otherwise resume from the
+    // last row's (transactionDate, id) keyset cursor.
+    getNextPageParam: (lastPage): TransactionPageCursor | undefined => {
+      if (lastPage.length < PAGE_SIZE) return undefined
+      const last = lastPage[lastPage.length - 1]
+      return { transactionDate: last.transactionDate, id: last.id }
+    },
     enabled: !!userId,
   })
 
   return {
-    transactions: query.data ?? [],
+    transactions: query.data?.pages.flat() ?? [],
     loading: profileLoading || query.isLoading,
     isError: query.isError,
     error: query.error,
+    hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
+    fetchNextPage: query.fetchNextPage,
   }
 }
 
@@ -85,18 +114,18 @@ export function usePeriodSummary(): PeriodSummaryResult {
   }
 }
 
-// Refresh both the recent list and the Period summary so every mutation
-// (create/update/delete) reflects in the list and the Cashflow totals. The
-// period-summary key omits the period start so the prefix match invalidates
-// every cached Period. Returns the promise so mutateAsync resolves only after
-// the caches have refreshed (the dialog closes on resolve).
+// Refresh the infinite list and the Period summary so every mutation
+// (create/update/delete) reflects in the list and the Cashflow totals. Each key
+// omits its trailing dimensions (date window / period start) so the prefix match
+// invalidates every cached window. Returns the promise so mutateAsync resolves
+// only after the caches have refreshed (the dialog closes on resolve).
 function invalidateTransactionCaches(
   queryClient: ReturnType<typeof useQueryClient>,
   userId: string,
 ) {
   return Promise.all([
     queryClient.invalidateQueries({
-      queryKey: ['transactions', 'recent', userId],
+      queryKey: ['transactions', 'infinite', userId],
     }),
     queryClient.invalidateQueries({
       queryKey: ['transactions', 'period-summary', userId],

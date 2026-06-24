@@ -38,6 +38,25 @@ export interface PeriodSummary {
   byCategory: CategorySpend[]
 }
 
+// A keyset cursor: the last row of the previous page, identifying where the next
+// page resumes. Paging is by (transactionDate, id) descending, so the cursor
+// carries both — id breaks ties within a day. See ITransactionRepository.listPage.
+export interface TransactionPageCursor {
+  transactionDate: string
+  id: string
+}
+
+// Params for one keyset-paginated page of transactions. `from`/`to` are an
+// optional half-open date window [from, to) on transactionDate (same shape as
+// listInRange); omit both to page across all of the user's transactions. Omit
+// `cursor` for the first page; pass the previous page's last row to continue.
+export interface TransactionPageParams {
+  from?: string
+  to?: string
+  limit: number
+  cursor?: TransactionPageCursor
+}
+
 // The fields a create writes. Money is in cents; id/createdAt are DB-assigned.
 export interface TransactionCreate {
   userId: string

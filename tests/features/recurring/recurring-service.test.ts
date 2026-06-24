@@ -91,6 +91,7 @@ function makeFakeRepo(overrides: Partial<IRecurringExpenseRepository> = {}) {
 function makeFakeTxRepo(overrides: Partial<ITransactionRepository> = {}) {
   return {
     listRecent: vi.fn(async () => [] as Transaction[]),
+    listPage: vi.fn(async () => [] as Transaction[]),
     listInRange: vi.fn(async () => [] as Transaction[]),
     create: vi.fn(
       async (input: TransactionCreate): Promise<Transaction> => ({

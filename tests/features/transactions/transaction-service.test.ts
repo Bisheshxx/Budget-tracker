@@ -3,6 +3,7 @@ import { TransactionService } from '#/features/transactions/transaction-service.
 import type {
   Transaction,
   TransactionCreate,
+  TransactionPageParams,
   TransactionUpdate,
 } from '#/features/transactions/types.ts'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository.ts'
@@ -14,6 +15,10 @@ import type { QuickAddInput } from '#/features/transactions/schema.ts'
 function makeFakeRepo(overrides: Partial<ITransactionRepository> = {}) {
   return {
     listRecent: vi.fn(async (_userId: string, _limit: number) => []),
+    listPage: vi.fn(
+      async (_userId: string, _params: TransactionPageParams) =>
+        [] as Transaction[],
+    ),
     listInRange: vi.fn(
       async (_userId: string, _start: string, _end: string) =>
         [] as Transaction[],
@@ -313,6 +318,23 @@ describe('TransactionService', () => {
       await service.listRecent('profile-1', 3)
 
       expect(repo.listRecent).toHaveBeenCalledWith('profile-1', 3)
+    })
+  })
+
+  describe('listPage', () => {
+    it('passes the page params through to the repository unchanged', async () => {
+      const repo = makeFakeRepo()
+      const service = new TransactionService(repo)
+      const params = {
+        from: '2026-06-01',
+        to: '2026-07-01',
+        limit: 25,
+        cursor: { transactionDate: '2026-06-10', id: 'tx-9' },
+      }
+
+      await service.listPage('profile-1', params)
+
+      expect(repo.listPage).toHaveBeenCalledWith('profile-1', params)
     })
   })
 })

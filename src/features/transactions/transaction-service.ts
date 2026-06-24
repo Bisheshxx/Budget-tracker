@@ -2,7 +2,11 @@ import { quickAddSchema } from './schema'
 import { rollup } from './summary'
 import { toCents } from '#/lib/money'
 import type { QuickAddInput } from './schema'
-import type { PeriodSummary, Transaction } from '#/features/transactions/types'
+import type {
+  PeriodSummary,
+  Transaction,
+  TransactionPageParams,
+} from '#/features/transactions/types'
 import type { PeriodRange } from '#/shared/period'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 
@@ -15,6 +19,16 @@ export class TransactionService {
 
   listRecent(userId: string, limit = 10): Promise<Transaction[]> {
     return this.repo.listRecent(userId, limit)
+  }
+
+  // One keyset-paginated page for the Dashboard's infinite-scroll list. Pure
+  // passthrough — the date-window/cursor logic lives in the repository; the hook
+  // assembles pages and resolves the next cursor (see useTransactionsInfinite).
+  listPage(
+    userId: string,
+    params: TransactionPageParams,
+  ): Promise<Transaction[]> {
+    return this.repo.listPage(userId, params)
   }
 
   // Cashflow summary for a resolved Period range: total income, total expenses,
