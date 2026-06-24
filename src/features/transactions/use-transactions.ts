@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { transactionService } from '#/features/transactions'
+import { nextPageCursor } from '#/features/transactions/pagination'
 import { useProfile } from '#/features/profile/use-profile'
 import { daysIntoPeriod, resolvePeriod, todayYmd } from '#/shared/period'
 import type { QuickAddInput } from './schema'
@@ -56,13 +57,7 @@ export function useTransactionsInfinite(bounds?: {
         cursor: pageParam ?? undefined,
       }),
     initialPageParam: null as TransactionPageCursor | null,
-    // A short page means there's nothing after it. Otherwise resume from the
-    // last row's (transactionDate, id) keyset cursor.
-    getNextPageParam: (lastPage): TransactionPageCursor | undefined => {
-      if (lastPage.length < PAGE_SIZE) return undefined
-      const last = lastPage[lastPage.length - 1]
-      return { transactionDate: last.transactionDate, id: last.id }
-    },
+    getNextPageParam: (lastPage) => nextPageCursor(lastPage, PAGE_SIZE),
     enabled: !!userId,
   })
 
