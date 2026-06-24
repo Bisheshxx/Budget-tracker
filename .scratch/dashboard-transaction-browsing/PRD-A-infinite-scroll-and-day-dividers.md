@@ -1,6 +1,6 @@
 # PRD A: Paginated Transaction List with Day Dividers
 
-Status: ready-for-agent
+Status: done
 
 > Domain language: see [CONTEXT.md](../../CONTEXT.md). Architecture: see [ADR 0001](../../docs/adr/0001-client-side-swappable-repositories.md). Sibling: [PRD B — Range filter](./PRD-B-range-filter.md) layers on top of this.
 
