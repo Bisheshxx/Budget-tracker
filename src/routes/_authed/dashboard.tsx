@@ -51,25 +51,40 @@ function DashboardPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-10">
+    <main className="mx-auto w-full max-w-[98.5rem] px-4 py-6 lg:py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
       </div>
 
-      <div className="mt-8 flex flex-col gap-6">
-        <CashflowSummary />
-        <DueNow />
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Recent transactions</CardTitle>
-            <div className="flex gap-2">
+      {/* On lg+ the dashboard pins to the viewport: the grid fills the space
+          below the header and each column scrolls on its own, so the page
+          itself doesn't scroll. Below lg it falls back to a single stacked
+          column with normal page scroll. The offset roughly accounts for the
+          header + this section's vertical padding + the title row. */}
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:h-[calc(100dvh-260px)] lg:grid-cols-12">
+        <div className="flex flex-col gap-6 lg:col-span-5 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
+          <CashflowSummary />
+          <DueNow />
+          {/* Actions panel — quick-add + category management today; this is also
+              where the transaction filters will live (PRD B). */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              <Button onClick={openQuickAdd}>Add transaction</Button>
               <Button variant="outline" onClick={manageCategories.open}>
                 Categories
               </Button>
-              <Button onClick={openQuickAdd}>Add transaction</Button>
-            </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="flex min-h-0 flex-col lg:col-span-7">
+          <CardHeader>
+            <CardTitle>Recent transactions</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-h-0 flex-1 overflow-y-auto">
             <RecentTransactions onEdit={openEdit} />
           </CardContent>
         </Card>

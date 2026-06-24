@@ -18,31 +18,35 @@ function ReportsPage() {
   const currency = profile?.currency ?? 'USD'
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-10">
+    <main className="mx-auto w-full max-w-[98.5rem] px-4 py-6 lg:py-8">
       <h1 className="text-2xl font-semibold">Reports</h1>
       <p className="mt-2 text-muted-foreground">
         How your spending is trending this Period.
       </p>
 
-      <div className="mt-8 flex flex-col gap-6">
-        {loading || !report ? (
-          <p className="text-sm text-muted-foreground">
-            {isError ? 'Could not load your reports.' : 'Loading…'}
-          </p>
-        ) : (
-          <>
+      {loading || !report ? (
+        <p className="mt-6 text-sm text-muted-foreground">
+          {isError ? 'Could not load your reports.' : 'Loading…'}
+        </p>
+      ) : (
+        // Left column: the (potentially tall) Period comparison breakdown.
+        // Right column: the two charts stacked. Single column below lg.
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <div className="lg:col-span-5">
             <PeriodComparisonCard
               comparison={report.comparison}
               currency={currency}
             />
+          </div>
+          <div className="flex flex-col gap-6 lg:col-span-7">
             <WeeklyCashflowChart weeks={report.weeks} currency={currency} />
             <CategorySpendChart
               breakdown={report.currentByCategory}
               currency={currency}
             />
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
