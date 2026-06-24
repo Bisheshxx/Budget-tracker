@@ -24,6 +24,10 @@ _Avoid_: Pending, scheduled (nothing is auto-generated or scheduled)
 A soft reference amount the user sets to frame their mindset for a Period — NOT a pass/fail verdict. The headline signal is Cashflow, not target adherence. The Period is always monthly; the user configures its start day and this reference target.
 _Avoid_: Budget limit, spending cap (it does not enforce anything), weekly budget
 
+**Range**:
+A user-chosen arbitrary date span (any start date to any end date) used purely to *view* spending — an exploratory lens, not a budgeting cycle. Distinct from a Period: a Range is free-form and carries no Budget Target, anchor day, or pass/fail meaning. When a Range is active the Dashboard reports Cashflow over those dates instead of the current Period; with no Range active the Dashboard shows the current Period.
+_Avoid_: Period (a Range is not a Period), filter, date filter
+
 **Cashflow**:
 The primary signal: income in vs. expenses out over a Period (and its weekly slices), and the resulting net. This — together with simple "how much did I spend" awareness — is the app's headline, above Budget Target.
 _Avoid_: Balance (implies a running account balance, which we don't track)
