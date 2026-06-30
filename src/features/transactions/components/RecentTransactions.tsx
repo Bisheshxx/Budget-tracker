@@ -8,6 +8,8 @@ import {
   groupByDay,
   formatDayLabel,
 } from '#/features/transactions/group-by-day'
+import { rangeToBounds } from '#/features/transactions/range'
+import type { Range } from '#/features/transactions/range'
 import { useProfile } from '#/features/profile/use-profile'
 import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
@@ -20,15 +22,48 @@ import { todayYmd } from '#/shared/period'
 import type { Transaction } from '#/features/transactions/types'
 import type { Category } from '#/features/categories/types'
 
+// Map an inclusive Range to the infinite-list hook's half-open {from, to}
+// window (the single +1-day conversion lives in rangeToBounds), or undefined for
+// no Range — which the hook falls back to the current Period.
+function rangeToHookBounds(range: Range | null | undefined) {
+  if (!range) return undefined
+  const { start, end } = rangeToBounds(range)
+  return { from: start, to: end }
+}
+
+// Observe a bottom sentinel and load the next page when it scrolls into view.
+// Returns the ref to attach to the sentinel element. Kept out of the list
+// component so its render body stays declarative.
+function useInfiniteScrollSentinel(
+  onLoadMore: () => void,
+  hasNextPage: boolean,
+  isFetchingNextPage: boolean,
+) {
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el || !hasNextPage) return
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !isFetchingNextPage) onLoadMore()
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, onLoadMore])
+  return sentinelRef
+}
+
 // The Dashboard transaction list: keyset-paginated infinite scroll, segmented
 // into per-day groups with a divider per calendar day (date label + that day's
 // net). Each row shows the transaction's category, note, and amount; edit
 // (pencil) and delete (trash) buttons reveal on row hover/focus — edit opens the
 // edit dialog, delete goes through a confirm modal. Defaults to the current
-// Period (PRD B re-scopes it to a Range).
+// Period; when a `range` is active (PRD B) it re-scopes to that arbitrary span
+// so the list matches the "This Period" card above it.
 export function RecentTransactions({
+  range,
   onEdit,
 }: {
+  range?: Range | null
   onEdit?: (tx: Transaction) => void
 }) {
   const {
@@ -37,7 +72,7 @@ export function RecentTransactions({
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useTransactionsInfinite()
+  } = useTransactionsInfinite(rangeToHookBounds(range))
   const { categoryFor, loading: categoriesLoading } = useCategoryLookup()
   const { profile } = useProfile()
   const confirmDelete = useDialog(DIALOG.confirmDeleteTransaction)
@@ -45,16 +80,11 @@ export function RecentTransactions({
   // The transaction queued for the confirm modal.
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null)
   // Fetch the next page when the bottom sentinel scrolls into view.
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el || !hasNextPage) return
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !isFetchingNextPage) fetchNextPage()
-    })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+  const sentinelRef = useInfiniteScrollSentinel(
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  )
 
   if (loading || categoriesLoading) {
     return <p className="text-sm text-muted-foreground">Loading…</p>

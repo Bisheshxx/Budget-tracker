@@ -2,6 +2,9 @@ import { usePeriodSummary } from '#/features/transactions/use-transactions'
 import { useProfile } from '#/features/profile/use-profile'
 import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
+import { RangeFilter } from '#/features/transactions/components/RangeFilter'
+import { formatRangeLabel, rangeToBounds } from '#/features/transactions/range'
+import type { Range } from '#/features/transactions/range'
 import { Money } from '#/shared/components/Money'
 import { MoneyBadge } from '#/shared/components/MoneyBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
@@ -10,33 +13,54 @@ import type {
   PeriodSummary,
 } from '#/features/transactions/types'
 
-// The Dashboard's primary surface: the current Period's Cashflow at a glance —
-// income in, expenses out, net — plus timing context, a spend-by-category
-// breakdown, and the Budget Target as a soft reference (never pass/fail).
-export function CashflowSummary() {
-  const { summary, daysIntoPeriod, loading } = usePeriodSummary()
+// The Dashboard's primary surface: Cashflow at a glance — income in, expenses
+// out, net — plus a spend-by-category breakdown. By default it summarizes the
+// current Period (with timing context and the soft Budget Target reference);
+// when a `range` is active (PRD B) it re-scopes to that arbitrary span, retitles
+// to the Range, and hides the Budget Target — a monthly-Period concept that's
+// meaningless over a free-form span. The Range filter lives in the card.
+export function CashflowSummary({ range }: { range?: Range | null }) {
+  const activeRange = range ?? null
+  const { summary, daysIntoPeriod, loading } = usePeriodSummary(
+    activeRange ? rangeToBounds(activeRange) : undefined,
+  )
   const { profile } = useProfile()
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>This Period</CardTitle>
+        <CardTitle>
+          {activeRange ? formatRangeLabel(activeRange) : 'This Period'}
+        </CardTitle>
         {/* Held back until loaded: before the profile resolves the start day
-            defaults to 1, which would briefly show the wrong day count. */}
-        {!loading && summary && (
+            defaults to 1, which would briefly show the wrong day count. The day
+            count is a Period concept — omitted under a Range. */}
+        {!activeRange && !loading && summary && (
           <p className="text-sm text-muted-foreground">
             Day {daysIntoPeriod} of this Period
           </p>
         )}
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col gap-6">
+        <RangeFilter range={activeRange} />
         {loading || !summary ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (
           <PeriodSummaryView
             summary={summary}
             currency={profile?.currency ?? 'USD'}
-            targetCents={profile?.monthlyBudgetTargetCents ?? 0}
+            // The Budget Target is a Period concept; hide it under a Range by
+            // passing 0 (BudgetTargetReference renders nothing for a 0 target).
+            targetCents={
+              activeRange ? 0 : (profile?.monthlyBudgetTargetCents ?? 0)
+            }
+            // Empty-breakdown copy stays Period-accurate by default; a Range
+            // never calls itself a "Period" (see CONTEXT.md).
+            emptyBreakdownLabel={
+              activeRange
+                ? 'No expenses in this range.'
+                : 'No expenses yet this Period.'
+            }
           />
         )}
       </CardContent>
@@ -51,10 +75,12 @@ function PeriodSummaryView({
   summary,
   currency,
   targetCents,
+  emptyBreakdownLabel,
 }: {
   summary: PeriodSummary
   currency: string
   targetCents: number
+  emptyBreakdownLabel: string
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -89,7 +115,11 @@ function PeriodSummaryView({
         currency={currency}
       />
 
-      <CategoryBreakdown breakdown={summary.byCategory} currency={currency} />
+      <CategoryBreakdown
+        breakdown={summary.byCategory}
+        currency={currency}
+        emptyLabel={emptyBreakdownLabel}
+      />
     </div>
   )
 }
@@ -144,9 +174,11 @@ function BudgetTargetReference({
 function CategoryBreakdown({
   breakdown,
   currency,
+  emptyLabel,
 }: {
   breakdown: CategorySpend[]
   currency: string
+  emptyLabel: string
 }) {
   const { categoryFor } = useCategoryLookup()
 
@@ -154,9 +186,7 @@ function CategoryBreakdown({
     return (
       <div>
         <h3 className="text-sm font-semibold">Spend by category</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          No expenses yet this Period.
-        </p>
+        <p className="mt-2 text-sm text-muted-foreground">{emptyLabel}</p>
       </div>
     )
   }

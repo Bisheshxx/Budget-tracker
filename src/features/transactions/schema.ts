@@ -54,6 +54,37 @@ export type QuickAddInput = z.infer<typeof quickAddSchema>
 // Pre-coercion shape the form binds to (all inputs start as strings).
 export type QuickAddFormValues = z.input<typeof quickAddSchema>
 
+// The Range filter form (see PRD B): a free-form from/to span the user explores,
+// distinct from a Period. Both dates required; both inclusive in the UI. `from`
+// must be on/before `to`, and `to` can't be in the future. Lexicographic string
+// comparison is correct for zero-padded 'YYYY-MM-DD'. Single source of truth for
+// the RangeFilter form; the half-open conversion lives in range.ts.
+export const rangeSchema = z
+  .object({
+    from: z.iso.date('Enter a start date'),
+    to: z.iso.date('Enter an end date'),
+  })
+  .refine((v) => v.from <= v.to, {
+    message: 'Start must be on or before end',
+    path: ['from'],
+  })
+  .refine((v) => v.to <= today(), {
+    message: "End can't be in the future",
+    path: ['to'],
+  })
+
+// No coercion, so the form-bound shape matches the parsed shape.
+export type RangeFormValues = z.input<typeof rangeSchema>
+
+// Validator for the dashboard's `?from=&to=` search params (route validateSearch).
+// Both optional and independently lenient: a malformed value falls back to
+// undefined rather than throwing mid-navigation. A Range is active only when
+// both resolve (enforced where the params are read).
+export const rangeSearchSchema = z.object({
+  from: z.iso.date().optional().catch(undefined),
+  to: z.iso.date().optional().catch(undefined),
+})
+
 // Seed the form from an existing transaction for edit mode. Cents → display
 // units for the amount input; null category/note become '' for the controlled
 // inputs (Uncategorized / blank note).

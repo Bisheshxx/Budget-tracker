@@ -1,5 +1,20 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { quickAddSchema, today } from '#/features/transactions/schema.ts'
+import type { z } from 'zod'
+import {
+  quickAddSchema,
+  rangeSchema,
+  today,
+} from '#/features/transactions/schema.ts'
+
+// The message of the first validation issue on a given field, or undefined when
+// the parse succeeded or no issue targets that field.
+function issueMessage(
+  result: z.ZodSafeParseResult<unknown>,
+  field: string,
+): string | undefined {
+  if (result.success) return undefined
+  return result.error.issues.find((i) => i.path[0] === field)?.message
+}
 
 describe('quickAddSchema', () => {
   afterEach(() => {
@@ -29,10 +44,9 @@ describe('quickAddSchema', () => {
         transactionDate: '2026-06-12',
       })
       expect(result.success).toBe(false)
-      if (!result.success) {
-        const issue = result.error.issues.find((i) => i.path[0] === 'amount')
-        expect(issue?.message).toBe('Amount must be greater than 0')
-      }
+      expect(issueMessage(result, 'amount')).toBe(
+        'Amount must be greater than 0',
+      )
     }
   })
 
@@ -72,5 +86,57 @@ describe('quickAddSchema', () => {
     if (result.success) {
       expect(result.data.transactionDate).toBe(today())
     }
+  })
+})
+
+describe('rangeSchema', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('accepts a valid past span', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-25T12:00:00'))
+    const result = rangeSchema.safeParse({
+      from: '2026-01-03',
+      to: '2026-03-18',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts a single-day span (from === to)', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-25T12:00:00'))
+    const result = rangeSchema.safeParse({
+      from: '2026-02-10',
+      to: '2026-02-10',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects a start after the end', () => {
+    const result = rangeSchema.safeParse({
+      from: '2026-03-18',
+      to: '2026-01-03',
+    })
+    expect(result.success).toBe(false)
+    expect(issueMessage(result, 'from')).toBe('Start must be on or before end')
+  })
+
+  it('rejects an end in the future', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-25T12:00:00'))
+    const result = rangeSchema.safeParse({
+      from: '2026-06-01',
+      to: '2026-12-31',
+    })
+    expect(result.success).toBe(false)
+    expect(issueMessage(result, 'to')).toBe("End can't be in the future")
+  })
+
+  it('requires both dates', () => {
+    expect(rangeSchema.safeParse({ from: '2026-01-03' }).success).toBe(false)
+    expect(rangeSchema.safeParse({ to: '2026-03-18' }).success).toBe(false)
+    expect(rangeSchema.safeParse({}).success).toBe(false)
   })
 })

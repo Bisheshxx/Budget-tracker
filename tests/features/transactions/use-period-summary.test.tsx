@@ -16,9 +16,8 @@ vi.mock('#/features/transactions', () => ({
   transactionService: { getPeriodSummary },
 }))
 
-const { usePeriodSummary } = await import(
-  '#/features/transactions/use-transactions.ts'
-)
+const { usePeriodSummary } =
+  await import('#/features/transactions/use-transactions.ts')
 
 // Each test gets a fresh QueryClient (retries off) so failures surface fast.
 function wrapper({ children }: { children: ReactNode }) {
@@ -70,5 +69,19 @@ describe('usePeriodSummary', () => {
       }),
     )
     expect(result.current.daysIntoPeriod).toBeGreaterThanOrEqual(1)
+  })
+
+  it('queries with explicit Range bounds when given, instead of the Period', () => {
+    useProfile.mockReturnValue({
+      profile: { id: 'profile-1', budgetPeriodStartDay: 25 },
+      loading: false,
+    })
+    getPeriodSummary.mockResolvedValue(summary)
+
+    const bounds = { start: '2026-01-03', end: '2026-03-19' }
+    renderHook(() => usePeriodSummary(bounds), { wrapper })
+
+    // The Range bounds are threaded straight through — not the resolved Period.
+    expect(getPeriodSummary).toHaveBeenCalledWith('profile-1', bounds)
   })
 })

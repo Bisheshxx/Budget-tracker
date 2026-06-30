@@ -11,16 +11,26 @@ import { RecentTransactions } from '#/features/transactions/components/RecentTra
 import { DueNow } from '#/features/recurring/components/DueNow'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { CategoryManager } from '#/features/categories/components/CategoryManager'
+import { rangeSearchSchema } from '#/features/transactions/schema'
+import { formatRangeLabel } from '#/features/transactions/range'
+import type { Range } from '#/features/transactions/range'
 import type { QuickAddFormValues } from '#/features/transactions/schema'
 import type { Transaction } from '#/features/transactions/types'
 
-// Protected shell: the current-Period Cashflow summary (issue 05) plus
-// quick-add + recent list (issue 03).
+// Protected shell: the Cashflow summary (issue 05) plus quick-add + recent list
+// (issue 03). `?from=&to=` re-scopes the summary card and the list to a Range
+// (PRD B); absent/invalid params leave both on the current Period.
 export const Route = createFileRoute('/_authed/dashboard')({
+  validateSearch: (search) => rangeSearchSchema.parse(search),
   component: DashboardPage,
 })
 
 function DashboardPage() {
+  // A Range is active only when both ends resolved (validateSearch keeps each
+  // lenient). One Range drives both the card and the list below it.
+  const { from, to } = Route.useSearch()
+  const activeRange: Range | null = from && to ? { from, to } : null
+
   const quickAdd = useDialog(DIALOG.quickAdd)
   const editTransaction = useDialog(DIALOG.editTransaction)
   const createCategory = useDialog(DIALOG.createCategory)
@@ -63,10 +73,9 @@ function DashboardPage() {
           header + this section's vertical padding + the title row. */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:h-[calc(100dvh-260px)] lg:grid-cols-12">
         <div className="flex flex-col gap-6 lg:col-span-5 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
-          <CashflowSummary />
+          <CashflowSummary range={activeRange} />
           <DueNow />
-          {/* Actions panel — quick-add + category management today; this is also
-              where the transaction filters will live (PRD B). */}
+          {/* Actions panel — quick-add + category management. */}
           <Card>
             <CardHeader>
               <CardTitle>Actions</CardTitle>
@@ -82,10 +91,16 @@ function DashboardPage() {
 
         <Card className="flex min-h-0 flex-col lg:col-span-7">
           <CardHeader>
-            <CardTitle>Recent transactions</CardTitle>
+            {/* Heading mirrors the card above: the Range when active, else the
+                default recent-transactions title. */}
+            <CardTitle>
+              {activeRange
+                ? formatRangeLabel(activeRange)
+                : 'Recent transactions'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="min-h-0 flex-1 overflow-y-auto">
-            <RecentTransactions onEdit={openEdit} />
+            <RecentTransactions range={activeRange} onEdit={openEdit} />
           </CardContent>
         </Card>
       </div>

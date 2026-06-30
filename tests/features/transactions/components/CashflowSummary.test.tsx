@@ -11,13 +11,17 @@ const { usePeriodSummary } = vi.hoisted(() => ({ usePeriodSummary: vi.fn() }))
 const { useProfile } = vi.hoisted(() => ({ useProfile: vi.fn() }))
 const { useCategories } = vi.hoisted(() => ({ useCategories: vi.fn() }))
 
-vi.mock('#/features/transactions/use-transactions', () => ({ usePeriodSummary }))
+vi.mock('#/features/transactions/use-transactions', () => ({
+  usePeriodSummary,
+}))
 vi.mock('#/features/profile/use-profile', () => ({ useProfile }))
 vi.mock('#/features/categories/use-categories', () => ({ useCategories }))
+// The card embeds RangeFilter, which navigates on Apply/Clear; stub the router
+// so the component renders without a real router context.
+vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn() }))
 
-const { CashflowSummary } = await import(
-  '#/features/transactions/components/CashflowSummary.tsx'
-)
+const { CashflowSummary } =
+  await import('#/features/transactions/components/CashflowSummary.tsx')
 
 const food: Category = {
   id: 'food',
@@ -106,7 +110,12 @@ describe('CashflowSummary', () => {
 
   it('shows the empty-breakdown message when there are no expenses', () => {
     usePeriodSummary.mockReturnValue({
-      summary: { incomeCents: 0, expensesCents: 0, netCents: 0, byCategory: [] },
+      summary: {
+        incomeCents: 0,
+        expensesCents: 0,
+        netCents: 0,
+        byCategory: [],
+      },
       daysIntoPeriod: 5,
       loading: false,
       isError: false,
@@ -122,5 +131,32 @@ describe('CashflowSummary', () => {
 
     expect(screen.getByText('No expenses yet this Period.')).toBeDefined()
     expect(screen.queryByRole('progressbar')).toBeNull()
+  })
+
+  it('retitles to the Range and hides the Budget Target when a range is active', () => {
+    usePeriodSummary.mockReturnValue({
+      summary,
+      daysIntoPeriod: 20,
+      loading: false,
+      isError: false,
+      error: null,
+    })
+    // A Budget Target IS set on the profile — it must still be hidden under a
+    // Range (a monthly-Period concept that's meaningless over a free-form span).
+    useProfile.mockReturnValue({
+      profile: { currency: 'USD', monthlyBudgetTargetCents: 200000 },
+    })
+    useCategories.mockReturnValue({ categories: [food, uncategorized] })
+
+    render(<CashflowSummary range={{ from: '2026-01-03', to: '2026-03-18' }} />)
+
+    // Title is the Range, not "This Period"; the day count is gone.
+    expect(screen.queryByText('This Period')).toBeNull()
+    expect(screen.queryByText(/of this Period/)).toBeNull()
+    // Budget Target progress bar hidden despite a target being set.
+    expect(screen.queryByRole('progressbar')).toBeNull()
+    // Cashflow totals + breakdown still render.
+    expect(screen.getByText('Income in')).toBeDefined()
+    expect(screen.getByText('Food')).toBeDefined()
   })
 })

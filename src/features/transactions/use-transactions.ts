@@ -8,6 +8,7 @@ import { transactionService } from '#/features/transactions'
 import { nextPageCursor } from '#/features/transactions/pagination'
 import { useProfile } from '#/features/profile/use-profile'
 import { daysIntoPeriod, resolvePeriod, todayYmd } from '#/shared/period'
+import type { PeriodRange } from '#/shared/period'
 import type { QuickAddInput } from './schema'
 import type {
   PeriodSummary,
@@ -81,21 +82,22 @@ interface PeriodSummaryResult {
   error: unknown
 }
 
-// The current Period's Cashflow summary, scoped to the user's profile. The
-// Period range is resolved from the profile's start day against today (pure
-// helpers in #/shared/period); the resolved start doubles as the cache key so
-// crossing into a new Period refetches. Disabled until the profile resolves.
-export function usePeriodSummary(): PeriodSummaryResult {
+// The Cashflow summary scoped to the user's profile. Defaults to the current
+// Period (resolved from the profile's start day against today, via the pure
+// helpers in #/shared/period); pass `bounds` to scope it to an arbitrary Range
+// instead (PRD B). Both ends of the resolved range feed the cache key, so the
+// current Period and each Range cache apart. Disabled until the profile resolves.
+export function usePeriodSummary(bounds?: PeriodRange): PeriodSummaryResult {
   const { profile, loading: profileLoading } = useProfile()
   const userId = profile?.id ?? null
   const startDay = profile?.budgetPeriodStartDay ?? 1
 
   const today = todayYmd()
-  const range = resolvePeriod(today, startDay)
+  const range = bounds ?? resolvePeriod(today, startDay)
   const id = userId ?? ''
 
   const query = useQuery({
-    queryKey: ['transactions', 'period-summary', id, range.start],
+    queryKey: ['transactions', 'period-summary', id, range.start, range.end],
     queryFn: () => transactionService.getPeriodSummary(id, range),
     enabled: !!userId,
   })
