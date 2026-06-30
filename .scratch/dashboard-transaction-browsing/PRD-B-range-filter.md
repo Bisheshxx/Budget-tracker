@@ -1,6 +1,6 @@
 # PRD B: Range Filter (re-scopes the This Period card + list)
 
-Status: ready-for-agent
+Status: done
 
 > Domain language: see [CONTEXT.md](../../CONTEXT.md) — note the new **Range** term. Architecture: see [ADR 0001](../../docs/adr/0001-client-side-swappable-repositories.md). Depends on: [PRD A — paginated list with day dividers](./PRD-A-infinite-scroll-and-day-dividers.md).
 
