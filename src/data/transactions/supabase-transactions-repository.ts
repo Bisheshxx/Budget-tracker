@@ -29,18 +29,6 @@ function toTransaction(row: TransactionRow): Transaction {
 }
 
 export class SupabaseTransactionRepository implements ITransactionRepository {
-  async listRecent(userId: string, limit: number): Promise<Transaction[]> {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('transaction_date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(limit)
-    if (error) throw error
-    return data.map(toTransaction)
-  }
-
   async listPage(
     userId: string,
     { from, to, limit, cursor }: TransactionPageParams,

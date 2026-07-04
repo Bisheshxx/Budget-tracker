@@ -14,7 +14,6 @@ import type { QuickAddInput } from '#/features/transactions/schema.ts'
 // the service decided to persist.
 function makeFakeRepo(overrides: Partial<ITransactionRepository> = {}) {
   return {
-    listRecent: vi.fn(async (_userId: string, _limit: number) => []),
     listPage: vi.fn(
       async (_userId: string, _params: TransactionPageParams) =>
         [] as Transaction[],
@@ -298,26 +297,6 @@ describe('TransactionService', () => {
         netCents: 0,
         byCategory: [],
       })
-    })
-  })
-
-  describe('listRecent', () => {
-    it('delegates to the repository with the default limit', async () => {
-      const repo = makeFakeRepo()
-      const service = new TransactionService(repo)
-
-      await service.listRecent('profile-1')
-
-      expect(repo.listRecent).toHaveBeenCalledWith('profile-1', 10)
-    })
-
-    it('forwards an explicit limit', async () => {
-      const repo = makeFakeRepo()
-      const service = new TransactionService(repo)
-
-      await service.listRecent('profile-1', 3)
-
-      expect(repo.listRecent).toHaveBeenCalledWith('profile-1', 3)
     })
   })
 

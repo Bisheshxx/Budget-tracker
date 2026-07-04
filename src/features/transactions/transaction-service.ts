@@ -17,10 +17,6 @@ import type { ITransactionRepository } from '#/data/transactions/ITransactionRep
 export class TransactionService {
   constructor(private readonly repo: ITransactionRepository) {}
 
-  listRecent(userId: string, limit = 10): Promise<Transaction[]> {
-    return this.repo.listRecent(userId, limit)
-  }
-
   // One keyset-paginated page for the Dashboard's infinite-scroll list. Pure
   // passthrough — the date-window/cursor logic lives in the repository; the hook
   // assembles pages and resolves the next cursor (see useTransactionsInfinite).

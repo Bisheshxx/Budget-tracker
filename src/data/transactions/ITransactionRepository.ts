@@ -6,8 +6,6 @@ import type {
 } from '#/features/transactions/types'
 
 export interface ITransactionRepository {
-  /** Most-recent-first, capped at `limit`. */
-  listRecent: (userId: string, limit: number) => Promise<Transaction[]>
   /**
    * One keyset-paginated page, newest-first by (transactionDate, id). Returns at
    * most `params.limit` rows within the optional half-open [from, to) window; a
