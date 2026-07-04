@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  addDays,
   daysIntoPeriod,
   getPeriodKey,
   previousPeriod,
@@ -118,6 +119,28 @@ describe('period', () => {
   describe('todayYmd', () => {
     it('formats a Date as a zero-padded local YYYY-MM-DD', () => {
       expect(todayYmd(new Date(2026, 0, 5))).toBe('2026-01-05')
+    })
+  })
+
+  describe('addDays', () => {
+    it('shifts within a month, both directions', () => {
+      expect(addDays('2026-06-10', 1)).toBe('2026-06-11')
+      expect(addDays('2026-06-10', -3)).toBe('2026-06-07')
+      expect(addDays('2026-06-10', 0)).toBe('2026-06-10')
+    })
+
+    it('rolls across month and year boundaries', () => {
+      expect(addDays('2026-06-30', 1)).toBe('2026-07-01')
+      expect(addDays('2026-06-01', -1)).toBe('2026-05-31')
+      expect(addDays('2026-12-31', 1)).toBe('2027-01-01')
+      expect(addDays('2026-01-01', -1)).toBe('2025-12-31')
+    })
+
+    it('respects leap years around February 29', () => {
+      // 2028 is a leap year; 2026 is not.
+      expect(addDays('2028-02-28', 1)).toBe('2028-02-29')
+      expect(addDays('2028-03-01', -1)).toBe('2028-02-29')
+      expect(addDays('2026-02-28', 1)).toBe('2026-03-01')
     })
   })
 })

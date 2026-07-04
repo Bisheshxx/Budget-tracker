@@ -3,6 +3,7 @@ import type { z } from 'zod'
 import {
   quickAddSchema,
   rangeSchema,
+  rangeSearchSchema,
   today,
 } from '#/features/transactions/schema.ts'
 
@@ -138,5 +139,29 @@ describe('rangeSchema', () => {
     expect(rangeSchema.safeParse({ from: '2026-01-03' }).success).toBe(false)
     expect(rangeSchema.safeParse({ to: '2026-03-18' }).success).toBe(false)
     expect(rangeSchema.safeParse({}).success).toBe(false)
+  })
+})
+
+describe('rangeSearchSchema', () => {
+  it('passes valid params through and accepts absent ones', () => {
+    expect(rangeSearchSchema.parse({ from: '2026-01-03', to: '2026-03-18' }))
+      .toEqual({ from: '2026-01-03', to: '2026-03-18' })
+    expect(rangeSearchSchema.parse({})).toEqual({})
+  })
+
+  it('drops a malformed value to undefined instead of throwing', () => {
+    // Lenient by design: a hand-edited URL must not break navigation.
+    const result = rangeSearchSchema.parse({
+      from: 'not-a-date',
+      to: '2026-03-18',
+    })
+    expect(result.from).toBeUndefined()
+    expect(result.to).toBe('2026-03-18')
+  })
+
+  it('drops non-string junk to undefined too', () => {
+    const result = rangeSearchSchema.parse({ from: 42, to: ['2026-03-18'] })
+    expect(result.from).toBeUndefined()
+    expect(result.to).toBeUndefined()
   })
 })
