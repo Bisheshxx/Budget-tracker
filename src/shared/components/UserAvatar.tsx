@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { cn } from '#/lib/utils.ts'
 
 const sizeClasses = {
@@ -41,6 +42,9 @@ export function UserAvatar({
   size = 'md',
   className,
 }: UserAvatarProps) {
+  // Avatar URLs can expire (e.g. Google's); on load failure drop to initials.
+  const [imageFailed, setImageFailed] = useState(false)
+
   return (
     <span
       className={cn(
@@ -49,11 +53,12 @@ export function UserAvatar({
         className,
       )}
     >
-      {imageUrl ? (
+      {imageUrl && !imageFailed ? (
         <img
           src={imageUrl}
           alt={name ?? email ?? 'User avatar'}
           className="size-full object-cover"
+          onError={() => setImageFailed(true)}
         />
       ) : (
         initialsFrom(name, email)
