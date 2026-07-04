@@ -13,7 +13,6 @@ import { useAuth } from '#/features/auth/auth-context'
 import { useProfile } from '#/features/profile/use-profile'
 import { UserAvatar } from '#/shared/components/UserAvatar'
 import type { UserProfile } from '#/features/profile/types'
-import type { AuthSession } from '#/features/auth/types'
 
 const Menu: {
   link: string
