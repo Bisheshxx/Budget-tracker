@@ -2,7 +2,6 @@ import { usePeriodSummary } from '#/features/transactions/use-transactions'
 import { useProfile } from '#/features/profile/use-profile'
 import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
-import { RangeFilter } from '#/features/transactions/components/RangeFilter'
 import { formatRangeLabel, rangeToBounds } from '#/features/transactions/range'
 import type { Range } from '#/features/transactions/range'
 import { Money } from '#/shared/components/Money'
@@ -18,7 +17,8 @@ import type {
 // current Period (with timing context and the soft Budget Target reference);
 // when a `range` is active (PRD B) it re-scopes to that arbitrary span, retitles
 // to the Range, and hides the Budget Target — a monthly-Period concept that's
-// meaningless over a free-form span. The Range filter lives in the card.
+// meaningless over a free-form span. The Range filter that drives `range` lives
+// in the Actions card on the Dashboard.
 export function CashflowSummary({ range }: { range?: Range | null }) {
   const activeRange = range ?? null
   const { summary, daysIntoPeriod, loading } = usePeriodSummary(
@@ -42,7 +42,6 @@ export function CashflowSummary({ range }: { range?: Range | null }) {
         )}
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <RangeFilter range={activeRange} />
         {loading || !summary ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (

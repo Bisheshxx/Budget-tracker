@@ -2,7 +2,32 @@ import { describe, expect, it } from 'vitest'
 import {
   formatRangeLabel,
   rangeToBounds,
+  searchToRange,
 } from '#/features/transactions/range.ts'
+
+describe('searchToRange', () => {
+  it('is active when both ends resolve and are in order', () => {
+    expect(searchToRange('2026-01-03', '2026-03-18')).toEqual({
+      from: '2026-01-03',
+      to: '2026-03-18',
+    })
+    // A single-day span is valid.
+    expect(searchToRange('2026-02-10', '2026-02-10')).toEqual({
+      from: '2026-02-10',
+      to: '2026-02-10',
+    })
+  })
+
+  it('is null when either end is missing', () => {
+    expect(searchToRange('2026-01-03', undefined)).toBeNull()
+    expect(searchToRange(undefined, '2026-03-18')).toBeNull()
+    expect(searchToRange(undefined, undefined)).toBeNull()
+  })
+
+  it('is null for an inverted span (from > to)', () => {
+    expect(searchToRange('2026-06-30', '2026-01-01')).toBeNull()
+  })
+})
 
 describe('rangeToBounds', () => {
   it('maps an inclusive from/to to half-open [from, to+1)', () => {

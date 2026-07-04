@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from '@tanstack/react-router'
@@ -30,6 +31,12 @@ export function RangeFilter({ range }: { range: Range | null }) {
   })
   const { control, handleSubmit, formState, reset } = form
 
+  // The component stays mounted while the URL changes (back/forward, Clear,
+  // shared links), so re-seed the inputs whenever the active Range moves.
+  useEffect(() => {
+    reset({ from: range?.from ?? '', to: range?.to ?? '' })
+  }, [range, reset])
+
   function onApply(values: RangeFormValues) {
     navigate({ to: '/dashboard', search: values })
   }
@@ -44,48 +51,44 @@ export function RangeFilter({ range }: { range: Range | null }) {
       <form
         onSubmit={handleSubmit(onApply)}
         noValidate
-        className="flex flex-col gap-3"
+        className="flex items-end gap-2"
       >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <FormField
-            control={control}
-            name="from"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>From</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={control}
-            name="to"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>To</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="flex gap-2">
-          <Button type="submit" size="sm" disabled={formState.isSubmitting}>
-            Apply
-          </Button>
-          {range && (
-            <Button type="button" variant="ghost" size="sm" onClick={onClear}>
-              Clear
-            </Button>
+        <FormField
+          control={control}
+          name="from"
+          render={({ field }) => (
+            <FormItem className="flex-1">
+              <FormLabel>From</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
+
+        <FormField
+          control={control}
+          name="to"
+          render={({ field }) => (
+            <FormItem className="flex-1">
+              <FormLabel>To</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" size="sm" disabled={formState.isSubmitting}>
+          Apply
+        </Button>
+        {range && (
+          <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+            Clear
+          </Button>
+        )}
       </form>
     </Form>
   )

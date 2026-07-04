@@ -16,12 +16,10 @@ vi.mock('#/features/transactions/use-transactions', () => ({
 }))
 vi.mock('#/features/profile/use-profile', () => ({ useProfile }))
 vi.mock('#/features/categories/use-categories', () => ({ useCategories }))
-// The card embeds RangeFilter, which navigates on Apply/Clear; stub the router
-// so the component renders without a real router context.
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => vi.fn() }))
 
 const { CashflowSummary } =
   await import('#/features/transactions/components/CashflowSummary.tsx')
+const { formatRangeLabel } = await import('#/features/transactions/range.ts')
 
 const food: Category = {
   id: 'food',
@@ -148,9 +146,11 @@ describe('CashflowSummary', () => {
     })
     useCategories.mockReturnValue({ categories: [food, uncategorized] })
 
-    render(<CashflowSummary range={{ from: '2026-01-03', to: '2026-03-18' }} />)
+    const range = { from: '2026-01-03', to: '2026-03-18' }
+    render(<CashflowSummary range={range} />)
 
-    // Title is the Range, not "This Period"; the day count is gone.
+    // Title is the formatted Range, not "This Period"; the day count is gone.
+    expect(screen.getByText(formatRangeLabel(range))).toBeDefined()
     expect(screen.queryByText('This Period')).toBeNull()
     expect(screen.queryByText(/of this Period/)).toBeNull()
     // Budget Target progress bar hidden despite a target being set.

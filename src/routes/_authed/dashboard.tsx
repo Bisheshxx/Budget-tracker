@@ -7,13 +7,16 @@ import { useDialog } from '#/shared/hooks/use-dialog'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { QuickAddForm } from '#/features/transactions/components/QuickAddForm'
 import { CashflowSummary } from '#/features/transactions/components/CashflowSummary'
+import { RangeFilter } from '#/features/transactions/components/RangeFilter'
 import { RecentTransactions } from '#/features/transactions/components/RecentTransactions'
 import { DueNow } from '#/features/recurring/components/DueNow'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { CategoryManager } from '#/features/categories/components/CategoryManager'
 import { rangeSearchSchema } from '#/features/transactions/schema'
-import { formatRangeLabel } from '#/features/transactions/range'
-import type { Range } from '#/features/transactions/range'
+import {
+  formatRangeLabel,
+  searchToRange,
+} from '#/features/transactions/range'
 import type { QuickAddFormValues } from '#/features/transactions/schema'
 import type { Transaction } from '#/features/transactions/types'
 
@@ -26,10 +29,10 @@ export const Route = createFileRoute('/_authed/dashboard')({
 })
 
 function DashboardPage() {
-  // A Range is active only when both ends resolved (validateSearch keeps each
-  // lenient). One Range drives both the card and the list below it.
+  // One Range drives both the card and the list below it; searchToRange owns
+  // the "active only when both ends resolved and not inverted" rule.
   const { from, to } = Route.useSearch()
-  const activeRange: Range | null = from && to ? { from, to } : null
+  const activeRange = searchToRange(from, to)
 
   const quickAdd = useDialog(DIALOG.quickAdd)
   const editTransaction = useDialog(DIALOG.editTransaction)
@@ -80,11 +83,22 @@ function DashboardPage() {
             <CardHeader>
               <CardTitle>Actions</CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              <Button onClick={openQuickAdd}>Add transaction</Button>
-              <Button variant="outline" onClick={manageCategories.open}>
-                Categories
-              </Button>
+            <CardContent className="flex flex-col gap-3">
+              {/* Range filter (PRD B): re-scopes the Cashflow card + list to an
+                  arbitrary span via the URL. Lives here in Actions. */}
+              <RangeFilter range={activeRange} />
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={openQuickAdd}>
+                  Add transaction
+                </Button>
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={manageCategories.open}
+                >
+                  Categories
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

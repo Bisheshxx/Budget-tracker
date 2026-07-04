@@ -14,6 +14,17 @@ export interface Range {
 }
 
 /**
+ * Resolve the dashboard's `?from=&to=` search params into the active Range, or
+ * null for "no Range" (current Period). Active only when both ends resolved
+ * (validateSearch keeps each lenient) and the span isn't inverted — a
+ * hand-edited URL with from > to falls back to the Period rather than showing
+ * an empty inverted span.
+ */
+export function searchToRange(from?: string, to?: string): Range | null {
+  return from && to && from <= to ? { from, to } : null
+}
+
+/**
  * Convert an inclusive Range into the half-open [start, end) bounds the data
  * layer speaks (matching listInRange / PeriodRange): `end` is the day *after*
  * `to`. This is the single place the +1-day conversion happens, so the card
