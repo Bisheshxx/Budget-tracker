@@ -6,6 +6,8 @@
 
 import type { CategorySpend } from '#/features/transactions/types'
 
+export type ReportView = 'period' | 'calendar-month' | 'calendar-week'
+
 // A single metric compared across two Periods: the raw amounts plus the change
 // as both an absolute amount and a percentage. `deltaPercent` is null when the
 // previous Period was zero (no base to divide by) — rendered as "new" rather

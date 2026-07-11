@@ -2,44 +2,71 @@ import { usePeriodSummary } from '#/features/transactions/use-transactions'
 import { useProfile } from '#/features/profile/use-profile'
 import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
+import { RangeFilter } from '#/features/transactions/components/RangeFilter'
 import { formatRangeLabel, rangeToBounds } from '#/features/transactions/range'
 import type { Range } from '#/features/transactions/range'
 import { Money } from '#/shared/components/Money'
 import { MoneyBadge } from '#/shared/components/MoneyBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
+import { parseYmd, todayYmd } from '#/shared/period'
 import type {
   CategorySpend,
   PeriodSummary,
 } from '#/features/transactions/types'
 
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+] as const
+
+function currentMonthName(): string {
+  const { month } = parseYmd(todayYmd())
+  return MONTH_NAMES[month - 1]
+}
+
 // The Dashboard's primary surface: Cashflow at a glance — income in, expenses
-// out, net — plus a spend-by-category breakdown. By default it summarizes the
-// current Period (with timing context and the soft Budget Target reference);
-// when a `range` is active (PRD B) it re-scopes to that arbitrary span, retitles
-// to the Range, and hides the Budget Target — a monthly-Period concept that's
-// meaningless over a free-form span. The Range filter that drives `range` lives
-// in the Actions card on the Dashboard.
+// out, remaining from income — plus a spend-by-category breakdown. By default it summarizes the
+// current Period (with timing context); when a `range` is active (PRD B) it
+// re-scopes to that arbitrary span and retitles to the Range. The Range filter
+// that drives `range` lives in this card header so the date scope sits with the
+// summary it changes.
 export function CashflowSummary({ range }: { range?: Range | null }) {
   const activeRange = range ?? null
   const { summary, daysIntoPeriod, loading } = usePeriodSummary(
     activeRange ? rangeToBounds(activeRange) : undefined,
   )
   const { profile } = useProfile()
+  const monthName = currentMonthName()
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>
-          {activeRange ? formatRangeLabel(activeRange) : 'This Period'}
-        </CardTitle>
-        {/* Held back until loaded: before the profile resolves the start day
-            defaults to 1, which would briefly show the wrong day count. The day
-            count is a Period concept — omitted under a Range. */}
-        {!activeRange && !loading && summary && (
-          <p className="text-sm text-muted-foreground">
-            Day {daysIntoPeriod} of this Period
-          </p>
-        )}
+      <CardHeader className="gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle>
+              {activeRange ? formatRangeLabel(activeRange) : monthName}
+            </CardTitle>
+            {/* Held back until loaded: before the profile resolves the start day
+                defaults to 1, which would briefly show the wrong day count. The
+                day count is a Period concept — omitted under a Range. */}
+            {!activeRange && !loading && summary && (
+              <p className="mt-1 text-sm text-muted-foreground">
+                Day {daysIntoPeriod} of {monthName}
+              </p>
+            )}
+          </div>
+          <RangeFilter range={activeRange} />
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         {loading || !summary ? (
@@ -48,17 +75,12 @@ export function CashflowSummary({ range }: { range?: Range | null }) {
           <PeriodSummaryView
             summary={summary}
             currency={profile?.currency ?? 'USD'}
-            // The Budget Target is a Period concept; hide it under a Range by
-            // passing 0 (BudgetTargetReference renders nothing for a 0 target).
-            targetCents={
-              activeRange ? 0 : (profile?.monthlyBudgetTargetCents ?? 0)
-            }
             // Empty-breakdown copy stays Period-accurate by default; a Range
             // never calls itself a "Period" (see CONTEXT.md).
             emptyBreakdownLabel={
               activeRange
                 ? 'No expenses in this range.'
-                : 'No expenses yet this Period.'
+                : `No expenses yet in ${monthName}.`
             }
           />
         )}
@@ -67,18 +89,16 @@ export function CashflowSummary({ range }: { range?: Range | null }) {
   )
 }
 
-// The loaded body: Cashflow totals, the soft Budget Target, and the
-// spend-by-category breakdown. Split out from CashflowSummary so the loading
+// The loaded body: Cashflow totals and the spend-by-category breakdown. Split
+// out from CashflowSummary so the loading
 // shell stays trivial and this renders only with a resolved summary.
 function PeriodSummaryView({
   summary,
   currency,
-  targetCents,
   emptyBreakdownLabel,
 }: {
   summary: PeriodSummary
   currency: string
-  targetCents: number
   emptyBreakdownLabel: string
 }) {
   return (
@@ -97,7 +117,9 @@ function PeriodSummaryView({
           label="Expenses out"
         />
         <div className="rounded-xl border border-border px-4 py-3">
-          <p className="text-xs font-semibold text-muted-foreground">Net</p>
+          <p className="text-xs font-semibold text-muted-foreground">
+            Remaining from income
+          </p>
           <Money
             cents={summary.netCents}
             currency={currency}
@@ -108,60 +130,11 @@ function PeriodSummaryView({
         </div>
       </div>
 
-      <BudgetTargetReference
-        spentCents={summary.expensesCents}
-        targetCents={targetCents}
-        currency={currency}
-      />
-
       <CategoryBreakdown
         breakdown={summary.byCategory}
         currency={currency}
         emptyLabel={emptyBreakdownLabel}
       />
-    </div>
-  )
-}
-
-// Budget Target as a soft mindset anchor: the spend-against-target bar uses the
-// teal accent regardless of whether spend exceeds the target — no red, no
-// verdict. Hidden entirely when no target is set (target of 0).
-function BudgetTargetReference({
-  spentCents,
-  targetCents,
-  currency,
-}: {
-  spentCents: number
-  targetCents: number
-  currency: string
-}) {
-  if (targetCents <= 0) return null
-
-  // Cap the bar at 100% so overspend doesn't overflow the track; the amounts
-  // below tell the real story without flagging pass/fail.
-  const pct = Math.min(100, Math.round((spentCents / targetCents) * 100))
-
-  return (
-    <div>
-      <div className="flex items-baseline justify-between text-sm">
-        <span className="text-muted-foreground">Budget Target</span>
-        <span className="text-muted-foreground">
-          <Money cents={spentCents} currency={currency} /> of{' '}
-          <Money cents={targetCents} currency={currency} />
-        </span>
-      </div>
-      <div
-        className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted"
-        role="progressbar"
-        aria-valuenow={pct}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <div
-          className="h-full rounded-full bg-primary"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
     </div>
   )
 }

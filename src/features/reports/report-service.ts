@@ -1,6 +1,13 @@
-import { previousPeriod, resolvePeriod } from '#/shared/period'
+import {
+  previousPeriod,
+  previousRange,
+  previousCalendarMonth,
+  resolveCalendarMonth,
+  resolveCalendarWeek,
+  resolvePeriod,
+} from '#/shared/period'
 import type { IReportRepository } from '#/data/reports/IReportRepository'
-import type { PeriodReport } from './types'
+import type { PeriodReport, ReportView } from './types'
 
 // Thin service over the report repository. Its only job is to turn the user's
 // "today + Period start day" into the two Period ranges the comparison needs
@@ -19,5 +26,28 @@ export class ReportService {
     const current = resolvePeriod(today, startDay)
     const previous = previousPeriod(today, startDay)
     return this.repo.getPeriodReport(userId, current, previous)
+  }
+
+  getReport(
+    userId: string,
+    today: string,
+    view: ReportView,
+    startDay: number,
+    weekStartDay?: number,
+  ): Promise<PeriodReport> {
+    if (view === 'period') {
+      return this.getPeriodReport(userId, today, startDay)
+    }
+
+    if (view === 'calendar-month') {
+      return this.repo.getPeriodReport(
+        userId,
+        resolveCalendarMonth(today),
+        previousCalendarMonth(today),
+      )
+    }
+
+    const current = resolveCalendarWeek(today, weekStartDay)
+    return this.repo.getPeriodReport(userId, current, previousRange(current))
   }
 }

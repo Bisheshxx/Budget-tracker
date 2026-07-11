@@ -26,8 +26,8 @@ function Landing() {
             money goes.
           </h1>
           <p className="mb-9 max-w-md text-lg leading-relaxed text-muted-foreground">
-            Track income and spending each period, see your cashflow at a glance,
-            and stay in control — no spreadsheets required.
+            Track income and spending each period, see your cashflow at a
+            glance, and stay in control — no spreadsheets required.
           </p>
 
           {!loading && (
@@ -62,7 +62,9 @@ function Landing() {
           </div>
 
           <div className="mb-6">
-            <p className="text-sm text-muted-foreground">Net this Period</p>
+            <p className="text-sm text-muted-foreground">
+              Remaining this Period
+            </p>
             <Money
               cents={137000}
               currency="USD"
@@ -72,8 +74,18 @@ function Landing() {
           </div>
 
           <div className="mb-6 grid grid-cols-2 gap-3">
-            <MoneyBadge cents={420000} currency="USD" tone="income" label="Income" />
-            <MoneyBadge cents={-283000} currency="USD" tone="expense" label="Spent" />
+            <MoneyBadge
+              cents={420000}
+              currency="USD"
+              tone="income"
+              label="Income"
+            />
+            <MoneyBadge
+              cents={-283000}
+              currency="USD"
+              tone="expense"
+              label="Spent"
+            />
           </div>
 
           <p className="mb-3 text-sm font-semibold text-muted-foreground">

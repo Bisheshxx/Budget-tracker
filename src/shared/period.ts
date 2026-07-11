@@ -139,3 +139,51 @@ export function addDays(date: string, delta: number): string {
     shifted.getUTCDate(),
   )
 }
+
+export function resolveCalendarMonth(today: string): PeriodRange {
+  const { year, month } = parseYmd(today)
+  const [endYear, endMonth] = addMonths(year, month, 1)
+  return {
+    start: formatYmd(year, month, 1),
+    end: formatYmd(endYear, endMonth, 1),
+  }
+}
+
+export function previousCalendarMonth(today: string): PeriodRange {
+  const current = resolveCalendarMonth(today)
+  const { year, month } = parseYmd(current.start)
+  const [prevYear, prevMonth] = addMonths(year, month, -1)
+  return {
+    start: formatYmd(prevYear, prevMonth, 1),
+    end: current.start,
+  }
+}
+
+export function resolveCalendarWeek(
+  today: string,
+  weekStartDay = defaultLocaleWeekStartDay(),
+): PeriodRange {
+  const { year, month, day } = parseYmd(today)
+  const todayDow = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+  const startOffset = -((todayDow - weekStartDay + 7) % 7)
+  const start = addDays(today, startOffset)
+  return { start, end: addDays(start, 7) }
+}
+
+export function previousRange(range: PeriodRange): PeriodRange {
+  const days = dayDiff(range.start, range.end)
+  return {
+    start: addDays(range.start, -days),
+    end: range.start,
+  }
+}
+
+export function defaultLocaleWeekStartDay(locale?: string): number {
+  const resolvedLocale =
+    locale ?? Intl.DateTimeFormat().resolvedOptions().locale
+  const region = resolvedLocale.split('-')[1] ?? undefined
+  if (region && ['US', 'CA', 'JP', 'PH'].includes(region.toUpperCase())) {
+    return 0
+  }
+  return 1
+}

@@ -3,7 +3,7 @@ import { z } from 'zod'
 // Single source of truth for Onboarding input. Used by the onboarding form (via
 // @hookform/resolvers' zodResolver) AND by ProfileService as a backstop, so the
 // required/optional rules never drift between UI and service. See CONTEXT.md for
-// the domain language (Period, Budget Target).
+// the domain language (Period, hidden/deprecated Budget Target).
 
 export const CURRENCIES = [
   'USD',

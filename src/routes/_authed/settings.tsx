@@ -25,8 +25,8 @@ function SettingsPage() {
         <CardHeader>
           <CardTitle>Profile</CardTitle>
           <CardDescription>
-            Update your display name, currency, Period start day, grocery day,
-            and Budget Target.
+            Update your display name, currency, Period start day, and grocery
+            day.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -49,7 +49,7 @@ function makeFakeRepo(overrides: Partial<IRecurringExpenseRepository> = {}) {
         name: 'Rent',
         amountCents: 120000,
         frequency: 'monthly',
-        anchorDay: 1,
+        firstDueDate: '2026-06-01',
         active: false,
         createdAt: '2026-06-22T00:00:00.000Z',
         deactivatedAt: '2026-06-22T00:00:00.000Z',
@@ -120,7 +120,7 @@ function makeTemplate(
     name: 'Rent',
     amountCents: 120000,
     frequency: 'monthly',
-    anchorDay: 5,
+    firstDueDate: '2026-06-05',
     active: true,
     createdAt: '2026-06-01T00:00:00.000Z',
     deactivatedAt: null,
@@ -149,7 +149,7 @@ function validInput(overrides: Partial<RecurringInput> = {}): RecurringInput {
     categoryId: 'cat-1',
     amount: 1200,
     frequency: 'monthly',
-    anchorDay: 1,
+    firstDueDate: '2026-06-01',
     ...overrides,
   }
 }
@@ -168,7 +168,7 @@ describe('RecurringService', () => {
         name: 'Rent',
         amountCents: 120000,
         frequency: 'monthly',
-        anchorDay: 1,
+        firstDueDate: '2026-06-01',
       })
     })
 
@@ -192,43 +192,43 @@ describe('RecurringService', () => {
       expect(repo.create).not.toHaveBeenCalled()
     })
 
-    it('rejects a monthly anchor outside 1–28', async () => {
+    it('rejects a monthly First Due Date after the 28th', async () => {
       const repo = makeFakeRepo()
       const service = makeService(repo)
 
       await expect(
         service.create(
           'profile-1',
-          validInput({ frequency: 'monthly', anchorDay: 31 }),
+          validInput({ frequency: 'monthly', firstDueDate: '2026-06-29' }),
         ),
       ).rejects.toThrow()
       expect(repo.create).not.toHaveBeenCalled()
     })
 
-    it('rejects a weekly anchor outside 0–6', async () => {
-      const repo = makeFakeRepo()
-      const service = makeService(repo)
-
-      await expect(
-        service.create(
-          'profile-1',
-          validInput({ frequency: 'weekly', anchorDay: 9 }),
-        ),
-      ).rejects.toThrow()
-      expect(repo.create).not.toHaveBeenCalled()
-    })
-
-    it('accepts a valid weekly anchor (0–6)', async () => {
+    it('accepts weekly and fortnightly First Due Dates', async () => {
       const repo = makeFakeRepo()
       const service = makeService(repo)
 
       await service.create(
         'profile-1',
-        validInput({ frequency: 'weekly', anchorDay: 2 }),
+        validInput({ frequency: 'weekly', firstDueDate: '2026-06-02' }),
+      )
+      await service.create(
+        'profile-1',
+        validInput({ frequency: 'fortnightly', firstDueDate: '2026-06-03' }),
       )
 
       expect(repo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ frequency: 'weekly', anchorDay: 2 }),
+        expect.objectContaining({
+          frequency: 'weekly',
+          firstDueDate: '2026-06-02',
+        }),
+      )
+      expect(repo.create).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          frequency: 'fortnightly',
+          firstDueDate: '2026-06-03',
+        }),
       )
     })
   })
@@ -245,7 +245,7 @@ describe('RecurringService', () => {
         name: 'Rent',
         amountCents: 150000,
         frequency: 'monthly',
-        anchorDay: 1,
+        firstDueDate: '2026-06-01',
       })
     })
   })
@@ -292,7 +292,7 @@ describe('RecurringService', () => {
       // resolved yet, so it should surface once.
       const repo = makeFakeRepo({
         listActive: vi.fn(async () => [
-          makeTemplate({ frequency: 'monthly', anchorDay: 5 }),
+          makeTemplate({ frequency: 'monthly', firstDueDate: '2026-06-05' }),
         ]),
       })
       const service = makeService(repo)
@@ -300,19 +300,17 @@ describe('RecurringService', () => {
       const due = await service.listDue('profile-1', '2026-06-20', 1)
 
       expect(due.map((d) => d.occurrenceDate)).toEqual(['2026-06-05'])
-      // Queried the occurrences for the resolved period [start, end) — anchored
-      // on the Period start day (1), independent of the template's anchor (5).
       expect(repo.listOccurrencesInRange).toHaveBeenCalledWith(
         ['re-1'],
-        '2026-06-01',
-        '2026-07-01',
+        '2026-06-05',
+        '2026-06-21',
       )
     })
 
     it('excludes an occurrence already resolved', async () => {
       const repo = makeFakeRepo({
         listActive: vi.fn(async () => [
-          makeTemplate({ frequency: 'monthly', anchorDay: 5 }),
+          makeTemplate({ frequency: 'monthly', firstDueDate: '2026-06-05' }),
         ]),
         listOccurrencesInRange: vi.fn(async () => [
           {
@@ -332,8 +330,53 @@ describe('RecurringService', () => {
       expect(due).toEqual([])
     })
 
+    it('confirmAll creates one default expense transaction per occurrence', async () => {
+      const repo = makeFakeRepo()
+      const txRepo = makeFakeTxRepo()
+      const service = makeService(repo, txRepo)
+      const template = makeTemplate({ id: 're-9', categoryId: 'cat-9' })
+
+      await service.confirmAll('profile-1', [
+        makeDue({ recurringExpense: template, occurrenceDate: '2026-06-05' }),
+        makeDue({ recurringExpense: template, occurrenceDate: '2026-07-05' }),
+      ])
+
+      expect(txRepo.create).toHaveBeenCalledTimes(2)
+      expect(txRepo.create).toHaveBeenNthCalledWith(1, {
+        userId: 'profile-1',
+        categoryId: 'cat-9',
+        type: 'expense',
+        amountCents: 120000,
+        note: null,
+        transactionDate: '2026-06-05',
+        recurringExpenseId: 're-9',
+      })
+      expect(repo.recordConfirmed).toHaveBeenNthCalledWith(
+        2,
+        're-9',
+        '2026-07-05',
+        'tx-1',
+      )
+    })
+
     it('returns nothing and skips the occurrence query when no active templates', async () => {
       const repo = makeFakeRepo({ listActive: vi.fn(async () => []) })
+      const service = makeService(repo)
+
+      const due = await service.listDue('profile-1', '2026-06-20', 1)
+
+      expect(due).toEqual([])
+      expect(repo.listOccurrencesInRange).not.toHaveBeenCalled()
+    })
+
+    it('does not query occurrences with an invalid First Due Date', async () => {
+      const repo = makeFakeRepo({
+        listActive: vi.fn(async () => [
+          makeTemplate({
+            firstDueDate: undefined as unknown as string,
+          }),
+        ]),
+      })
       const service = makeService(repo)
 
       const due = await service.listDue('profile-1', '2026-06-20', 1)

@@ -2,8 +2,13 @@ import { describe, expect, it } from 'vitest'
 import {
   addDays,
   daysIntoPeriod,
+  defaultLocaleWeekStartDay,
   getPeriodKey,
+  previousCalendarMonth,
   previousPeriod,
+  previousRange,
+  resolveCalendarMonth,
+  resolveCalendarWeek,
   resolvePeriod,
   todayYmd,
 } from '#/shared/period.ts'
@@ -141,6 +146,44 @@ describe('period', () => {
       expect(addDays('2028-02-28', 1)).toBe('2028-02-29')
       expect(addDays('2028-03-01', -1)).toBe('2028-02-29')
       expect(addDays('2026-02-28', 1)).toBe('2026-03-01')
+    })
+  })
+
+  describe('calendar report windows', () => {
+    it('resolves a calendar month from the first day to the next first day', () => {
+      expect(resolveCalendarMonth('2026-07-11')).toEqual({
+        start: '2026-07-01',
+        end: '2026-08-01',
+      })
+      expect(previousCalendarMonth('2026-07-11')).toEqual({
+        start: '2026-06-01',
+        end: '2026-07-01',
+      })
+    })
+
+    it('resolves a calendar week from the configured week start day', () => {
+      expect(resolveCalendarWeek('2026-07-11', 1)).toEqual({
+        start: '2026-07-06',
+        end: '2026-07-13',
+      })
+      expect(resolveCalendarWeek('2026-07-11', 0)).toEqual({
+        start: '2026-07-05',
+        end: '2026-07-12',
+      })
+    })
+
+    it('defaults week start from locale region', () => {
+      expect(defaultLocaleWeekStartDay('en-US')).toBe(0)
+      expect(defaultLocaleWeekStartDay('en-NZ')).toBe(1)
+    })
+
+    it('resolves the previous matching range by length', () => {
+      expect(previousRange({ start: '2026-07-05', end: '2026-07-12' })).toEqual(
+        {
+          start: '2026-06-28',
+          end: '2026-07-05',
+        },
+      )
     })
   })
 })

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  useConfirmAllDue,
   useConfirmDue,
   useDueRecurring,
   useSkipDue,
@@ -47,12 +48,14 @@ export function DueNow() {
   const { profile } = useProfile()
   const skip = useSkipDue()
   const confirmDue = useConfirmDue()
+  const confirmAllDue = useConfirmAllDue()
   const [confirming, setConfirming] = useState<DueOccurrence | null>(null)
 
   // Quietly absent until there's something to prompt for — no empty card.
   if (loading || due.length === 0) return null
 
   const currency = profile?.currency ?? 'USD'
+  const groups = groupDue(due)
 
   return (
     <Card>
@@ -64,37 +67,61 @@ export function DueNow() {
       </CardHeader>
       <CardContent>
         <ul className="flex flex-col divide-y">
-          {due.map((item) => (
-            <li
-              key={`${item.recurringExpense.id}|${item.occurrenceDate}`}
-              className="flex items-center justify-between gap-3 py-3"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">
-                  {item.recurringExpense.name}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  Due {item.occurrenceDate}
-                </p>
+          {groups.map((group) => (
+            <li key={group.recurringExpense.id} className="py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {group.recurringExpense.name}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {group.items.length === 1
+                      ? `Due ${group.items[0].occurrenceDate}`
+                      : `${group.items.length} due from ${group.items[0].occurrenceDate} to ${group.items[group.items.length - 1].occurrenceDate}`}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Money
+                    cents={
+                      group.recurringExpense.amountCents * group.items.length
+                    }
+                    currency={currency}
+                    tone="expense"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => confirmAllDue.mutate(group.items)}
+                    disabled={confirmAllDue.isPending}
+                  >
+                    Accept all
+                  </Button>
+                </div>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Money
-                  cents={item.recurringExpense.amountCents}
-                  currency={currency}
-                  tone="expense"
-                />
-                <Button size="sm" onClick={() => setConfirming(item)}>
-                  Confirm
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => skip.mutate(item)}
-                  disabled={skip.isPending}
-                >
-                  Skip
-                </Button>
-              </div>
+              <ul className="mt-3 flex flex-col gap-2">
+                {group.items.map((item) => (
+                  <li
+                    key={`${item.recurringExpense.id}|${item.occurrenceDate}`}
+                    className="flex items-center justify-between gap-3 rounded-md bg-muted px-3 py-2"
+                  >
+                    <span className="text-xs text-muted-foreground">
+                      {item.occurrenceDate}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={() => setConfirming(item)}>
+                        Review
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => skip.mutate(item)}
+                        disabled={skip.isPending}
+                      >
+                        Skip
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </li>
           ))}
         </ul>
@@ -127,4 +154,27 @@ export function DueNow() {
       </Dialog>
     </Card>
   )
+}
+
+function groupDue(due: DueOccurrence[]) {
+  const byTemplate = new Map<
+    string,
+    {
+      recurringExpense: DueOccurrence['recurringExpense']
+      items: DueOccurrence[]
+    }
+  >()
+
+  for (const item of due) {
+    const group = byTemplate.get(item.recurringExpense.id)
+    if (group) group.items.push(item)
+    else {
+      byTemplate.set(item.recurringExpense.id, {
+        recurringExpense: item.recurringExpense,
+        items: [item],
+      })
+    }
+  }
+
+  return Array.from(byTemplate.values())
 }

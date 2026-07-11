@@ -48,7 +48,7 @@ export class ProfileService {
   // (onboardingSchema) but must NOT re-stamp the onboarded marker — it reads the
   // current row and writes back its existing onboarding_completed_at unchanged.
   // Every consumer reads these fields via useProfile, so refreshing that query
-  // after this write propagates currency / Period / Budget Target app-wide.
+  // after this write propagates currency / Period settings app-wide.
   async updateProfile(
     authUserId: string,
     input: OnboardingInput,

@@ -9,11 +9,11 @@ import type { PeriodReport } from '#/features/reports/types.ts'
 // Mock the profile hook and the service singleton so the hook is exercised
 // without Supabase. vi.hoisted keeps the spies reachable in the factories.
 const { useProfile } = vi.hoisted(() => ({ useProfile: vi.fn() }))
-const { getPeriodReport } = vi.hoisted(() => ({ getPeriodReport: vi.fn() }))
+const { getReport } = vi.hoisted(() => ({ getReport: vi.fn() }))
 
 vi.mock('#/features/profile/use-profile', () => ({ useProfile }))
 vi.mock('#/features/reports', () => ({
-  reportService: { getPeriodReport },
+  reportService: { getReport },
 }))
 
 const { useReports } = await import('#/features/reports/use-reports.ts')
@@ -27,9 +27,24 @@ function wrapper({ children }: { children: ReactNode }) {
 
 const report: PeriodReport = {
   comparison: {
-    income: { currentCents: 0, previousCents: 0, deltaCents: 0, deltaPercent: null },
-    expenses: { currentCents: 0, previousCents: 0, deltaCents: 0, deltaPercent: null },
-    net: { currentCents: 0, previousCents: 0, deltaCents: 0, deltaPercent: null },
+    income: {
+      currentCents: 0,
+      previousCents: 0,
+      deltaCents: 0,
+      deltaPercent: null,
+    },
+    expenses: {
+      currentCents: 0,
+      previousCents: 0,
+      deltaCents: 0,
+      deltaPercent: null,
+    },
+    net: {
+      currentCents: 0,
+      previousCents: 0,
+      deltaCents: 0,
+      deltaPercent: null,
+    },
     byCategory: [],
   },
   weeks: [],
@@ -48,7 +63,7 @@ describe('useReports', () => {
 
     expect(result.current.loading).toBe(true)
     expect(result.current.report).toBeNull()
-    expect(getPeriodReport).not.toHaveBeenCalled()
+    expect(getReport).not.toHaveBeenCalled()
   })
 
   it('queries the report for the profile id, today, and start day', async () => {
@@ -56,16 +71,18 @@ describe('useReports', () => {
       profile: { id: 'profile-1', budgetPeriodStartDay: 25 },
       loading: false,
     })
-    getPeriodReport.mockResolvedValue(report)
+    getReport.mockResolvedValue(report)
 
     const { result } = renderHook(() => useReports(), { wrapper })
 
     await waitFor(() => expect(result.current.report).toEqual(report))
 
-    expect(getPeriodReport).toHaveBeenCalledWith(
+    expect(getReport).toHaveBeenCalledWith(
       'profile-1',
       expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      'period',
       25,
+      expect.any(Number),
     )
   })
 
@@ -74,7 +91,7 @@ describe('useReports', () => {
       profile: { id: 'profile-1', budgetPeriodStartDay: 1 },
       loading: false,
     })
-    getPeriodReport.mockRejectedValue(new Error('boom'))
+    getReport.mockRejectedValue(new Error('boom'))
 
     const { result } = renderHook(() => useReports(), { wrapper })
 

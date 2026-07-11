@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import type { PeriodSummary } from '#/features/transactions/types.ts'
 import type { Category } from '#/features/categories/types.ts'
@@ -29,6 +29,7 @@ const food: Category = {
   icon: null,
   isSystem: false,
   isDefault: false,
+  createdAt: '2026-01-01T00:00:00.000Z',
 }
 const uncategorized: Category = {
   id: 'uncat',
@@ -38,6 +39,7 @@ const uncategorized: Category = {
   icon: null,
   isSystem: true,
   isDefault: true,
+  createdAt: '2026-01-01T00:00:00.000Z',
 }
 
 const summary: PeriodSummary = {
@@ -50,8 +52,14 @@ const summary: PeriodSummary = {
   ],
 }
 
+beforeEach(() => {
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date('2026-07-11T12:00:00.000Z'))
+})
+
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.clearAllMocks()
 })
 
@@ -70,10 +78,10 @@ describe('CashflowSummary', () => {
     render(<CashflowSummary />)
 
     expect(screen.getByText('Loading…')).toBeDefined()
-    expect(screen.queryByText(/of this Period/)).toBeNull()
+    expect(screen.queryByText(/of July/)).toBeNull()
   })
 
-  it('renders income, expenses, net, the day count, and the category breakdown', () => {
+  it('renders income, expenses, remaining from income, the day count, and the category breakdown', () => {
     usePeriodSummary.mockReturnValue({
       summary,
       daysIntoPeriod: 20,
@@ -88,10 +96,10 @@ describe('CashflowSummary', () => {
 
     render(<CashflowSummary />)
 
-    expect(screen.getByText('Day 20 of this Period')).toBeDefined()
+    expect(screen.getByText('Day 20 of July')).toBeDefined()
     expect(screen.getByText('Income in')).toBeDefined()
     expect(screen.getByText('Expenses out')).toBeDefined()
-    expect(screen.getByText('Net')).toBeDefined()
+    expect(screen.getByText('Remaining from income')).toBeDefined()
     // Totals render through formatMoney.
     expect(screen.getByText('+$1,000.00')).toBeDefined()
     expect(screen.getByText('+$650.00')).toBeDefined()
@@ -102,8 +110,8 @@ describe('CashflowSummary', () => {
     // 5000/35000 → 14%.
     expect(screen.getByText('86%')).toBeDefined()
     expect(screen.getByText('14%')).toBeDefined()
-    // Budget Target is shown as a soft reference (a progress bar, no verdict).
-    expect(screen.getByRole('progressbar')).toBeDefined()
+    expect(screen.queryByText('Budget Target')).toBeNull()
+    expect(screen.queryByRole('progressbar')).toBeNull()
   })
 
   it('shows the empty-breakdown message when there are no expenses', () => {
@@ -119,7 +127,6 @@ describe('CashflowSummary', () => {
       isError: false,
       error: null,
     })
-    // No Budget Target set → the soft reference is hidden entirely.
     useProfile.mockReturnValue({
       profile: { currency: 'USD', monthlyBudgetTargetCents: 0 },
     })
@@ -127,7 +134,7 @@ describe('CashflowSummary', () => {
 
     render(<CashflowSummary />)
 
-    expect(screen.getByText('No expenses yet this Period.')).toBeDefined()
+    expect(screen.getByText('No expenses yet in July.')).toBeDefined()
     expect(screen.queryByRole('progressbar')).toBeNull()
   })
 
@@ -139,8 +146,6 @@ describe('CashflowSummary', () => {
       isError: false,
       error: null,
     })
-    // A Budget Target IS set on the profile — it must still be hidden under a
-    // Range (a monthly-Period concept that's meaningless over a free-form span).
     useProfile.mockReturnValue({
       profile: { currency: 'USD', monthlyBudgetTargetCents: 200000 },
     })
@@ -149,11 +154,11 @@ describe('CashflowSummary', () => {
     const range = { from: '2026-01-03', to: '2026-03-18' }
     render(<CashflowSummary range={range} />)
 
-    // Title is the formatted Range, not "This Period"; the day count is gone.
-    expect(screen.getByText(formatRangeLabel(range))).toBeDefined()
-    expect(screen.queryByText('This Period')).toBeNull()
-    expect(screen.queryByText(/of this Period/)).toBeNull()
-    // Budget Target progress bar hidden despite a target being set.
+    // Title and filter button both show the formatted Range; the Period day
+    // count is gone.
+    expect(screen.getAllByText(formatRangeLabel(range))).toHaveLength(2)
+    expect(screen.queryByText('July')).toBeNull()
+    expect(screen.queryByText(/of July/)).toBeNull()
     expect(screen.queryByRole('progressbar')).toBeNull()
     // Cashflow totals + breakdown still render.
     expect(screen.getByText('Income in')).toBeDefined()

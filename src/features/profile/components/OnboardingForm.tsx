@@ -12,7 +12,6 @@ import type {
   OnboardingFormValues,
   OnboardingInput,
 } from '#/features/profile/schema'
-import { MoneyAmountField } from '#/shared/components/MoneyAmountField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Select } from '#/components/ui/select'
@@ -160,34 +159,26 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
           )}
         />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            control={control}
-            name="groceryDayOfWeek"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Grocery day</FormLabel>
-                <FormControl>
-                  <Select {...field} value={field.value as string}>
-                    <option value="">—</option>
-                    {DAYS_OF_WEEK.map((day, idx) => (
-                      <option key={day} value={idx}>
-                        {day}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <MoneyAmountField
-            control={control}
-            name="monthlyBudgetTarget"
-            label="Budget Target"
-          />
-        </div>
+        <FormField
+          control={control}
+          name="groceryDayOfWeek"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Grocery day</FormLabel>
+              <FormControl>
+                <Select {...field} value={field.value as string}>
+                  <option value="">—</option>
+                  {DAYS_OF_WEEK.map((day, idx) => (
+                    <option key={day} value={idx}>
+                      {day}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {formState.errors.root && (
           <p className="text-sm text-destructive">

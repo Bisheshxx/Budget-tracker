@@ -147,6 +147,7 @@ function useInvalidateAfterResolve() {
       queryClient.invalidateQueries({
         queryKey: ['transactions', 'period-summary', userId],
       }),
+      queryClient.invalidateQueries({ queryKey: ['reports', userId] }),
     ])
   }
 }
@@ -166,6 +167,20 @@ export function useConfirmDue() {
     }) => {
       if (!userId) throw new Error('No profile loaded')
       return recurringService.confirm(userId, due, input)
+    },
+    onSuccess: invalidate,
+  })
+}
+
+export function useConfirmAllDue() {
+  const { profile } = useProfile()
+  const userId = profile?.id ?? null
+  const invalidate = useInvalidateAfterResolve()
+
+  return useMutation({
+    mutationFn: (dueItems: DueOccurrence[]) => {
+      if (!userId) throw new Error('No profile loaded')
+      return recurringService.confirmAll(userId, dueItems)
     },
     onSuccess: invalidate,
   })

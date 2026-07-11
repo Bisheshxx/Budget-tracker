@@ -126,10 +126,10 @@ export type Database = {
         Row: {
           active: boolean
           amount_cents: number
-          anchor_day: number
           category_id: string
           created_at: string
           deactivated_at: string | null
+          first_due_date: string
           frequency: string
           id: string
           name: string
@@ -138,10 +138,10 @@ export type Database = {
         Insert: {
           active?: boolean
           amount_cents: number
-          anchor_day: number
           category_id: string
           created_at?: string
           deactivated_at?: string | null
+          first_due_date: string
           frequency: string
           id?: string
           name: string
@@ -150,10 +150,10 @@ export type Database = {
         Update: {
           active?: boolean
           amount_cents?: number
-          anchor_day?: number
           category_id?: string
           created_at?: string
           deactivated_at?: string | null
+          first_due_date?: string
           frequency?: string
           id?: string
           name?: string

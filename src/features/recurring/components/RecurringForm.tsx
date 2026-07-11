@@ -6,7 +6,6 @@ import {
 } from '#/features/recurring/use-recurring'
 import {
   RECURRING_FREQUENCIES,
-  WEEKDAY_LABELS,
   recurringSchema,
   recurringToFormValues,
 } from '#/features/recurring/schema'
@@ -34,12 +33,8 @@ const BLANK: RecurringFormValues = {
   categoryId: '',
   amount: '',
   frequency: 'monthly',
-  anchorDay: '1',
+  firstDueDate: '',
 }
-
-// Day-of-month options for monthly anchors (1–28, matching the DB CHECK and the
-// budget_period_start_day clamp).
-const MONTH_DAYS = Array.from({ length: 28 }, (_, i) => i + 1)
 
 // Create a Recurring Expense template, or edit one when `recurringExpense` is
 // passed. Lives inside the Recurring dialog; on success it persists via the
@@ -71,8 +66,7 @@ export function RecurringForm({
       ? recurringToFormValues(recurringExpense)
       : BLANK,
   })
-  const { control, handleSubmit, formState, setError, watch, setValue } = form
-  const frequency = watch('frequency')
+  const { control, handleSubmit, formState, setError } = form
 
   async function onSubmit(values: RecurringInput) {
     try {
@@ -155,16 +149,7 @@ export function RecurringForm({
               <FormItem>
                 <FormLabel>Frequency</FormLabel>
                 <FormControl>
-                  <Select
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e)
-                      // Reset the anchor to a valid default for the new frequency
-                      // so a stale day-of-month (e.g. 28) can't fail weekly's 0–6.
-                      // '1' is valid for both (Monday / the 1st).
-                      setValue('anchorDay', '1')
-                    }}
-                  >
+                  <Select {...field}>
                     {RECURRING_FREQUENCIES.map((f) => (
                       <option key={f} value={f}>
                         {f[0].toUpperCase() + f.slice(1)}
@@ -179,26 +164,12 @@ export function RecurringForm({
 
           <FormField
             control={control}
-            name="anchorDay"
+            name="firstDueDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  {frequency === 'weekly' ? 'Day of week' : 'Day of month'}
-                </FormLabel>
+                <FormLabel>First Due Date</FormLabel>
                 <FormControl>
-                  <Select {...field} value={field.value as string}>
-                    {frequency === 'weekly'
-                      ? WEEKDAY_LABELS.map((label, day) => (
-                          <option key={label} value={day}>
-                            {label}
-                          </option>
-                        ))
-                      : MONTH_DAYS.map((day) => (
-                          <option key={day} value={day}>
-                            {day}
-                          </option>
-                        ))}
-                  </Select>
+                  <Input type="date" {...field} value={field.value as string} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

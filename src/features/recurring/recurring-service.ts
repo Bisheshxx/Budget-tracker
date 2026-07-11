@@ -2,7 +2,7 @@ import { recurringSchema } from './schema'
 import { computeDue } from './due'
 import { toCents } from '#/lib/money'
 import { quickAddSchema } from '#/features/transactions/schema'
-import { resolvePeriod } from '#/shared/period'
+import { addDays } from '#/shared/period'
 import type { RecurringInput } from './schema'
 import type { QuickAddInput } from '#/features/transactions/schema'
 import type {
@@ -11,6 +11,8 @@ import type {
 } from '#/features/recurring/types'
 import type { IRecurringExpenseRepository } from '#/data/recurring/IRecurringExpenseRepository'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
+
+const YMD_RE = /^\d{4}-\d{2}-\d{2}$/
 
 // Thin service over the recurring-expense repository. Validates via the shared
 // schema (the backstop, not just the UI), converts the display-unit amount to
@@ -38,7 +40,7 @@ export class RecurringService {
       name: v.name,
       amountCents: toCents(v.amount),
       frequency: v.frequency,
-      anchorDay: v.anchorDay,
+      firstDueDate: v.firstDueDate,
     })
   }
 
@@ -52,7 +54,7 @@ export class RecurringService {
       name: v.name,
       amountCents: toCents(v.amount),
       frequency: v.frequency,
-      anchorDay: v.anchorDay,
+      firstDueDate: v.firstDueDate,
     })
   }
 
@@ -70,17 +72,24 @@ export class RecurringService {
   }
 
   // The Due items to prompt for on the Dashboard: the active templates' computed
-  // occurrences in the current Period, minus any already resolved. Nothing is
+  // occurrences from their First Due Date through today, minus any already resolved. Nothing is
   // pre-materialized — "Due" is derived (see due.ts / ADR 0006).
   async listDue(
     userId: string,
     today: string,
-    periodStartDay: number,
+    _periodStartDay: number,
   ): Promise<DueOccurrence[]> {
-    const templates = await this.repo.listActive(userId)
+    const templates = (await this.repo.listActive(userId)).filter((template) =>
+      YMD_RE.test(template.firstDueDate),
+    )
     if (templates.length === 0) return []
 
-    const period = resolvePeriod(today, periodStartDay)
+    const firstDueDate = templates.reduce(
+      (min, template) =>
+        template.firstDueDate < min ? template.firstDueDate : min,
+      templates[0].firstDueDate,
+    )
+    const period = { start: firstDueDate, end: addDays(today, 1) }
     const resolved = await this.repo.listOccurrencesInRange(
       templates.map((t) => t.id),
       period.start,
@@ -119,6 +128,25 @@ export class RecurringService {
       due.occurrenceDate,
       transaction.id,
     )
+  }
+
+  async confirmAll(userId: string, dueItems: DueOccurrence[]): Promise<void> {
+    for (const due of dueItems) {
+      const transaction = await this.transactionRepo.create({
+        userId,
+        categoryId: due.recurringExpense.categoryId,
+        type: 'expense',
+        amountCents: due.recurringExpense.amountCents,
+        note: null,
+        transactionDate: due.occurrenceDate,
+        recurringExpenseId: due.recurringExpense.id,
+      })
+      await this.repo.recordConfirmed(
+        due.recurringExpense.id,
+        due.occurrenceDate,
+        transaction.id,
+      )
+    }
   }
 
   // Skip a Due occurrence: record a `skipped` row against the Due date so it

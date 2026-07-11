@@ -1,6 +1,6 @@
 // Pure helpers for the Range filter (see PRD B) — no React, no I/O. A Range is a
 // free-form from/to span the user explores, *not* a Period (see CONTEXT.md): no
-// anchor, no Budget Target, no pass/fail. Both dates are inclusive in the UI.
+// First Due Date, no target, no pass/fail. Both dates are inclusive in the UI.
 
 import { addDays, parseYmd } from '#/shared/period'
 import type { PeriodRange } from '#/shared/period'

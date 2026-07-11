@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { DeltaDisplay } from './DeltaDisplay'
 import type { CategoryDelta, PeriodComparison } from '#/features/reports/types'
 
-// Period Comparison: this Period vs. the previous one. Overall income, expenses,
-// and net are shown as both an amount and a percentage change, then a
+// Comparison for the selected reporting window vs. the previous matching
+// window. Overall income, expenses, and remaining from income are shown as both an amount and a percentage change, then a
 // per-category breakdown so the user sees which categories drove the change.
 export function PeriodComparisonCard({
   comparison,
@@ -18,9 +18,9 @@ export function PeriodComparisonCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>This Period vs. last</CardTitle>
+        <CardTitle>Current view vs. previous</CardTitle>
         <p className="text-sm text-muted-foreground">
-          How your Cashflow compares with the previous Period.
+          How your Cashflow compares with the previous matching window.
         </p>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
@@ -38,7 +38,7 @@ export function PeriodComparisonCard({
             direction="spend"
           />
           <OverallRow
-            label="Net"
+            label="Remaining"
             currency={currency}
             comparison={comparison.net}
             direction="earn"
@@ -72,7 +72,7 @@ function OverallRow({
         cents={comparison.currentCents}
         currency={currency}
         tone="neutral"
-        signed={label === 'Net'}
+        signed={label === 'Remaining'}
         className="mt-1 block text-lg font-bold"
       />
       <DeltaDisplay
@@ -102,7 +102,7 @@ function CategoryComparison({
       <div>
         <h3 className="text-sm font-semibold">By category</h3>
         <p className="mt-2 text-sm text-muted-foreground">
-          No expenses in either Period.
+          No expenses in either window.
         </p>
       </div>
     )
