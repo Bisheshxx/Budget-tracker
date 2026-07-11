@@ -1,95 +1,123 @@
-import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect, useState } from 'react'
+import { CalendarIcon } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import { rangeSchema } from '#/features/transactions/schema'
-import type { RangeFormValues } from '#/features/transactions/schema'
+import { formatRangeLabel } from '#/features/transactions/range'
 import type { Range } from '#/features/transactions/range'
+import { formatYmd, parseYmd } from '#/shared/period'
 import { Button } from '#/components/ui/button'
-import { Input } from '#/components/ui/input'
+import { Calendar } from '#/components/ui/calendar'
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '#/components/ui/form'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '#/components/ui/popover'
+import type { DateRange } from 'react-day-picker'
 
-// The Range filter inside the "This Period" card (see PRD B): two date inputs
-// plus Apply/Clear. Applying re-scopes both the card and the transaction list to
-// an arbitrary span by writing `?from=&to=` to the dashboard search params;
-// clearing removes them (back to the current Period). The active Range lives in
-// the URL — not local state — so it survives refresh and is shareable. `range`
-// seeds the inputs from whatever the URL currently carries.
+// The Range filter inside the Actions card (see PRD B): a popover range
+// calendar plus Apply/Clear. Applying re-scopes both the Cashflow card and the
+// transaction list to an arbitrary span by writing `?from=&to=` to the
+// dashboard search params; clearing removes them (back to the current Period).
+// The active Range lives in the URL — not local state — so it survives refresh
+// and is shareable. `range` seeds the calendar from whatever the URL carries.
+
+function ymdToDate(ymd: string): Date {
+  const { year, month, day } = parseYmd(ymd)
+  return new Date(year, month - 1, day)
+}
+
+function dateToYmd(date: Date): string {
+  return formatYmd(date.getFullYear(), date.getMonth() + 1, date.getDate())
+}
+
+function rangeToSelection(range: Range | null): DateRange | undefined {
+  if (!range) return undefined
+  return { from: ymdToDate(range.from), to: ymdToDate(range.to) }
+}
+
 export function RangeFilter({ range }: { range: Range | null }) {
   const navigate = useNavigate()
-
-  const form = useForm<RangeFormValues>({
-    resolver: zodResolver(rangeSchema),
-    defaultValues: { from: range?.from ?? '', to: range?.to ?? '' },
-  })
-  const { control, handleSubmit, formState, reset } = form
+  const [open, setOpen] = useState(false)
+  const [selected, setSelected] = useState<DateRange | undefined>(() =>
+    rangeToSelection(range),
+  )
 
   // The component stays mounted while the URL changes (back/forward, Clear,
-  // shared links), so re-seed the inputs whenever the active Range moves.
+  // shared links), so re-seed the selection whenever the active Range moves.
   useEffect(() => {
-    reset({ from: range?.from ?? '', to: range?.to ?? '' })
-  }, [range, reset])
+    setSelected(rangeToSelection(range))
+  }, [range])
 
-  function onApply(values: RangeFormValues) {
-    navigate({ to: '/dashboard', search: values })
+  // A complete selection that also passes the shared range rules (from <= to,
+  // no future end) — rangeSchema stays the single source of truth even though
+  // the calendar itself already blocks future days.
+  const draft =
+    selected?.from && selected.to
+      ? { from: dateToYmd(selected.from), to: dateToYmd(selected.to) }
+      : null
+  const canApply = draft !== null && rangeSchema.safeParse(draft).success
+
+  function onApply() {
+    if (!draft) return
+    setOpen(false)
+    navigate({ to: '/dashboard', search: draft })
   }
 
   function onClear() {
-    reset({ from: '', to: '' })
+    setSelected(undefined)
+    setOpen(false)
     navigate({ to: '/dashboard', search: {} })
   }
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={handleSubmit(onApply)}
-        noValidate
-        className="flex items-end gap-2"
-      >
-        <FormField
-          control={control}
-          name="from"
-          render={({ field }) => (
-            <FormItem className="flex-1">
-              <FormLabel>From</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        // Discard a half-finished selection when the popover closes without
+        // applying, so reopening shows the active Range again.
+        if (!next) setSelected(rangeToSelection(range))
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className="justify-start font-normal"
+          aria-label="Filter by date range"
+        >
+          <CalendarIcon />
+          {range ? (
+            formatRangeLabel(range)
+          ) : (
+            <span className="text-muted-foreground">Filter by date range</span>
           )}
-        />
-
-        <FormField
-          control={control}
-          name="to"
-          render={({ field }) => (
-            <FormItem className="flex-1">
-              <FormLabel>To</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit" size="sm" disabled={formState.isSubmitting}>
-          Apply
         </Button>
-        {range && (
-          <Button type="button" variant="ghost" size="sm" onClick={onClear}>
-            Clear
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="range"
+          numberOfMonths={2}
+          selected={selected}
+          onSelect={setSelected}
+          defaultMonth={selected?.from}
+          disabled={{ after: new Date() }}
+        />
+        <div className="flex justify-end gap-2 border-t p-3">
+          {range && (
+            <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+              Clear
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="sm"
+            disabled={!canApply}
+            onClick={onApply}
+          >
+            Apply
           </Button>
-        )}
-      </form>
-    </Form>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }

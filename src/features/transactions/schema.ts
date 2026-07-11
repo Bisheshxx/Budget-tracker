@@ -73,9 +73,6 @@ export const rangeSchema = z
     path: ['to'],
   })
 
-// No coercion, so the form-bound shape matches the parsed shape.
-export type RangeFormValues = z.input<typeof rangeSchema>
-
 // Validator for the dashboard's `?from=&to=` search params (route validateSearch).
 // Both optional and independently lenient: a malformed value falls back to
 // undefined rather than throwing mid-navigation. A Range is active only when

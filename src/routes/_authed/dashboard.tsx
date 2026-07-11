@@ -13,10 +13,7 @@ import { DueNow } from '#/features/recurring/components/DueNow'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { CategoryManager } from '#/features/categories/components/CategoryManager'
 import { rangeSearchSchema } from '#/features/transactions/schema'
-import {
-  formatRangeLabel,
-  searchToRange,
-} from '#/features/transactions/range'
+import { formatRangeLabel, searchToRange } from '#/features/transactions/range'
 import type { QuickAddFormValues } from '#/features/transactions/schema'
 import type { Transaction } from '#/features/transactions/types'
 
