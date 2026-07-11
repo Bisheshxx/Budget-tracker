@@ -25,12 +25,16 @@ export const CATEGORY_COLORS = [
 
 export const DEFAULT_CATEGORY_COLOR = CATEGORY_COLORS[0]
 
-export const createCategorySchema = z.object({
+export const categorySchema = z.object({
   name: z.string().trim().min(1, 'Enter a name').max(40, 'Name is too long'),
   colorHex: z.enum(CATEGORY_COLORS).default(DEFAULT_CATEGORY_COLOR),
   icon: z.enum(CATEGORY_ICON_NAMES as [string, ...string[]]).optional(),
 })
 
+export const createCategorySchema = categorySchema
+export const updateCategorySchema = categorySchema
+
 export type CategoryCreateInput = z.infer<typeof createCategorySchema>
+export type CategoryUpdateInput = z.infer<typeof updateCategorySchema>
 // Pre-coercion shape the form binds to.
-export type CategoryCreateFormValues = z.input<typeof createCategorySchema>
+export type CategoryFormValues = z.input<typeof categorySchema>

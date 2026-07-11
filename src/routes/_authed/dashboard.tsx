@@ -7,7 +7,6 @@ import { useDialog } from '#/shared/hooks/use-dialog'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { QuickAddForm } from '#/features/transactions/components/QuickAddForm'
 import { CashflowSummary } from '#/features/transactions/components/CashflowSummary'
-import { RangeFilter } from '#/features/transactions/components/RangeFilter'
 import { RecentTransactions } from '#/features/transactions/components/RecentTransactions'
 import { DueNow } from '#/features/recurring/components/DueNow'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
@@ -34,7 +33,6 @@ function DashboardPage() {
   const quickAdd = useDialog(DIALOG.quickAdd)
   const editTransaction = useDialog(DIALOG.editTransaction)
   const createCategory = useDialog(DIALOG.createCategory)
-  const manageCategories = useDialog(DIALOG.manageCategories)
   // Draft preserves the in-progress transaction across the create-category dialog
   // swap (the add/edit form unmounts while the category dialog is open).
   const [draft, setDraft] = useState<QuickAddFormValues | null>(null)
@@ -62,53 +60,32 @@ function DashboardPage() {
 
   return (
     <main className="mx-auto w-full max-w-[98.5rem] px-4 py-6 lg:py-8">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
       </div>
 
-      {/* On lg+ the dashboard pins to the viewport: the grid fills the space
-          below the header and each column scrolls on its own, so the page
-          itself doesn't scroll. Below lg it falls back to a single stacked
-          column with normal page scroll. The offset roughly accounts for the
-          header + this section's vertical padding + the title row. */}
+      {/* On lg+ the dashboard grid pins to the viewport. The transaction list
+          owns its scroll area; the left column stays natural-height, with the
+          Categories card scrolling only its list. */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:h-[calc(100dvh-260px)] lg:grid-cols-12">
-        <div className="flex flex-col gap-6 lg:col-span-5 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
+        <div className="flex flex-col gap-6 lg:col-span-5 lg:pr-1">
           <CashflowSummary range={activeRange} />
           <DueNow />
-          {/* Actions panel — quick-add + category management. */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {/* Range filter (PRD B): re-scopes the Cashflow card + list to an
-                  arbitrary span via the URL. Lives here in Actions. */}
-              <RangeFilter range={activeRange} />
-              <div className="flex gap-2">
-                <Button className="flex-1" onClick={openQuickAdd}>
-                  Add transaction
-                </Button>
-                <Button
-                  className="flex-1"
-                  variant="outline"
-                  onClick={manageCategories.open}
-                >
-                  Categories
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <CategoryManager />
         </div>
 
         <Card className="flex min-h-0 flex-col lg:col-span-7">
-          <CardHeader>
-            {/* Heading mirrors the card above: the Range when active, else the
-                default recent-transactions title. */}
-            <CardTitle>
-              {activeRange
-                ? formatRangeLabel(activeRange)
-                : 'Recent transactions'}
-            </CardTitle>
+          <CardHeader className="gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              {/* Heading mirrors the card above: the Range when active, else the
+                  default recent-transactions title. */}
+              <CardTitle>
+                {activeRange
+                  ? formatRangeLabel(activeRange)
+                  : 'Recent transactions'}
+              </CardTitle>
+              <Button onClick={openQuickAdd}>Add transaction</Button>
+            </div>
           </CardHeader>
           <CardContent className="min-h-0 flex-1 overflow-y-auto">
             <RecentTransactions range={activeRange} onEdit={openEdit} />
@@ -164,10 +141,6 @@ function DashboardPage() {
           }}
           onCancel={reopenTransactionForm}
         />
-      </Dialog>
-
-      <Dialog name={DIALOG.manageCategories} title="Categories">
-        <CategoryManager />
       </Dialog>
     </main>
   )

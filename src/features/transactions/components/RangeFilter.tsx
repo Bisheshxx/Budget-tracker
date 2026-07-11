@@ -14,12 +14,12 @@ import {
 } from '#/components/ui/popover'
 import type { DateRange } from 'react-day-picker'
 
-// The Range filter inside the Actions card (see PRD B): a popover range
+// The Range filter in the Cashflow card header (see PRD B): a popover range
 // calendar plus Apply/Clear. Applying re-scopes both the Cashflow card and the
-// transaction list to an arbitrary span by writing `?from=&to=` to the
-// dashboard search params; clearing removes them (back to the current Period).
-// The active Range lives in the URL — not local state — so it survives refresh
-// and is shareable. `range` seeds the calendar from whatever the URL carries.
+// transaction list to an arbitrary span by writing `?from=&to=` to dashboard
+// search params; clearing removes them (back to the current Period). The active
+// Range lives in the URL — not local state — so it survives refresh and is
+// shareable. `range` seeds the calendar from whatever the URL carries.
 
 function ymdToDate(ymd: string): Date {
   const { year, month, day } = parseYmd(ymd)

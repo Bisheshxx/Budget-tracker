@@ -3,17 +3,30 @@ import { CategoryService } from '#/features/categories/category-service.ts'
 import type {
   Category,
   CategoryCreate,
+  CategoryUpdate,
 } from '#/features/categories/types.ts'
 import type { ICategoryRepository } from '#/data/categories/ICategoryRepository.ts'
 
 function makeFakeRepo(overrides: Partial<ICategoryRepository> = {}) {
   return {
     listAvailable: vi.fn(async (_userId: string) => [] as Category[]),
+    listAvailablePage: vi.fn(async (_userId: string) => [] as Category[]),
     create: vi.fn(
       async (input: CategoryCreate): Promise<Category> => ({
         id: 'cat-1',
         isSystem: false,
         isDefault: false,
+        createdAt: '2026-01-01T00:00:00.000Z',
+        ...input,
+      }),
+    ),
+    update: vi.fn(
+      async (categoryId: string, input: CategoryUpdate): Promise<Category> => ({
+        id: categoryId,
+        userId: 'profile-1',
+        isSystem: false,
+        isDefault: false,
+        createdAt: '2026-01-01T00:00:00.000Z',
         ...input,
       }),
     ),
@@ -31,6 +44,7 @@ function makeCategory(overrides: Partial<Category> = {}): Category {
     icon: 'utensils',
     isSystem: false,
     isDefault: false,
+    createdAt: '2026-01-01T00:00:00.000Z',
     ...overrides,
   }
 }
@@ -44,6 +58,17 @@ describe('CategoryService', () => {
       await service.listAvailable('profile-1')
 
       expect(repo.listAvailable).toHaveBeenCalledWith('profile-1')
+    })
+
+    it('delegates page requests to the repository', async () => {
+      const repo = makeFakeRepo()
+      const service = new CategoryService(repo)
+
+      await service.listAvailablePage('profile-1', { limit: 20 })
+
+      expect(repo.listAvailablePage).toHaveBeenCalledWith('profile-1', {
+        limit: 20,
+      })
     })
   })
 
@@ -88,6 +113,67 @@ describe('CategoryService', () => {
         service.create('profile-1', { name: '   ', colorHex: '#888780' }),
       ).rejects.toThrow('Enter a name')
       expect(repo.create).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('update', () => {
+    it('persists validated editable fields for a non-system category', async () => {
+      const repo = makeFakeRepo()
+      const service = new CategoryService(repo)
+      const category = makeCategory({ id: 'cat-9', isSystem: false })
+
+      await service.update(category, {
+        name: '  Dining  ',
+        colorHex: '#D4537E',
+        icon: 'utensils',
+      })
+
+      expect(repo.update).toHaveBeenCalledWith('cat-9', {
+        name: 'Dining',
+        colorHex: '#D4537E',
+        icon: 'utensils',
+      })
+    })
+
+    it('maps an omitted icon to null', async () => {
+      const repo = makeFakeRepo()
+      const service = new CategoryService(repo)
+
+      await service.update(makeCategory(), {
+        name: 'Misc',
+        colorHex: '#888780',
+      })
+
+      expect(repo.update).toHaveBeenCalledWith(
+        'cat-1',
+        expect.objectContaining({ icon: null }),
+      )
+    })
+
+    it('rejects a blank name and never hits the repo', async () => {
+      const repo = makeFakeRepo()
+      const service = new CategoryService(repo)
+
+      await expect(
+        service.update(makeCategory(), {
+          name: '   ',
+          colorHex: '#888780',
+        }),
+      ).rejects.toThrow('Enter a name')
+      expect(repo.update).not.toHaveBeenCalled()
+    })
+
+    it('refuses to edit a system category and never hits the repo', async () => {
+      const repo = makeFakeRepo()
+      const service = new CategoryService(repo)
+
+      await expect(
+        service.update(makeCategory({ isSystem: true, userId: null }), {
+          name: 'System',
+          colorHex: '#888780',
+        }),
+      ).rejects.toThrow('System categories cannot be edited')
+      expect(repo.update).not.toHaveBeenCalled()
     })
   })
 
