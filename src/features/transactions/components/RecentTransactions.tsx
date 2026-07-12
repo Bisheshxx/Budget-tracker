@@ -18,6 +18,7 @@ import { Dialog } from '#/shared/components/Dialog'
 import { useDialog } from '#/shared/hooks/use-dialog'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { Button } from '#/components/ui/button'
+import { Skeleton } from '#/components/ui/skeleton'
 import { todayYmd } from '#/shared/lib/period'
 import type { Transaction } from '#/features/transactions/types'
 import type { Category } from '#/features/categories/types'
@@ -87,7 +88,7 @@ export function RecentTransactions({
   )
 
   if (loading || categoriesLoading) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+    return <RecentTransactionsSkeleton />
   }
 
   if (transactions.length === 0) {
@@ -148,6 +149,39 @@ export function RecentTransactions({
         onClose={() => setPendingDelete(null)}
       />
     </>
+  )
+}
+
+function RecentTransactionsSkeleton() {
+  return (
+    <div aria-busy="true" aria-live="polite" className="flex flex-col gap-4">
+      <span className="sr-only">Loading transactions</span>
+      {Array.from({ length: 3 }, (_day, dayIndex) => (
+        <div key={dayIndex}>
+          <div className="mb-1 flex items-baseline justify-between border-b border-border pb-1">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+          <ul className="flex flex-col divide-y divide-border">
+            {Array.from({ length: 3 }, (_row, rowIndex) => (
+              <li key={rowIndex} className="flex items-center gap-2 py-3">
+                <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <Skeleton className="h-5 w-32 max-w-full" />
+                    <Skeleton className="mt-2 h-3 w-48 max-w-full" />
+                  </div>
+                  <Skeleton className="h-5 w-20 shrink-0" />
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Skeleton className="size-8" />
+                  <Skeleton className="size-8" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
   )
 }
 

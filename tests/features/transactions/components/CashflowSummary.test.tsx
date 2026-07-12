@@ -77,7 +77,7 @@ describe('CashflowSummary', () => {
 
     render(<CashflowSummary />)
 
-    expect(screen.getByText('Loading…')).toBeDefined()
+    expect(screen.getByText('Loading cashflow summary')).toBeDefined()
     expect(screen.queryByText(/of July/)).toBeNull()
   })
 

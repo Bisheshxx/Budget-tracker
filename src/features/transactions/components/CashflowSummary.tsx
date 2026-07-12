@@ -8,6 +8,7 @@ import type { Range } from '#/features/transactions/range'
 import { Money } from '#/shared/components/Money'
 import { MoneyBadge } from '#/shared/components/MoneyBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
+import { Skeleton } from '#/components/ui/skeleton'
 import { parseYmd, todayYmd } from '#/shared/lib/period'
 import type {
   CategorySpend,
@@ -70,7 +71,7 @@ export function CashflowSummary({ range }: { range?: Range | null }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
         {loading || !summary ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <PeriodSummarySkeleton />
         ) : (
           <PeriodSummaryView
             summary={summary}
@@ -86,6 +87,38 @@ export function CashflowSummary({ range }: { range?: Range | null }) {
         )}
       </CardContent>
     </Card>
+  )
+}
+
+function PeriodSummarySkeleton() {
+  return (
+    <div aria-busy="true" aria-live="polite" className="flex flex-col gap-6">
+      <span className="sr-only">Loading cashflow summary</span>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {Array.from({ length: 3 }, (_, index) => (
+          <div key={index} className="rounded-xl border border-border px-4 py-3">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="mt-2 h-7 w-28" />
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <Skeleton className="h-4 w-36" />
+        <Skeleton className="mt-3 h-3 w-full" />
+        <div className="mt-3 flex flex-col gap-3">
+          {Array.from({ length: 3 }, (_, index) => (
+            <div key={index} className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <Skeleton className="h-5 w-28 max-w-full" />
+                <Skeleton className="h-3 w-10" />
+              </div>
+              <Skeleton className="h-4 w-20 shrink-0" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 

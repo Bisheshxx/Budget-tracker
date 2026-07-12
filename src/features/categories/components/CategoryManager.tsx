@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
+import { Skeleton } from '#/components/ui/skeleton'
 import type { Category } from '#/features/categories/types'
 
 function useInfiniteScrollSentinel(
@@ -80,7 +81,7 @@ export function CategoryManager() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <CategoryListSkeleton />
           ) : categories.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               You haven't created any categories yet.
@@ -148,6 +149,31 @@ export function CategoryManager() {
       <CreateCategoryDialog open={createOpen} onOpenChange={setCreateOpen} />
       <EditCategoryDialog category={editing} onClose={() => setEditing(null)} />
     </>
+  )
+}
+
+function CategoryListSkeleton() {
+  return (
+    <ul
+      aria-busy="true"
+      aria-live="polite"
+      className="flex max-h-80 flex-col divide-y overflow-hidden pr-1"
+    >
+      <span className="sr-only">Loading categories</span>
+      {Array.from({ length: 6 }, (_, index) => (
+        <li key={index} className="flex items-center justify-between gap-2 py-2">
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            <Skeleton className="size-3 shrink-0 rounded-full" />
+            <Skeleton className="size-4 shrink-0" />
+            <Skeleton className="h-4 w-28 max-w-full" />
+          </span>
+          <span className="flex shrink-0 items-center gap-1">
+            <Skeleton className="size-8" />
+            <Skeleton className="size-8" />
+          </span>
+        </li>
+      ))}
+    </ul>
   )
 }
 

@@ -1,7 +1,13 @@
-import { Outlet, createFileRoute, useNavigate } from '@tanstack/react-router'
+import {
+  Outlet,
+  createFileRoute,
+  useLocation,
+  useNavigate,
+} from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { useAuth } from '#/features/auth/auth-context'
 import { useProfile } from '#/features/profile/use-profile'
+import { DashboardSkeleton } from '#/shared/components/skeleton-loaders/DashboardSkeleton'
 
 // Pathless protected layout. Any route nested under `_authed` requires a
 // session AND a completed Onboarding. The guard runs client-side (SSR deferred
@@ -16,6 +22,7 @@ function AuthedLayout() {
   const { session, loading: authLoading } = useAuth()
   const { isOnboarded, loading: profileLoading } = useProfile()
   const navigate = useNavigate()
+  const pathname = useLocation({ select: (location) => location.pathname })
   const loading = authLoading || profileLoading
 
   useEffect(() => {
@@ -27,7 +34,12 @@ function AuthedLayout() {
     }
   }, [loading, session, isOnboarded, navigate])
 
-  if (loading || !session || !isOnboarded) return null
+  if (loading) {
+    if (pathname === '/dashboard') return <DashboardSkeleton />
+    return null
+  }
+
+  if (!session || !isOnboarded) return null
 
   return <Outlet />
 }
