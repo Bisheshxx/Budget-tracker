@@ -8,6 +8,7 @@ import {
   onboardingSchema,
   resolveDisplayName,
 } from '#/features/profile/schema'
+import { DAYS_OF_WEEK } from '#/features/profile/constants/profile.constant'
 import type {
   OnboardingFormValues,
   OnboardingInput,
@@ -24,16 +25,6 @@ import {
   FormLabel,
   FormMessage,
 } from '#/components/ui/form'
-
-const DAYS_OF_WEEK = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-]
 
 // The Onboarding form. Owns its own form state; on success it persists the
 // profile, refreshes the profile context (flipping isOnboarded), then routes on

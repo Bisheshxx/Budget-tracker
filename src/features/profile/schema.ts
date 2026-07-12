@@ -1,20 +1,12 @@
 import { z } from 'zod'
+import { CURRENCIES } from './constants/profile.constant'
 
 // Single source of truth for Onboarding input. Used by the onboarding form (via
 // @hookform/resolvers' zodResolver) AND by ProfileService as a backstop, so the
 // required/optional rules never drift between UI and service. See CONTEXT.md for
 // the domain language (Period, hidden/deprecated Budget Target).
 
-export const CURRENCIES = [
-  'USD',
-  'EUR',
-  'GBP',
-  'CAD',
-  'AUD',
-  'JPY',
-  'INR',
-  'NPR',
-] as const
+export { CURRENCIES }
 
 // react-hook-form hands string values from inputs; coerce numbers and treat a
 // blank string as "not provided" for the optional fields. Whitespace-only

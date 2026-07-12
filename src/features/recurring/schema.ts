@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { fromCents } from '#/lib/money'
+import { RECURRING_FREQUENCIES } from './constants/recurring.constant'
 import type { RecurringExpense } from './types'
 
 // Single source of truth for the Recurring Expense form. Used by the form (via
@@ -7,11 +8,7 @@ import type { RecurringExpense } from './types'
 // rules never drift between UI and service. Amounts are entered in display units;
 // the service converts to integer cents. See CONTEXT.md.
 
-export const RECURRING_FREQUENCIES = [
-  'weekly',
-  'fortnightly',
-  'monthly',
-] as const
+export { RECURRING_FREQUENCIES }
 
 const blankToUndefined = (v: unknown) => {
   if (v === null) return undefined

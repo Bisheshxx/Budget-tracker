@@ -171,7 +171,7 @@ function CategoryPreview({
   icon,
   name,
 }: {
-  colorHex: string
+  colorHex: CategoryFormValues['colorHex']
   icon: string | null
   name: unknown
 }) {

@@ -8,7 +8,7 @@ import type { Range } from '#/features/transactions/range'
 import { Money } from '#/shared/components/Money'
 import { MoneyBadge } from '#/shared/components/MoneyBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
-import { parseYmd, todayYmd } from '#/shared/period'
+import { parseYmd, todayYmd } from '#/shared/lib/period'
 import type {
   CategorySpend,
   PeriodSummary,

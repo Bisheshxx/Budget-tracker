@@ -3,12 +3,14 @@
 // that traffics in these lives in #/data/categories/ICategoryRepository.
 // See docs/adr/0004.
 
+import type { CategoryFormValues } from './schema'
+
 export interface Category {
   id: string
   /** Null = a system/preset category visible to everyone; otherwise the owner's profile id. */
   userId: string | null
   name: string
-  colorHex: string
+  colorHex: CategoryFormValues['colorHex']
   /** A lucide icon name (e.g. 'home'), or null. */
   icon: string | null
   isSystem: boolean

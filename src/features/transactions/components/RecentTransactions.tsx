@@ -18,7 +18,7 @@ import { Dialog } from '#/shared/components/Dialog'
 import { useDialog } from '#/shared/hooks/use-dialog'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { Button } from '#/components/ui/button'
-import { todayYmd } from '#/shared/period'
+import { todayYmd } from '#/shared/lib/period'
 import type { Transaction } from '#/features/transactions/types'
 import type { Category } from '#/features/categories/types'
 

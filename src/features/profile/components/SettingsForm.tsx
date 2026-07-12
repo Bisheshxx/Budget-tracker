@@ -5,6 +5,7 @@ import { useAuth } from '#/features/auth/auth-context'
 import { useProfile } from '#/features/profile/use-profile'
 import { profileService } from '#/features/profile'
 import { CURRENCIES, onboardingSchema } from '#/features/profile/schema'
+import { DAYS_OF_WEEK } from '#/features/profile/constants/profile.constant'
 import { fromCents } from '#/lib/money'
 import type {
   OnboardingFormValues,
@@ -23,16 +24,6 @@ import {
   FormLabel,
   FormMessage,
 } from '#/components/ui/form'
-
-const DAYS_OF_WEEK = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-]
 
 // Seed the (string-typed) form inputs from the saved profile. Budget Target is
 // hidden/deprecated, but preserved in form state so saving settings does not wipe

@@ -11,7 +11,7 @@ import {
   resolveCalendarWeek,
   resolvePeriod,
   todayYmd,
-} from '#/shared/period.ts'
+} from '#/shared/lib/period.ts'
 
 describe('period', () => {
   describe('resolvePeriod', () => {

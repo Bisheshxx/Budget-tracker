@@ -3,13 +3,12 @@
 // Due items to prompt for. Nothing is pre-materialized: "Due" is computed on
 // read (see ADR 0006). Operates on SQL date strings ('YYYY-MM-DD'), which sort
 // lexicographically, so all range checks are plain string comparisons and stay
-// timezone-deterministic (mirrors #/shared/period).
+// timezone-deterministic (mirrors #/shared/lib/period).
 
-import { addDays, addMonths, formatYmd, parseYmd } from '#/shared/period'
-import type { PeriodRange } from '#/shared/period'
+import { addDays, addMonths, formatYmd, parseYmd } from '#/shared/lib/period'
+import { MS_PER_DAY } from '#/shared/constants/period.constant'
+import type { PeriodRange } from '#/shared/lib/period'
 import type { DueOccurrence, RecurringExpense } from './types'
-
-const MS_PER_DAY = 86_400_000
 
 function epochDay(date: string): number {
   const { year, month, day } = parseYmd(date)

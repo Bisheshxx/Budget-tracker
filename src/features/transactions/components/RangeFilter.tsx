@@ -4,7 +4,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { rangeSchema } from '#/features/transactions/schema'
 import { formatRangeLabel } from '#/features/transactions/range'
 import type { Range } from '#/features/transactions/range'
-import { formatYmd, parseYmd } from '#/shared/period'
+import { formatYmd, parseYmd } from '#/shared/lib/period'
 import { Button } from '#/components/ui/button'
 import { Calendar } from '#/components/ui/calendar'
 import {

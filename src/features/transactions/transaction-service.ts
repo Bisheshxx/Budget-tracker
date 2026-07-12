@@ -7,7 +7,7 @@ import type {
   Transaction,
   TransactionPageParams,
 } from '#/features/transactions/types'
-import type { PeriodRange } from '#/shared/period'
+import type { PeriodRange } from '#/shared/lib/period'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 
 // Thin service over the transaction repository. Holds the app-level rules for
@@ -29,7 +29,7 @@ export class TransactionService {
 
   // Cashflow summary for a resolved Period range: total income, total expenses,
   // net (income − expenses), and the expense spend-by-category breakdown. The
-  // caller resolves the range via the pure Period helpers (#/shared/period);
+  // caller resolves the range via the pure Period helpers (#/shared/lib/period);
   // keeping the date math out of here makes both sides independently testable.
   // All arithmetic is on integer cents.
   async getPeriodSummary(

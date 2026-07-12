@@ -7,13 +7,12 @@ import {
 } from '@tanstack/react-query'
 import { categoryService } from '#/features/categories'
 import { useProfile } from '#/features/profile/use-profile'
+import { CATEGORY_PAGE_SIZE } from './constants/categories.constant'
 import type { CategoryCreateInput, CategoryUpdateInput } from './schema'
 import type {
   Category,
   CategoryPageCursor,
 } from '#/features/categories/types'
-
-const CATEGORY_PAGE_SIZE = 20
 
 const categoriesQueryOptions = (userId: string) =>
   queryOptions({

@@ -1,7 +1,7 @@
 import { computeComparison, computeWeeks } from '#/features/reports/comparison'
 import { rollup } from '#/features/transactions/summary'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
-import type { PeriodRange } from '#/shared/period'
+import type { PeriodRange } from '#/shared/lib/period'
 import type { PeriodReport } from '#/features/reports/types'
 import type { IReportRepository } from './IReportRepository'
 

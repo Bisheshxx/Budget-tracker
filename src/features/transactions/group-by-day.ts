@@ -2,7 +2,7 @@
 // day dividers on the Dashboard. No React, no I/O. Kept separate from the
 // component so the grouping logic is unit-testable on its own.
 
-import { addDays, parseYmd } from '#/shared/period'
+import { addDays, parseYmd } from '#/shared/lib/period'
 import type { Transaction } from './types'
 
 // One calendar day's worth of transactions, with that day's net (income −

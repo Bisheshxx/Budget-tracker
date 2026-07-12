@@ -7,7 +7,7 @@ import {
   resolveCalendarMonth,
   resolveCalendarWeek,
   todayYmd,
-} from '#/shared/period'
+} from '#/shared/lib/period'
 import type { PeriodReport, ReportView } from './types'
 
 interface ReportsResult {
@@ -19,7 +19,7 @@ interface ReportsResult {
 
 // The current Period's Reports payload (comparison + weekly + category spend),
 // scoped to the user's profile. The Period is resolved from the profile's start
-// day against today (pure helpers in #/shared/period); the Period key doubles as
+// day against today (pure helpers in #/shared/lib/period); the Period key doubles as
 // the cache key so crossing into a new Period refetches. Disabled until the
 // profile resolves. Mirrors usePeriodSummary in the transactions feature.
 export function useReports(view: ReportView = 'period'): ReportsResult {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { computeDue } from '#/features/recurring/due.ts'
-import type { PeriodRange } from '#/shared/period.ts'
+import type { PeriodRange } from '#/shared/lib/period.ts'
 import type { RecurringExpense } from '#/features/recurring/types.ts'
 
 // June 2026 starts on a Monday (getUTCDay === 1), so Mondays fall on the 1st,

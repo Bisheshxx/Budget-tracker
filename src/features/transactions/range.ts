@@ -2,8 +2,8 @@
 // free-form from/to span the user explores, *not* a Period (see CONTEXT.md): no
 // First Due Date, no target, no pass/fail. Both dates are inclusive in the UI.
 
-import { addDays, parseYmd } from '#/shared/period'
-import type { PeriodRange } from '#/shared/period'
+import { addDays, parseYmd } from '#/shared/lib/period'
+import type { PeriodRange } from '#/shared/lib/period'
 
 // An inclusive from/to span as the UI and URL carry it.
 export interface Range {

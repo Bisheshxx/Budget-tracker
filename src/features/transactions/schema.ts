@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { fromCents } from '#/lib/money'
+import { TRANSACTION_TYPES } from './constants/transactions.constant'
 import type { Transaction } from './types'
 
 // Single source of truth for the quick-add form. Used by the form (via
@@ -7,7 +8,7 @@ import type { Transaction } from './types'
 // the rules never drift between UI and service. Amounts are entered in display
 // units (e.g. dollars); the service converts to integer cents. See CONTEXT.md.
 
-export const TRANSACTION_TYPES = ['income', 'expense'] as const
+export { TRANSACTION_TYPES }
 
 // react-hook-form hands string values from inputs; coerce numbers and treat a
 // blank string as "not provided" for the optional note. Mirrors the idiom in

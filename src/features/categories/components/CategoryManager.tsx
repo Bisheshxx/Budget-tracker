@@ -23,7 +23,7 @@ function useInfiniteScrollSentinel(
   hasNextPage: boolean,
   isFetchingNextPage: boolean,
 ) {
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const sentinelRef = useRef<HTMLLIElement | null>(null)
 
   useEffect(() => {
     const el = sentinelRef.current
@@ -145,14 +145,8 @@ export function CategoryManager() {
         category={pendingDelete}
         onClose={() => setPendingDelete(null)}
       />
-      <CreateCategoryDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-      />
-      <EditCategoryDialog
-        category={editing}
-        onClose={() => setEditing(null)}
-      />
+      <CreateCategoryDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <EditCategoryDialog category={editing} onClose={() => setEditing(null)} />
     </>
   )
 }

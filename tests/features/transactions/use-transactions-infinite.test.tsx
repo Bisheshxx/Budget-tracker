@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement } from 'react'
-import { resolvePeriod, todayYmd } from '#/shared/period.ts'
+import { resolvePeriod, todayYmd } from '#/shared/lib/period.ts'
 import type { ReactNode } from 'react'
 import type { Transaction } from '#/features/transactions/types.ts'
 
