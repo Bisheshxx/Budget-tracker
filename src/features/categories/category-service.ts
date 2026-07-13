@@ -1,6 +1,9 @@
-import { createCategorySchema } from './schema'
-import type { CategoryCreateInput } from './schema'
-import type { Category } from '#/features/categories/types'
+import { createCategorySchema, updateCategorySchema } from './schema'
+import type { CategoryCreateInput, CategoryUpdateInput } from './schema'
+import type {
+  Category,
+  CategoryPageRequest,
+} from '#/features/categories/types'
 import type { ICategoryRepository } from '#/data/categories/ICategoryRepository'
 
 // Thin service over the category repository. Validates via the shared schema (the
@@ -13,6 +16,13 @@ export class CategoryService {
     return this.repo.listAvailable(userId)
   }
 
+  listAvailablePage(
+    userId: string,
+    request: CategoryPageRequest,
+  ): Promise<Category[]> {
+    return this.repo.listAvailablePage(userId, request)
+  }
+
   async create(userId: string, input: CategoryCreateInput): Promise<Category> {
     const result = createCategorySchema.safeParse(input)
     if (!result.success) {
@@ -22,6 +32,28 @@ export class CategoryService {
 
     return this.repo.create({
       userId,
+      name: v.name,
+      colorHex: v.colorHex,
+      icon: v.icon ?? null,
+    })
+  }
+
+  // Edit one of the user's own categories. System categories are read-only; keep
+  // that rule in the service so tests and non-UI callers get the same guard.
+  async update(
+    category: Category,
+    input: CategoryUpdateInput,
+  ): Promise<Category> {
+    if (category.isSystem) {
+      throw new Error('System categories cannot be edited')
+    }
+    const result = updateCategorySchema.safeParse(input)
+    if (!result.success) {
+      throw new Error(result.error.issues[0].message)
+    }
+    const v = result.data
+
+    return this.repo.update(category.id, {
       name: v.name,
       colorHex: v.colorHex,
       icon: v.icon ?? null,

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { fromCents } from '#/lib/money'
+import { RECURRING_FREQUENCIES } from './constants/recurring.constant'
 import type { RecurringExpense } from './types'
 
 // Single source of truth for the Recurring Expense form. Used by the form (via
@@ -7,19 +8,7 @@ import type { RecurringExpense } from './types'
 // rules never drift between UI and service. Amounts are entered in display units;
 // the service converts to integer cents. See CONTEXT.md.
 
-export const RECURRING_FREQUENCIES = ['weekly', 'monthly'] as const
-
-// Day-of-week labels for weekly anchors (index = anchor_day 0–6, matching
-// JS getDay() and the DB CHECK). Monthly anchors are a day-of-month 1–28.
-export const WEEKDAY_LABELS = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-] as const
+export { RECURRING_FREQUENCIES }
 
 const blankToUndefined = (v: unknown) => {
   if (v === null) return undefined
@@ -41,32 +30,27 @@ export const recurringSchema = z
         .positive('Amount must be greater than 0'),
     ),
     frequency: z.enum(RECURRING_FREQUENCIES, { message: 'Pick a frequency' }),
-    anchorDay: z.preprocess(
+    firstDueDate: z.preprocess(
       blankToUndefined,
-      z.coerce.number({ message: 'Pick when it recurs' }).int(),
+      z
+        .string({ message: 'Pick the first due date' })
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick the first due date'),
     ),
   })
-  // anchor_day is interpreted by frequency — validate the range to match the DB's
-  // frequency-keyed CHECK so an invalid pairing never reaches the service/DB.
   .superRefine((val, ctx) => {
-    if (
-      val.frequency === 'weekly' &&
-      (val.anchorDay < 0 || val.anchorDay > 6)
-    ) {
+    const day = Number(val.firstDueDate.slice(8, 10))
+    if (!Number.isInteger(day) || day < 1 || day > 31) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Pick a day of the week',
-        path: ['anchorDay'],
+        message: 'Pick a valid first due date',
+        path: ['firstDueDate'],
       })
     }
-    if (
-      val.frequency === 'monthly' &&
-      (val.anchorDay < 1 || val.anchorDay > 28)
-    ) {
+    if (val.frequency === 'monthly' && day > 28) {
       ctx.addIssue({
         code: 'custom',
-        message: 'Pick a day between 1 and 28',
-        path: ['anchorDay'],
+        message: 'Monthly first due date must be on or before the 28th',
+        path: ['firstDueDate'],
       })
     }
   })
@@ -85,17 +69,18 @@ export function recurringToFormValues(
     categoryId: re.categoryId,
     amount: String(fromCents(re.amountCents)),
     frequency: re.frequency,
-    anchorDay: String(re.anchorDay),
+    firstDueDate: re.firstDueDate,
   }
 }
 
-// Human-readable schedule for a template (e.g. "Monthly on the 1st",
-// "Weekly on Tuesday"). Used in the management list.
+// Human-readable schedule for a template. Used in the management list.
 export function describeSchedule(re: RecurringExpense): string {
-  if (re.frequency === 'weekly') {
-    return `Weekly on ${WEEKDAY_LABELS[re.anchorDay]}`
+  if (re.frequency === 'monthly') {
+    const day = Number(re.firstDueDate.slice(8, 10))
+    return `Monthly on the ${ordinal(day)}, from ${re.firstDueDate}`
   }
-  return `Monthly on the ${ordinal(re.anchorDay)}`
+  const label = re.frequency === 'weekly' ? 'Weekly' : 'Fortnightly'
+  return `${label} from ${re.firstDueDate}`
 }
 
 function ordinal(n: number): string {

@@ -3,9 +3,10 @@ import type { Database } from '#/lib/database.types'
 import type {
   Transaction,
   TransactionCreate,
+  TransactionPageParams,
   TransactionType,
   TransactionUpdate,
-} from '#/features/transactions/types'
+} from '#/features/transactions/types/transaction.type'
 import type { ITransactionRepository } from './ITransactionRepository'
 
 type TransactionRow = Database['public']['Tables']['transactions']['Row']
@@ -28,14 +29,32 @@ function toTransaction(row: TransactionRow): Transaction {
 }
 
 export class SupabaseTransactionRepository implements ITransactionRepository {
-  async listRecent(userId: string, limit: number): Promise<Transaction[]> {
-    const { data, error } = await supabase
+  async listPage(
+    userId: string,
+    { from, to, limit, cursor }: TransactionPageParams,
+  ): Promise<Transaction[]> {
+    let query = supabase
       .from('transactions')
       .select('*')
       .eq('user_id', userId)
       .order('transaction_date', { ascending: false })
-      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(limit)
+
+    if (from) query = query.gte('transaction_date', from)
+    if (to) query = query.lt('transaction_date', to)
+
+    // Keyset predicate: resume strictly *after* the cursor row in
+    // (transaction_date desc, id desc) order — an earlier date, or the same date
+    // with a smaller id. ANDed with the date window above.
+    if (cursor) {
+      query = query.or(
+        `transaction_date.lt.${cursor.transactionDate},` +
+          `and(transaction_date.eq.${cursor.transactionDate},id.lt.${cursor.id})`,
+      )
+    }
+
+    const { data, error } = await query
     if (error) throw error
     return data.map(toTransaction)
   }

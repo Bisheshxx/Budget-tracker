@@ -1,0 +1,191 @@
+// Pure Period-boundary math — no React, no I/O, no timezone surprises. The
+// Period is the app's single budgeting unit: a monthly cycle anchored on the
+// user's `budget_period_start_day` (constrained 1–28, see PRD / CONTEXT.md).
+// Everything keys off `resolvePeriod`. These functions operate on SQL date
+// strings ('YYYY-MM-DD') — the same shape as `transactions.transaction_date` —
+// so they stay deterministic regardless of the host timezone. Cross-feature
+// (transactions summary, reports, recurring), hence src/shared per ADR 0003.
+
+import {
+  MAX_START_DAY,
+  MIN_START_DAY,
+  MS_PER_DAY,
+} from '#/shared/constants/period.constant'
+
+/** A half-open Period range: `start` inclusive, `end` exclusive (the next Period's start). */
+export interface PeriodRange {
+  /** Inclusive Period start, 'YYYY-MM-DD'. */
+  start: string
+  /** Exclusive Period end (= next Period's start), 'YYYY-MM-DD'. */
+  end: string
+}
+
+// The start day is constrained 1–28 so the anchor day exists in every month
+// (no Feb-30 problem). Clamp defensively — a stored 0/31 still resolves sanely.
+function clampStartDay(day: number): number {
+  return Math.min(MAX_START_DAY, Math.max(MIN_START_DAY, Math.trunc(day)))
+}
+
+/** Split a 'YYYY-MM-DD' string into numeric parts. Shared date primitive. */
+export function parseYmd(date: string): {
+  year: number
+  month: number
+  day: number
+} {
+  const [year, month, day] = date.split('-').map(Number)
+  return { year, month, day }
+}
+
+/** Format numeric parts back into a zero-padded 'YYYY-MM-DD' string. */
+export function formatYmd(year: number, month: number, day: number): string {
+  const mm = String(month).padStart(2, '0')
+  const dd = String(day).padStart(2, '0')
+  return `${year}-${mm}-${dd}`
+}
+
+// Shift a (year, month) pair by `delta` months, keeping month in 1–12 and
+// rolling the year. `month` is 1-based.
+export function addMonths(
+  year: number,
+  month: number,
+  delta: number,
+): [number, number] {
+  const index = month - 1 + delta
+  const newYear = year + Math.floor(index / 12)
+  const newMonth = (((index % 12) + 12) % 12) + 1
+  return [newYear, newMonth]
+}
+
+/**
+ * Resolve the Period containing `today` for an anchor `startDay`. If today's
+ * day-of-month is on/after the anchor, the Period started this month on the
+ * anchor; otherwise it started last month (the month-flip). End is the same
+ * anchor one month on.
+ */
+export function resolvePeriod(today: string, startDay: number): PeriodRange {
+  const anchor = clampStartDay(startDay)
+  const { year, month, day } = parseYmd(today)
+
+  let [startYear, startMonth] = [year, month]
+  if (day < anchor) {
+    ;[startYear, startMonth] = addMonths(year, month, -1)
+  }
+  const [endYear, endMonth] = addMonths(startYear, startMonth, 1)
+
+  return {
+    start: formatYmd(startYear, startMonth, anchor),
+    end: formatYmd(endYear, endMonth, anchor),
+  }
+}
+
+/**
+ * A stable identifier for the Period containing `today` — its start date. Two
+ * dates in the same Period share a key; useful as a cache key for Period-scoped
+ * queries.
+ */
+export function getPeriodKey(today: string, startDay: number): string {
+  return resolvePeriod(today, startDay).start
+}
+
+/**
+ * The Period immediately before the one containing `today` — the comparison
+ * baseline for Reports (this Period vs. last). Resolved by stepping the start
+ * anchor back one month, so it inherits the same month-flip/clamp rules and
+ * stays adjacent (its `end` equals the current Period's `start`).
+ */
+export function previousPeriod(today: string, startDay: number): PeriodRange {
+  const current = resolvePeriod(today, startDay)
+  const { year, month } = parseYmd(current.start)
+  const [prevYear, prevMonth] = addMonths(year, month, -1)
+  return {
+    start: formatYmd(prevYear, prevMonth, clampStartDay(startDay)),
+    end: current.start,
+  }
+}
+
+// Whole-day difference between two 'YYYY-MM-DD' dates (b - a), via UTC epoch
+// days so DST never shifts the count.
+function dayDiff(a: string, b: string): number {
+  const { year: ay, month: am, day: ad } = parseYmd(a)
+  const { year: by, month: bm, day: bd } = parseYmd(b)
+  return Math.round(
+    (Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / MS_PER_DAY,
+  )
+}
+
+/**
+ * How many days into the current Period `today` is, 1-based: on the anchor day
+ * itself this is 1. Timing context for the Dashboard.
+ */
+export function daysIntoPeriod(today: string, startDay: number): number {
+  const { start } = resolvePeriod(today, startDay)
+  return dayDiff(start, today) + 1
+}
+
+/** Today as a local 'YYYY-MM-DD' string — the boundary that feeds the pure helpers. */
+export function todayYmd(now: Date = new Date()): string {
+  return formatYmd(now.getFullYear(), now.getMonth() + 1, now.getDate())
+}
+
+/**
+ * Shift a 'YYYY-MM-DD' date by `delta` whole days, via UTC epoch math so DST
+ * never shifts the result. Used for relative date labels (yesterday) and to
+ * convert an inclusive end date into the half-open exclusive bound.
+ */
+export function addDays(date: string, delta: number): string {
+  const { year, month, day } = parseYmd(date)
+  const shifted = new Date(Date.UTC(year, month - 1, day) + delta * MS_PER_DAY)
+  return formatYmd(
+    shifted.getUTCFullYear(),
+    shifted.getUTCMonth() + 1,
+    shifted.getUTCDate(),
+  )
+}
+
+export function resolveCalendarMonth(today: string): PeriodRange {
+  const { year, month } = parseYmd(today)
+  const [endYear, endMonth] = addMonths(year, month, 1)
+  return {
+    start: formatYmd(year, month, 1),
+    end: formatYmd(endYear, endMonth, 1),
+  }
+}
+
+export function previousCalendarMonth(today: string): PeriodRange {
+  const current = resolveCalendarMonth(today)
+  const { year, month } = parseYmd(current.start)
+  const [prevYear, prevMonth] = addMonths(year, month, -1)
+  return {
+    start: formatYmd(prevYear, prevMonth, 1),
+    end: current.start,
+  }
+}
+
+export function resolveCalendarWeek(
+  today: string,
+  weekStartDay = defaultLocaleWeekStartDay(),
+): PeriodRange {
+  const { year, month, day } = parseYmd(today)
+  const todayDow = new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+  const startOffset = -((todayDow - weekStartDay + 7) % 7)
+  const start = addDays(today, startOffset)
+  return { start, end: addDays(start, 7) }
+}
+
+export function previousRange(range: PeriodRange): PeriodRange {
+  const days = dayDiff(range.start, range.end)
+  return {
+    start: addDays(range.start, -days),
+    end: range.start,
+  }
+}
+
+export function defaultLocaleWeekStartDay(locale?: string): number {
+  const resolvedLocale =
+    locale ?? Intl.DateTimeFormat().resolvedOptions().locale
+  const region = resolvedLocale.split('-')[1] ?? undefined
+  if (region && ['US', 'CA', 'JP', 'PH'].includes(region.toUpperCase())) {
+    return 0
+  }
+  return 1
+}

@@ -17,9 +17,18 @@ carries **domain meaning** — so it doesn't belong in `src/lib/` (pure infra) o
 
 ## Conventions
 
-- Subfolders: `components/`, `hooks/`, `services/`, `stores/` (add `schema.ts`, etc. ad hoc).
+- Subfolders: `components/`, `hooks/`, `services/`, `stores/`, `lib/`,
+  `utils/`,
+  `database/`, `types/`, `constants/` (add others only when the ownership is
+  clear).
   `stores/` holds zustand stores for **ephemeral client UI state only** (e.g. which dialog is
   open) — never per-user data, which would leak across requests during SSR (see ADR 0007).
+- Shared constants live in `constants/<area>.constant.ts`, e.g.
+  `constants/period.constant.ts`. Feature-owned constants use the same pattern
+  inside the feature, e.g. `src/features/profile/constants/profile.constant.ts`.
+- Files inside `utils/` use `<area>.util.ts` naming, e.g.
+  `string.util.ts` or `array.util.ts`. Use `lib/` instead for larger named
+  modules such as `period.ts` or `money.ts`.
 - **No barrel `index.ts`.** Unlike a feature barrel (a composition root that wires
   a service to its repository), `shared/` has no single root — import leaf modules
   by explicit path: `#/shared/hooks/use-foo`, `#/shared/components/Foo`. This

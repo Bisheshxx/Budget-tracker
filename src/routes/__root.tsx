@@ -10,7 +10,7 @@ import Header from '#/components/Header'
 import { NotFound } from '#/components/NotFound'
 import { RootErrorBoundary } from '#/components/RootErrorBoundary'
 import { Toaster } from '#/components/ui/sonner'
-import { AuthProvider } from '#/features/auth/auth-context'
+import { AuthProvider } from '#/features/auth/contexts/auth-context'
 
 import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
 

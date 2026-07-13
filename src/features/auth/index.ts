@@ -1,5 +1,5 @@
 import { authRepository } from '#/data/auth'
-import { AuthService } from './auth-service'
+import { AuthService } from '#/features/auth/services/auth-service'
 
 // Composition root for the auth feature: the app-wide AuthService singleton,
 // wired to the active repository. Swap the repository in #/data/auth to move

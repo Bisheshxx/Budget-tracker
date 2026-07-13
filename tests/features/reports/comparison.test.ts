@@ -4,7 +4,7 @@ import {
   computeWeeks,
   percentChange,
 } from '#/features/reports/comparison.ts'
-import type { Transaction } from '#/features/transactions/types.ts'
+import type { Transaction } from '#/features/transactions/types/transaction.type.ts'
 
 // Minimal transaction factory — only the fields the rollup/comparison math reads
 // matter; the rest are filled with stable placeholders.

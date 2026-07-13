@@ -1,10 +1,11 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
-import { useAuth } from '#/features/auth/auth-context'
+import { useAuth } from '#/features/auth/contexts/auth-context'
 import { useProfile } from '#/features/profile/use-profile'
 import { profileService } from '#/features/profile'
 import { CURRENCIES, onboardingSchema } from '#/features/profile/schema'
+import { DAYS_OF_WEEK } from '#/features/profile/constants/profile.constant'
 import { fromCents } from '#/lib/money'
 import type {
   OnboardingFormValues,
@@ -24,19 +25,9 @@ import {
   FormMessage,
 } from '#/components/ui/form'
 
-const DAYS_OF_WEEK = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-]
-
-// Seed the (string-typed) form inputs from the saved profile. Money is stored as
-// cents, so convert the Budget Target back to display units; null optionals seed
-// as the empty string the schema treats as "not provided".
+// Seed the (string-typed) form inputs from the saved profile. Budget Target is
+// hidden/deprecated, but preserved in form state so saving settings does not wipe
+// existing stored values.
 function toFormValues(profile: UserProfile): OnboardingFormValues {
   return {
     // currency is a free string in the DB row but the form binds the enum; the
@@ -55,8 +46,8 @@ function toFormValues(profile: UserProfile): OnboardingFormValues {
 
 // Settings: edit any profile field after Onboarding. Reuses the profile
 // service/schema (onboardingSchema is the single source of validation); on save
-// it persists via the repository and refreshes the profile query so currency,
-// Period boundaries, and the Budget Target update everywhere they're read.
+// it persists via the repository and refreshes the profile query so currency and
+// Period boundaries update everywhere they're read.
 export function SettingsForm({ profile }: { profile: UserProfile }) {
   const { session } = useAuth()
   const { refresh } = useProfile()
@@ -167,52 +158,26 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
           )}
         />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            control={control}
-            name="groceryDayOfWeek"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Grocery day</FormLabel>
-                <FormControl>
-                  <Select {...field} value={field.value as string}>
-                    <option value="">—</option>
-                    {DAYS_OF_WEEK.map((day, idx) => (
-                      <option key={day} value={idx}>
-                        {day}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={control}
-            name="monthlyBudgetTarget"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Budget Target</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    placeholder="0.00"
-                    {...field}
-                    value={field.value as string}
-                  />
-                </FormControl>
-                <FormDescription>
-                  A soft reference shown on the Dashboard — not a hard limit.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={control}
+          name="groceryDayOfWeek"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Grocery day</FormLabel>
+              <FormControl>
+                <Select {...field} value={field.value as string}>
+                  <option value="">—</option>
+                  {DAYS_OF_WEEK.map((day, idx) => (
+                    <option key={day} value={idx}>
+                      {day}
+                    </option>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {formState.errors.root && (
           <p className="text-sm text-destructive">

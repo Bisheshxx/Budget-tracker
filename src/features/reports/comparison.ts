@@ -5,12 +5,12 @@
 // the future Node.js backend reimplements the same contract. All arithmetic is
 // on integer cents.
 
-import { rollup } from '#/features/transactions/summary'
-import type { Transaction } from '#/features/transactions/types'
-import type { PeriodRange } from '#/shared/period'
+import { rollup } from '#/features/transactions/utils/summary.util'
+import { DAYS_PER_WEEK } from './constants/reports.constant'
+import { MS_PER_DAY } from '#/shared/constants/period.constant'
+import type { Transaction } from '#/features/transactions/types/transaction.type'
+import type { PeriodRange } from '#/shared/lib/period'
 import type { CategoryDelta, Delta, PeriodComparison, WeekSlice } from './types'
-
-const MS_PER_DAY = 86_400_000
 
 function parseYmd(date: string): { year: number; month: number; day: number } {
   const [year, month, day] = date.split('-').map(Number)
@@ -96,12 +96,12 @@ export function computeWeeks(
   const startDay = epochDay(range.start)
   const endDay = epochDay(range.end)
   const totalDays = endDay - startDay
-  const weekCount = Math.ceil(totalDays / 7)
+  const weekCount = Math.ceil(totalDays / DAYS_PER_WEEK)
 
   const weeks: WeekSlice[] = []
   for (let i = 0; i < weekCount; i++) {
-    const weekStart = addDays(range.start, i * 7)
-    const rawEnd = addDays(range.start, (i + 1) * 7)
+    const weekStart = addDays(range.start, i * DAYS_PER_WEEK)
+    const rawEnd = addDays(range.start, (i + 1) * DAYS_PER_WEEK)
     // Clamp the last week to the Period end.
     const weekEnd = epochDay(rawEnd) > endDay ? range.end : rawEnd
     weeks.push({ weekStart, weekEnd, incomeCents: 0, expensesCents: 0 })
@@ -111,7 +111,7 @@ export function computeWeeks(
     const offset = epochDay(tx.transactionDate) - startDay
     // Ignore anything outside the range (defensive; the repo queries in-range).
     if (offset < 0 || offset >= totalDays) continue
-    const week = weeks[Math.floor(offset / 7)]
+    const week = weeks[Math.floor(offset / DAYS_PER_WEEK)]
     if (tx.type === 'income') week.incomeCents += tx.amountCents
     else week.expensesCents += tx.amountCents
   }

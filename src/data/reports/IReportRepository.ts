@@ -1,4 +1,4 @@
-import type { PeriodRange } from '#/shared/period'
+import type { PeriodRange } from '#/shared/lib/period'
 import type { PeriodReport } from '#/features/reports/types'
 
 // The Reports data port. Unlike the other repositories it returns a *computed*

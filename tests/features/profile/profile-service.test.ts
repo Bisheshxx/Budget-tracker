@@ -8,6 +8,8 @@ const blankProfile: UserProfile = {
   id: 'profile-1',
   authUserId: 'auth-1',
   displayName: null,
+  email: null,
+  avatarUrl: null,
   currency: 'USD',
   budgetPeriodStartDay: 1,
   groceryDayOfWeek: null,

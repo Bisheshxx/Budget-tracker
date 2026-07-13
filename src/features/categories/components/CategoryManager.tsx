@@ -1,33 +1,239 @@
 import { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import {
-  useCategories,
+  useCategoriesInfinite,
   useDeleteCategory,
 } from '#/features/categories/use-categories'
 import { CategoryIcon } from '#/features/categories/CategoryIcon'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { Button } from '#/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '#/components/ui/dialog'
+import { Skeleton } from '#/components/ui/skeleton'
+import { useInfiniteScrollSentinel } from '#/shared/hooks/use-infinite-scroll-sentinel'
 import type { Category } from '#/features/categories/types'
 
-// Manage the user's own categories: list, create, and delete. Lives inside the
-// "Categories" dialog. System categories are read-only (no delete) — they're
-// shown for context but can't be removed. The create form is reused inline
-// (toggled by `creating`), not via its own store dialog.
+// Manage categories directly inside the Dashboard's Categories card. The list
+// is newest-created first and paged; system categories are read-only, while the
+// user's own categories can be edited or deleted inline.
 export function CategoryManager() {
-  const { categories, loading } = useCategories()
+  const {
+    categories,
+    loading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useCategoriesInfinite()
+  const [editing, setEditing] = useState<Category | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  // The category queued for the confirm modal.
+  const [pendingDelete, setPendingDelete] = useState<Category | null>(null)
+  const sentinelRef = useInfiniteScrollSentinel<HTMLLIElement>(
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  )
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <CardTitle>Categories</CardTitle>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setPendingDelete(null)
+                setCreateOpen(true)
+              }}
+            >
+              <Plus />
+              New category
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <CategoryListSkeleton />
+          ) : categories.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              You haven't created any categories yet.
+            </p>
+          ) : (
+            <ul className="flex max-h-80 flex-col divide-y overflow-y-auto pr-1">
+              {categories.map((category) => (
+                <li
+                  key={category.id}
+                  className="flex items-center justify-between gap-2 py-2"
+                >
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="size-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: category.colorHex }}
+                    />
+                    <CategoryIcon name={category.icon} className="size-4" />
+                    <span className="text-sm">{category.name}</span>
+                  </span>
+
+                  {category.isSystem ? (
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      System
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Edit ${category.name}`}
+                        onClick={() => {
+                          setPendingDelete(null)
+                          setEditing(category)
+                        }}
+                      >
+                        <Pencil />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Delete ${category.name}`}
+                        onClick={() => setPendingDelete(category)}
+                      >
+                        <Trash2 className="text-destructive" />
+                      </Button>
+                    </span>
+                  )}
+                </li>
+              ))}
+              <li ref={sentinelRef} aria-hidden />
+              {isFetchingNextPage && (
+                <li className="py-2 text-center text-sm text-muted-foreground">
+                  Loading…
+                </li>
+              )}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <ConfirmDeleteCategoryDialog
+        category={pendingDelete}
+        onClose={() => setPendingDelete(null)}
+      />
+      <CreateCategoryDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <EditCategoryDialog category={editing} onClose={() => setEditing(null)} />
+    </>
+  )
+}
+
+function CategoryListSkeleton() {
+  return (
+    <ul
+      aria-busy="true"
+      aria-live="polite"
+      className="flex max-h-80 flex-col divide-y overflow-hidden pr-1"
+    >
+      <span className="sr-only">Loading categories</span>
+      {Array.from({ length: 6 }, (_, index) => (
+        <li
+          key={index}
+          className="flex items-center justify-between gap-2 py-2"
+        >
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            <Skeleton className="size-3 shrink-0 rounded-full" />
+            <Skeleton className="size-4 shrink-0" />
+            <Skeleton className="h-4 w-28 max-w-full" />
+          </span>
+          <span className="flex shrink-0 items-center gap-1">
+            <Skeleton className="size-8" />
+            <Skeleton className="size-8" />
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function CreateCategoryDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>New category</DialogTitle>
+        </DialogHeader>
+        <CategoryCreateForm
+          onSuccess={() => onOpenChange(false)}
+          onCancel={() => onOpenChange(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function EditCategoryDialog({
+  category,
+  onClose,
+}: {
+  category: Category | null
+  onClose: () => void
+}) {
+  return (
+    <Dialog
+      open={category !== null}
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit category</DialogTitle>
+        </DialogHeader>
+        {category && (
+          <CategoryCreateForm
+            category={category}
+            onSuccess={(updated) => {
+              onClose()
+              toast.success(`${updated.name} updated`)
+            }}
+            onCancel={onClose}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Delete confirmation modal. Kept local to the manager so category management
+// stays contained in the Dashboard card.
+function ConfirmDeleteCategoryDialog({
+  category,
+  onClose,
+}: {
+  category: Category | null
+  onClose: () => void
+}) {
   const deleteCategory = useDeleteCategory()
-  const [creating, setCreating] = useState(false)
-  // The category awaiting delete confirmation (inline, no nested dialog).
-  const [confirmId, setConfirmId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const own = categories.filter((c) => !c.isSystem)
-
-  async function onDelete(category: Category) {
+  async function onConfirm() {
+    if (!category) return
     setError(null)
     try {
       await deleteCategory.mutateAsync(category)
-      setConfirmId(null)
+      onClose()
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Could not delete the category',
@@ -35,91 +241,46 @@ export function CategoryManager() {
     }
   }
 
-  if (creating) {
-    return (
-      <CategoryCreateForm
-        onSuccess={() => setCreating(false)}
-        onCancel={() => setCreating(false)}
-      />
-    )
-  }
-
   return (
-    <div className="flex flex-col gap-4">
-      {loading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      ) : own.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          You haven't created any categories yet.
-        </p>
-      ) : (
-        <ul className="flex flex-col divide-y">
-          {own.map((category) => (
-            <li
-              key={category.id}
-              className="flex items-center justify-between gap-2 py-2"
-            >
-              <span className="flex items-center gap-2">
-                <span
-                  className="size-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: category.colorHex }}
-                />
-                <CategoryIcon name={category.icon} className="size-4" />
-                <span className="text-sm">{category.name}</span>
-              </span>
-
-              {confirmId === category.id ? (
-                <span className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Delete?</span>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => onDelete(category)}
-                    disabled={deleteCategory.isPending}
-                  >
-                    {deleteCategory.isPending ? 'Deleting…' : 'Confirm'}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setConfirmId(null)}
-                    disabled={deleteCategory.isPending}
-                  >
-                    Cancel
-                  </Button>
-                </span>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={`Delete ${category.name}`}
-                  onClick={() => {
-                    setError(null)
-                    setConfirmId(category.id)
-                  }}
-                >
-                  <Trash2 className="text-destructive" />
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => {
+    <Dialog
+      open={category !== null}
+      onOpenChange={(open) => {
+        if (!open) {
           setError(null)
-          setConfirmId(null)
-          setCreating(true)
-        }}
-      >
-        <Plus />
-        New category
-      </Button>
-    </div>
+          onClose()
+        }
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete category?</DialogTitle>
+          <DialogDescription>
+            Transactions in this category will move to Uncategorized.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setError(null)
+                onClose()
+              }}
+              disabled={deleteCategory.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={onConfirm}
+              disabled={deleteCategory.isPending}
+            >
+              {deleteCategory.isPending ? 'Deleting…' : 'Delete'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

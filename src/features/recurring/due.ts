@@ -3,48 +3,55 @@
 // Due items to prompt for. Nothing is pre-materialized: "Due" is computed on
 // read (see ADR 0006). Operates on SQL date strings ('YYYY-MM-DD'), which sort
 // lexicographically, so all range checks are plain string comparisons and stay
-// timezone-deterministic (mirrors #/shared/period).
+// timezone-deterministic (mirrors #/shared/lib/period).
 
-import { addMonths, formatYmd, parseYmd } from '#/shared/period'
-import type { PeriodRange } from '#/shared/period'
+import { addDays, addMonths, formatYmd, parseYmd } from '#/shared/lib/period'
+import { MS_PER_DAY } from '#/shared/constants/period.constant'
+import type { PeriodRange } from '#/shared/lib/period'
 import type { DueOccurrence, RecurringExpense } from './types'
 
-// Day of week for a 'YYYY-MM-DD' date, 0=Sunday..6=Saturday (UTC so it never
-// shifts with the host timezone). Matches recurring_expenses.anchor_day for
-// weekly templates and WEEKDAY_LABELS in schema.ts.
-function dayOfWeek(date: string): number {
+function epochDay(date: string): number {
   const { year, month, day } = parseYmd(date)
-  return new Date(Date.UTC(year, month - 1, day)).getUTCDay()
+  return Math.round(Date.UTC(year, month - 1, day) / MS_PER_DAY)
 }
 
-function nextDay(date: string): string {
-  const { year, month, day } = parseYmd(date)
-  const d = new Date(Date.UTC(year, month - 1, day + 1))
-  return formatYmd(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate())
-}
+function monthlyOccurrenceDates(
+  firstDueDate: string,
+  start: string,
+  today: string,
+): string[] {
+  const dates: string[] = []
+  const first = parseYmd(firstDueDate)
+  const dueDay = first.day
+  let year = first.year
+  let month = first.month
 
-// The single date in the current Period on which a monthly template falls. The
-// Period is anchored on `period.start`'s day-of-month; a template anchorDay on or
-// after that lands in the start month, otherwise in the following month — either
-// way inside [start, end).
-function monthlyOccurrenceDate(anchorDay: number, period: PeriodRange): string {
-  const { year, month, day: periodStartDay } = parseYmd(period.start)
-  if (anchorDay >= periodStartDay) {
-    return formatYmd(year, month, anchorDay)
+  while (formatYmd(year, month, dueDay) < start) {
+    ;[year, month] = addMonths(year, month, 1)
   }
-  const [y, m] = addMonths(year, month, 1)
-  return formatYmd(y, m, anchorDay)
+
+  for (
+    let date = formatYmd(year, month, dueDay);
+    date <= today;
+    [year, month] = addMonths(year, month, 1),
+      date = formatYmd(year, month, dueDay)
+  ) {
+    dates.push(date)
+  }
+
+  return dates
 }
 
 /**
  * The Due occurrences to prompt for, sorted by date then template name. An
- * occurrence is Due when its date is within the current window — on/after the
- * Period start and on/before `today` (future dates in the Period aren't prompted
- * yet) — and has no resolved (`confirmed`/`skipped`) occurrence on that date.
+ * occurrence is Due when its date is within the requested window — on/after the
+ * window start and on/before `today` — and has no resolved
+ * (`confirmed`/`skipped`) occurrence on that date.
  *
- * Weekly templates surface once per matching weekday in the window; monthly
- * templates surface once per Period. Inactive templates never surface, so a
- * deactivated template stops prompting immediately while its history remains.
+ * Weekly and fortnightly templates repeat every 7/14 days from firstDueDate.
+ * Monthly templates repeat on firstDueDate's day-of-month. Inactive templates
+ * never surface, so a deactivated template stops prompting immediately while
+ * its history remains.
  */
 export function computeDue(
   templates: RecurringExpense[],
@@ -58,22 +65,16 @@ export function computeDue(
   const resolvedKeys = new Set(
     resolved.map((o) => `${o.recurringExpenseId}|${o.occurrenceDate}`),
   )
-
   const due: DueOccurrence[] = []
 
   for (const template of templates) {
-    if (!template.active) continue
-
-    const candidateDates =
-      template.frequency === 'monthly'
-        ? [monthlyOccurrenceDate(template.anchorDay, period)]
-        : weeklyOccurrenceDates(template.anchorDay, period.start, today)
-
-    for (const date of candidateDates) {
-      // Within the window: [period.start, today]. (today is always inside the
-      // current Period, so the period end never excludes it.)
-      if (date < period.start || date > today) continue
-      if (resolvedKeys.has(`${template.id}|${date}`)) continue
+    if (!template.active) {
+      continue
+    }
+    for (const date of occurrenceDatesForTemplate(template, period, today)) {
+      if (isResolved(resolvedKeys, template, date)) {
+        continue
+      }
       due.push({ recurringExpense: template, occurrenceDate: date })
     }
   }
@@ -85,15 +86,55 @@ export function computeDue(
   )
 }
 
-// Every date in [start, today] (inclusive) whose weekday matches `anchorDay`.
-function weeklyOccurrenceDates(
-  anchorDay: number,
-  start: string,
+function occurrenceDatesForTemplate(
+  template: RecurringExpense,
+  period: PeriodRange,
   today: string,
 ): string[] {
+  const windowStart =
+    template.firstDueDate > period.start ? template.firstDueDate : period.start
+
+  if (template.frequency === 'monthly') {
+    return monthlyOccurrenceDates(template.firstDueDate, windowStart, today)
+  }
+
+  return intervalOccurrenceDates(
+    template.firstDueDate,
+    windowStart,
+    today,
+    intervalDaysFor(template),
+  ).filter((date) => date >= period.start && date <= today)
+}
+
+function intervalDaysFor(template: RecurringExpense): number {
+  return template.frequency === 'weekly' ? 7 : 14
+}
+
+function isResolved(
+  resolvedKeys: Set<string>,
+  template: RecurringExpense,
+  date: string,
+): boolean {
+  return resolvedKeys.has(`${template.id}|${date}`)
+}
+
+function intervalOccurrenceDates(
+  firstDueDate: string,
+  start: string,
+  today: string,
+  intervalDays: number,
+): string[] {
   const dates: string[] = []
-  for (let date = start; date <= today; date = nextDay(date)) {
-    if (dayOfWeek(date) === anchorDay) dates.push(date)
+  const firstDay = epochDay(firstDueDate)
+  const startOffset = Math.max(0, epochDay(start) - firstDay)
+  const firstOffset = Math.ceil(startOffset / intervalDays) * intervalDays
+
+  for (
+    let date = addDays(firstDueDate, firstOffset);
+    date <= today;
+    date = addDays(date, intervalDays)
+  ) {
+    dates.push(date)
   }
   return dates
 }

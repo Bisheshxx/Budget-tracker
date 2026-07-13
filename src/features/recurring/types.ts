@@ -3,7 +3,7 @@
 // that traffics in these lives in #/data/recurring/IRecurringExpenseRepository.
 // See docs/adr/0004 and docs/adr/0006.
 
-export type RecurringFrequency = 'weekly' | 'monthly'
+export type RecurringFrequency = 'weekly' | 'fortnightly' | 'monthly'
 
 export type RecurringOccurrenceStatus = 'confirmed' | 'skipped'
 
@@ -19,8 +19,8 @@ export interface RecurringExpense {
   /** Default amount in integer cents; editable per occurrence at confirm time. */
   amountCents: number
   frequency: RecurringFrequency
-  /** Interpreted by frequency: weekly = day-of-week 0–6, monthly = day-of-month 1–28. */
-  anchorDay: number
+  /** SQL date as 'YYYY-MM-DD'. Weekly/fortnightly cadence repeats from this date; monthly repeats on this day-of-month. */
+  firstDueDate: string
   active: boolean
   createdAt: string
   /** Set when deactivated; null while active. History is retained, never deleted. */
@@ -35,7 +35,7 @@ export interface RecurringExpenseCreate {
   name: string
   amountCents: number
   frequency: RecurringFrequency
-  anchorDay: number
+  firstDueDate: string
 }
 
 // The editable fields an update writes. id targets the row (passed separately);
@@ -45,7 +45,7 @@ export interface RecurringExpenseUpdate {
   name: string
   amountCents: number
   frequency: RecurringFrequency
-  anchorDay: number
+  firstDueDate: string
 }
 
 // A resolved occurrence — only confirmed or skipped rows exist. Unresolved "Due"

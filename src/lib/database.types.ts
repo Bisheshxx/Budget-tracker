@@ -126,10 +126,10 @@ export type Database = {
         Row: {
           active: boolean
           amount_cents: number
-          anchor_day: number
           category_id: string
           created_at: string
           deactivated_at: string | null
+          first_due_date: string
           frequency: string
           id: string
           name: string
@@ -138,10 +138,10 @@ export type Database = {
         Insert: {
           active?: boolean
           amount_cents: number
-          anchor_day: number
           category_id: string
           created_at?: string
           deactivated_at?: string | null
+          first_due_date: string
           frequency: string
           id?: string
           name: string
@@ -150,10 +150,10 @@ export type Database = {
         Update: {
           active?: boolean
           amount_cents?: number
-          anchor_day?: number
           category_id?: string
           created_at?: string
           deactivated_at?: string | null
+          first_due_date?: string
           frequency?: string
           id?: string
           name?: string
@@ -281,10 +281,12 @@ export type Database = {
       user_profiles: {
         Row: {
           auth_user_id: string
+          avatar_url: string | null
           budget_period_start_day: number
           created_at: string
           currency: string
           display_name: string | null
+          email: string | null
           grocery_day_of_week: number | null
           id: string
           monthly_budget_target: number
@@ -294,10 +296,12 @@ export type Database = {
         }
         Insert: {
           auth_user_id: string
+          avatar_url?: string | null
           budget_period_start_day?: number
           created_at?: string
           currency?: string
           display_name?: string | null
+          email?: string | null
           grocery_day_of_week?: number | null
           id?: string
           monthly_budget_target?: number
@@ -307,10 +311,12 @@ export type Database = {
         }
         Update: {
           auth_user_id?: string
+          avatar_url?: string | null
           budget_period_start_day?: number
           created_at?: string
           currency?: string
           display_name?: string | null
+          email?: string | null
           grocery_day_of_week?: number | null
           id?: string
           monthly_budget_target?: number

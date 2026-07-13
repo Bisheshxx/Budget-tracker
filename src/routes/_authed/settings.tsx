@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '#/components/ui/card'
+import { SettingsFormSkeleton } from '#/shared/components/skeleton-loaders/SettingsSkeleton'
 
 // Protected (nested under _authed, so session + onboarding are already
 // guaranteed). Edits the profile fields captured at Onboarding.
@@ -25,15 +26,15 @@ function SettingsPage() {
         <CardHeader>
           <CardTitle>Profile</CardTitle>
           <CardDescription>
-            Update your display name, currency, Period start day, grocery day,
-            and Budget Target.
+            Update your display name, currency, Period start day, and grocery
+            day.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {/* _authed already gates on a resolved profile, but render defensively
               while the cache rehydrates so the form always has seed values. */}
           {loading || !profile ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SettingsFormSkeleton />
           ) : (
             <SettingsForm profile={profile} />
           )}

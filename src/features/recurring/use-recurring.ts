@@ -6,9 +6,9 @@ import {
 } from '@tanstack/react-query'
 import { recurringService } from '#/features/recurring'
 import { useProfile } from '#/features/profile/use-profile'
-import { resolvePeriod, todayYmd } from '#/shared/period'
+import { resolvePeriod, todayYmd } from '#/shared/lib/period'
 import type { RecurringInput } from './schema'
-import type { QuickAddInput } from '#/features/transactions/schema'
+import type { QuickAddInput } from '#/features/transactions/schemas/transaction.schema'
 import type {
   DueOccurrence,
   RecurringExpense,
@@ -147,6 +147,7 @@ function useInvalidateAfterResolve() {
       queryClient.invalidateQueries({
         queryKey: ['transactions', 'period-summary', userId],
       }),
+      queryClient.invalidateQueries({ queryKey: ['reports', userId] }),
     ])
   }
 }
@@ -166,6 +167,20 @@ export function useConfirmDue() {
     }) => {
       if (!userId) throw new Error('No profile loaded')
       return recurringService.confirm(userId, due, input)
+    },
+    onSuccess: invalidate,
+  })
+}
+
+export function useConfirmAllDue() {
+  const { profile } = useProfile()
+  const userId = profile?.id ?? null
+  const invalidate = useInvalidateAfterResolve()
+
+  return useMutation({
+    mutationFn: (dueItems: DueOccurrence[]) => {
+      if (!userId) throw new Error('No profile loaded')
+      return recurringService.confirmAll(userId, dueItems)
     },
     onSuccess: invalidate,
   })

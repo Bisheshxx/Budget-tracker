@@ -2,38 +2,64 @@ import { useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import {
   useDeleteTransaction,
-  useRecentTransactions,
-} from '#/features/transactions/use-transactions'
+  useTransactionsInfinite,
+} from '#/features/transactions/hooks/use-transactions'
+import {
+  groupByDay,
+  formatDayLabel,
+} from '#/features/transactions/utils/group-by-day.util'
+import { rangeToHookBounds } from '#/features/transactions/utils/range.util'
+import type { Range } from '#/features/transactions/utils/range.util'
 import { useProfile } from '#/features/profile/use-profile'
 import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
 import { Money } from '#/shared/components/Money'
 import { Dialog } from '#/shared/components/Dialog'
 import { useDialog } from '#/shared/hooks/use-dialog'
+import { useInfiniteScrollSentinel } from '#/shared/hooks/use-infinite-scroll-sentinel'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { Button } from '#/components/ui/button'
-import type { Transaction } from '#/features/transactions/types'
+import { todayYmd } from '#/shared/lib/period'
+import { TransactionsListSkeleton } from '#/shared/components/skeleton-loaders/DashboardSkeleton'
+import type { Transaction } from '#/features/transactions/types/transaction.type'
 import type { Category } from '#/features/categories/types'
 
-// The recent-transactions list. Each row shows the transaction's category, the
-// note, and the amount. Edit (pencil) and delete (trash) buttons are revealed on
-// row hover/focus — edit opens the edit dialog, delete goes through a confirm
-// modal.
+// The Dashboard transaction list: keyset-paginated infinite scroll, segmented
+// into per-day groups with a divider per calendar day (date label + that day's
+// net). Each row shows the transaction's category, note, and amount; edit
+// (pencil) and delete (trash) buttons reveal on row hover/focus — edit opens the
+// edit dialog, delete goes through a confirm modal. Defaults to the current
+// Period; when a `range` is active (PRD B) it re-scopes to that arbitrary span
+// so the list matches the "This Period" card above it.
 export function RecentTransactions({
+  range,
   onEdit,
 }: {
+  range?: Range | null
   onEdit?: (tx: Transaction) => void
 }) {
-  const { transactions, loading } = useRecentTransactions()
+  const {
+    transactions,
+    loading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useTransactionsInfinite(rangeToHookBounds(range))
   const { categoryFor, loading: categoriesLoading } = useCategoryLookup()
   const { profile } = useProfile()
   const confirmDelete = useDialog(DIALOG.confirmDeleteTransaction)
   const currency = profile?.currency ?? 'USD'
   // The transaction queued for the confirm modal.
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null)
+  // Fetch the next page when the bottom sentinel scrolls into view.
+  const sentinelRef = useInfiniteScrollSentinel(
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  )
 
   if (loading || categoriesLoading) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+    return <TransactionsListSkeleton />
   }
 
   if (transactions.length === 0) {
@@ -44,23 +70,50 @@ export function RecentTransactions({
     )
   }
 
+  const today = todayYmd()
+  const days = groupByDay(transactions)
+
   return (
     <>
-      <ul className="flex flex-col divide-y divide-border">
-        {transactions.map((tx) => (
-          <TransactionRow
-            key={tx.id}
-            tx={tx}
-            category={categoryFor(tx.categoryId)}
-            currency={currency}
-            onEdit={onEdit}
-            onRequestDelete={() => {
-              setPendingDelete(tx)
-              confirmDelete.open()
-            }}
-          />
+      <div className="flex flex-col gap-4">
+        {days.map((day) => (
+          <div key={day.date}>
+            <div className="mb-1 flex items-baseline justify-between border-b border-border pb-1">
+              <h3 className="text-sm font-semibold">
+                {formatDayLabel(day.date, today)}
+              </h3>
+              <Money
+                cents={day.netCents}
+                currency={currency}
+                tone={day.netCents >= 0 ? 'income' : 'expense'}
+                signed
+                className="text-xs font-medium"
+              />
+            </div>
+            <ul className="flex flex-col divide-y divide-border">
+              {day.transactions.map((tx) => (
+                <TransactionRow
+                  key={tx.id}
+                  tx={tx}
+                  category={categoryFor(tx.categoryId)}
+                  currency={currency}
+                  onEdit={onEdit}
+                  onRequestDelete={() => {
+                    setPendingDelete(tx)
+                    confirmDelete.open()
+                  }}
+                />
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+
+        {/* Sentinel drives infinite scroll; the loader shows while a page loads. */}
+        <div ref={sentinelRef} aria-hidden />
+        {isFetchingNextPage && (
+          <p className="text-center text-sm text-muted-foreground">Loading…</p>
+        )}
+      </div>
 
       <ConfirmDeleteDialog
         transaction={pendingDelete}
@@ -144,10 +197,9 @@ function TransactionRow({
       <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
         <div className="min-w-0">
           <CategoryChip category={category} className="font-medium" />
-          <p className="truncate text-xs text-muted-foreground">
-            {tx.transactionDate}
-            {tx.note ? ` · ${tx.note}` : ''}
-          </p>
+          {tx.note && (
+            <p className="truncate text-xs text-muted-foreground">{tx.note}</p>
+          )}
         </div>
         <Money
           cents={tx.type === 'expense' ? -tx.amountCents : tx.amountCents}

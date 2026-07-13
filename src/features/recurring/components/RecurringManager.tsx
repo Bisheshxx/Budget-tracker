@@ -11,6 +11,7 @@ import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { CategoryIcon } from '#/features/categories/CategoryIcon'
 import { useProfile } from '#/features/profile/use-profile'
 import { Money } from '#/shared/components/Money'
+import { RecurringRowsSkeleton } from '#/shared/components/skeleton-loaders/RecurringSkeleton'
 import { Button } from '#/components/ui/button'
 import {
   Dialog,
@@ -45,7 +46,7 @@ export function RecurringManager() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <RecurringRowsSkeleton />
       ) : recurringExpenses.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           You haven't set up any recurring expenses yet. Add fixed costs like

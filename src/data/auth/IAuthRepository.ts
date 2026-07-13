@@ -1,4 +1,4 @@
-import type { AuthSession, Credentials } from '#/features/auth/types'
+import type { AuthSession, Credentials } from '#/features/auth/types/auth.type'
 
 // The auth persistence port. Today it's implemented by Supabase
 // (supabase-auth-repository.ts); tomorrow it can be an axios/REST backend —
@@ -16,5 +16,7 @@ export interface IAuthRepository {
   signOut: () => Promise<void>
   getSession: () => Promise<AuthSession | null>
   /** Subscribe to session changes. Returns an unsubscribe function. */
-  onAuthStateChange: (callback: (session: AuthSession | null) => void) => () => void
+  onAuthStateChange: (
+    callback: (session: AuthSession | null) => void,
+  ) => () => void
 }

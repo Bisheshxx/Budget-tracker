@@ -1,15 +1,22 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCategories, useCreateCategory } from '#/features/categories/use-categories'
+import {
+  useCategories,
+  useCreateCategory,
+  useUpdateCategory,
+} from '#/features/categories/use-categories'
 import {
   CATEGORY_COLORS,
   DEFAULT_CATEGORY_COLOR,
-  createCategorySchema,
+  categorySchema,
 } from '#/features/categories/schema'
-import { CATEGORY_ICON_NAMES, CategoryIcon } from '#/features/categories/CategoryIcon'
+import {
+  CATEGORY_ICON_NAMES,
+  CategoryIcon,
+} from '#/features/categories/CategoryIcon'
 import type {
-  CategoryCreateFormValues,
   CategoryCreateInput,
+  CategoryFormValues,
 } from '#/features/categories/schema'
 import type { Category } from '#/features/categories/types'
 import { Button } from '#/components/ui/button'
@@ -24,45 +31,75 @@ import {
   FormMessage,
 } from '#/components/ui/form'
 
-// Create-a-category form (lives in its own dialog). On success it hands the new
-// category back so the caller can re-open quick-add with it pre-selected.
+function defaultValuesFor(category?: Category): CategoryFormValues {
+  if (!category) {
+    return {
+      name: '',
+      colorHex: DEFAULT_CATEGORY_COLOR,
+      icon: CATEGORY_ICON_NAMES[0],
+    }
+  }
+  return {
+    name: category.name,
+    colorHex: category.colorHex,
+    icon: category.icon ?? CATEGORY_ICON_NAMES[0],
+  }
+}
+
+function categoryNameExists(
+  categories: Category[],
+  category: Category | undefined,
+  name: string,
+): boolean {
+  const normalizedName = name.trim().toLowerCase()
+  return categories.some(
+    (c) => c.id !== category?.id && c.name.toLowerCase() === normalizedName,
+  )
+}
+
+function submitLabel(isSubmitting: boolean, isEdit: boolean): string {
+  if (isSubmitting) return 'Saving…'
+  return isEdit ? 'Save changes' : 'Create category'
+}
+
+// Create or edit a user category. On create success it hands the new category
+// back so callers can re-open quick-add with it pre-selected.
 export function CategoryCreateForm({
+  category,
   onSuccess,
   onCancel,
 }: {
+  category?: Category
   onSuccess: (category: Category) => void
   onCancel: () => void
 }) {
   const { categories } = useCategories()
   const createCategory = useCreateCategory()
+  const updateCategory = useUpdateCategory()
+  const isEdit = !!category
 
-  const form = useForm<CategoryCreateFormValues, unknown, CategoryCreateInput>({
-    resolver: zodResolver(createCategorySchema),
-    defaultValues: {
-      name: '',
-      colorHex: DEFAULT_CATEGORY_COLOR,
-      icon: CATEGORY_ICON_NAMES[0],
-    },
+  const form = useForm<CategoryFormValues, unknown, CategoryCreateInput>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: defaultValuesFor(category),
   })
   const { control, handleSubmit, formState, setError, watch } = form
 
   async function onSubmit(values: CategoryCreateInput) {
     // Avoid a unique-constraint error and silent duplicates: if the name already
     // exists among available categories, surface it rather than creating a dupe.
-    const exists = categories.some(
-      (c) => c.name.toLowerCase() === values.name.trim().toLowerCase(),
-    )
-    if (exists) {
+    if (categoryNameExists(categories, category, values.name)) {
       setError('name', { message: 'A category with this name already exists' })
       return
     }
     try {
-      const created = await createCategory.mutateAsync(values)
-      onSuccess(created)
+      const saved = category
+        ? await updateCategory.mutateAsync({ category, input: values })
+        : await createCategory.mutateAsync(values)
+      onSuccess(saved)
     } catch (err) {
       setError('root', {
         message:
-          err instanceof Error ? err.message : 'Could not create the category',
+          err instanceof Error ? err.message : 'Could not save the category',
       })
     }
   }
@@ -78,14 +115,11 @@ export function CategoryCreateForm({
         noValidate
         className="flex flex-col gap-5"
       >
-        <div className="flex items-center gap-2 rounded-md border p-3">
-          <span
-            className="size-4 shrink-0 rounded-full"
-            style={{ backgroundColor: previewColor }}
-          />
-          <CategoryIcon name={previewIcon ?? null} className="size-4" />
-          <span className="text-sm">{previewName || 'New category'}</span>
-        </div>
+        <CategoryPreview
+          colorHex={previewColor}
+          icon={previewIcon ?? null}
+          name={previewName}
+        />
 
         <FormField
           control={control}
@@ -104,62 +138,13 @@ export function CategoryCreateForm({
         <FormField
           control={control}
           name="colorHex"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Color</FormLabel>
-              <FormControl>
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORY_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      aria-label={color}
-                      onClick={() => field.onChange(color)}
-                      className={cn(
-                        'size-7 rounded-full border-2 transition-transform',
-                        field.value === color
-                          ? 'border-foreground scale-110'
-                          : 'border-transparent',
-                      )}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => <ColorField field={field} />}
         />
 
         <FormField
           control={control}
           name="icon"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Icon</FormLabel>
-              <FormControl>
-                <div className="grid grid-cols-8 gap-2">
-                  {CATEGORY_ICON_NAMES.map((iconName) => (
-                    <button
-                      key={iconName}
-                      type="button"
-                      aria-label={iconName}
-                      onClick={() => field.onChange(iconName)}
-                      className={cn(
-                        'flex items-center justify-center rounded-md border p-2 transition-colors',
-                        field.value === iconName
-                          ? 'border-foreground bg-accent'
-                          : 'border-input hover:bg-accent/50',
-                      )}
-                    >
-                      <CategoryIcon name={iconName} className="size-4" />
-                    </button>
-                  ))}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => <IconField field={field} />}
         />
 
         {formState.errors.root && (
@@ -173,10 +158,110 @@ export function CategoryCreateForm({
             Cancel
           </Button>
           <Button type="submit" disabled={formState.isSubmitting}>
-            {formState.isSubmitting ? 'Creating…' : 'Create category'}
+            {submitLabel(formState.isSubmitting, isEdit)}
           </Button>
         </div>
       </form>
     </Form>
+  )
+}
+
+function CategoryPreview({
+  colorHex,
+  icon,
+  name,
+}: {
+  colorHex: CategoryFormValues['colorHex']
+  icon: string | null
+  name: unknown
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-md border p-3">
+      <span
+        className="size-4 shrink-0 rounded-full"
+        style={{ backgroundColor: colorHex }}
+      />
+      <CategoryIcon name={icon} className="size-4" />
+      <span className="text-sm">
+        {typeof name === 'string' && name ? name : 'New category'}
+      </span>
+    </div>
+  )
+}
+
+function selectedColorClass(selected: boolean): string {
+  return selected ? 'border-foreground scale-110' : 'border-transparent'
+}
+
+function selectedIconClass(selected: boolean): string {
+  return selected
+    ? 'border-foreground bg-accent'
+    : 'border-input hover:bg-accent/50'
+}
+
+function ColorField({
+  field,
+}: {
+  field: {
+    value: unknown
+    onChange: (value: string) => void
+  }
+}) {
+  return (
+    <FormItem>
+      <FormLabel>Color</FormLabel>
+      <FormControl>
+        <div className="flex flex-wrap gap-2">
+          {CATEGORY_COLORS.map((color) => (
+            <button
+              key={color}
+              type="button"
+              aria-label={color}
+              onClick={() => field.onChange(color)}
+              className={cn(
+                'size-7 rounded-full border-2 transition-transform',
+                selectedColorClass(field.value === color),
+              )}
+              style={{ backgroundColor: color }}
+            />
+          ))}
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )
+}
+
+function IconField({
+  field,
+}: {
+  field: {
+    value: unknown
+    onChange: (value: string) => void
+  }
+}) {
+  return (
+    <FormItem>
+      <FormLabel>Icon</FormLabel>
+      <FormControl>
+        <div className="grid grid-cols-8 gap-2">
+          {CATEGORY_ICON_NAMES.map((iconName) => (
+            <button
+              key={iconName}
+              type="button"
+              aria-label={iconName}
+              onClick={() => field.onChange(iconName)}
+              className={cn(
+                'flex items-center justify-center rounded-md border p-2 transition-colors',
+                selectedIconClass(field.value === iconName),
+              )}
+            >
+              <CategoryIcon name={iconName} className="size-4" />
+            </button>
+          ))}
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
   )
 }

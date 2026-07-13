@@ -12,6 +12,8 @@ function toUserProfile(row: ProfileRow): UserProfile {
     id: row.id,
     authUserId: row.auth_user_id,
     displayName: row.display_name,
+    email: row.email,
+    avatarUrl: row.avatar_url,
     currency: row.currency,
     budgetPeriodStartDay: row.budget_period_start_day,
     groceryDayOfWeek: row.grocery_day_of_week,
