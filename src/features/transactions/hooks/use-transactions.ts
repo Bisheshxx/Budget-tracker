@@ -6,9 +6,9 @@ import {
 } from '@tanstack/react-query'
 import { transactionService } from '#/features/transactions'
 import { TRANSACTION_PAGE_SIZE } from '#/features/transactions/constants/transactions.constant'
-import { nextPageCursor } from '#/features/transactions/utils/pagination.util'
 import { useProfile } from '#/features/profile/use-profile'
 import { daysIntoPeriod, resolvePeriod, todayYmd } from '#/shared/lib/period'
+import { nextPageCursor } from '#/shared/utils/pagination.util'
 import type { PeriodRange } from '#/shared/lib/period'
 import type { QuickAddInput } from '#/features/transactions/schemas/transaction.schema'
 import type {
@@ -57,7 +57,11 @@ export function useTransactionsInfinite(bounds?: {
       }),
     initialPageParam: null as TransactionPageCursor | null,
     getNextPageParam: (lastPage) =>
-      nextPageCursor(lastPage, TRANSACTION_PAGE_SIZE),
+      nextPageCursor(lastPage, TRANSACTION_PAGE_SIZE, (last) => ({
+        // Transactions resume from the last row's keyset cursor.
+        transactionDate: last.transactionDate,
+        id: last.id,
+      })),
     enabled: !!userId,
   })
 

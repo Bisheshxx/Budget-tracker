@@ -8,7 +8,7 @@ import {
 import { categoryService } from '#/features/categories'
 import { useProfile } from '#/features/profile/use-profile'
 import { CATEGORY_PAGE_SIZE } from '#/features/categories/constants/categories.constant'
-import { nextCategoryPageCursor } from '#/features/categories/utils/pagination.util'
+import { nextPageCursor } from '#/shared/utils/pagination.util'
 import type {
   CategoryCreateInput,
   CategoryUpdateInput,
@@ -73,7 +73,10 @@ export function useCategoriesInfinite(): InfiniteCategoriesResult {
       }),
     initialPageParam: null as CategoryPageCursor | null,
     getNextPageParam: (lastPage) =>
-      nextCategoryPageCursor(lastPage, CATEGORY_PAGE_SIZE),
+      nextPageCursor(lastPage, CATEGORY_PAGE_SIZE, (last) => ({
+        createdAt: last.createdAt,
+        id: last.id,
+      })),
     enabled: !!userId,
   })
 
