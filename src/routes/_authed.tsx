@@ -5,9 +5,20 @@ import {
   useNavigate,
 } from '@tanstack/react-router'
 import { useEffect } from 'react'
+import type { ReactNode } from 'react'
 import { useAuth } from '#/features/auth/auth-context'
 import { useProfile } from '#/features/profile/use-profile'
 import { DashboardSkeleton } from '#/shared/components/skeleton-loaders/DashboardSkeleton'
+import { RecurringSkeleton } from '#/shared/components/skeleton-loaders/RecurringSkeleton'
+import { ReportsSkeleton } from '#/shared/components/skeleton-loaders/ReportsSkeleton'
+import { SettingsSkeleton } from '#/shared/components/skeleton-loaders/SettingsSkeleton'
+
+const AUTHED_ROUTE_SKELETONS: Partial<Record<string, () => ReactNode>> = {
+  '/dashboard': DashboardSkeleton,
+  '/reports': ReportsSkeleton,
+  '/recurring': RecurringSkeleton,
+  '/settings': SettingsSkeleton,
+}
 
 // Pathless protected layout. Any route nested under `_authed` requires a
 // session AND a completed Onboarding. The guard runs client-side (SSR deferred
@@ -35,8 +46,8 @@ function AuthedLayout() {
   }, [loading, session, isOnboarded, navigate])
 
   if (loading) {
-    if (pathname === '/dashboard') return <DashboardSkeleton />
-    return null
+    const Skeleton = AUTHED_ROUTE_SKELETONS[pathname]
+    return Skeleton ? <Skeleton /> : null
   }
 
   if (!session || !isOnboarded) return null

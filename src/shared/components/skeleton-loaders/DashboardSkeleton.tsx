@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader } from '#/components/ui/card'
+import { Button } from '#/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 
 export function DashboardSkeleton() {
@@ -11,7 +12,7 @@ export function DashboardSkeleton() {
       <span className="sr-only">Loading dashboard</span>
 
       <div className="flex items-center justify-between gap-4">
-        <Skeleton className="h-8 w-36" />
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:h-[calc(100dvh-260px)] lg:grid-cols-12">
@@ -41,7 +42,10 @@ function SummaryCardSkeleton() {
       <CardContent className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {Array.from({ length: 3 }, (_item, index) => (
-            <div key={index} className="rounded-xl border border-border px-4 py-3">
+            <div
+              key={index}
+              className="rounded-xl border border-border px-4 py-3"
+            >
               <Skeleton className="h-3 w-24" />
               <Skeleton className="mt-2 h-7 w-28" />
             </div>
@@ -53,7 +57,10 @@ function SummaryCardSkeleton() {
           <Skeleton className="mt-3 h-3 w-full" />
           <div className="mt-3 flex flex-col gap-3">
             {Array.from({ length: 3 }, (_item, index) => (
-              <div key={index} className="flex items-center justify-between gap-3">
+              <div
+                key={index}
+                className="flex items-center justify-between gap-3"
+              >
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   <Skeleton className="h-5 w-28 max-w-full" />
                   <Skeleton className="h-3 w-10" />
@@ -73,8 +80,10 @@ function CategoriesCardSkeleton() {
     <Card>
       <CardHeader className="gap-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-9 w-36" />
+          <CardTitle>Categories</CardTitle>
+          <Button type="button" variant="outline" disabled>
+            New category
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -106,8 +115,10 @@ function TransactionsCardSkeleton() {
     <Card className="flex min-h-0 flex-col lg:col-span-7">
       <CardHeader className="gap-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <Skeleton className="h-5 w-44" />
-          <Skeleton className="h-9 w-36" />
+          <CardTitle>Recent transactions</CardTitle>
+          <Button type="button" disabled>
+            Add transaction
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="min-h-0 flex-1 overflow-hidden">

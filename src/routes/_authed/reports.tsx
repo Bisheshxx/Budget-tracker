@@ -6,6 +6,7 @@ import { PeriodComparisonCard } from '#/features/reports/components/PeriodCompar
 import { WeeklyCashflowChart } from '#/features/reports/components/WeeklyCashflowChart'
 import { CategorySpendChart } from '#/features/reports/components/CategorySpendChart'
 import { Button } from '#/components/ui/button'
+import { ReportsContentSkeleton } from '#/shared/components/skeleton-loaders/ReportsSkeleton'
 import type { ReportView } from '#/features/reports/types'
 
 // Reports surface (issue 07): Period Comparison (this Period vs. last, % and
@@ -41,10 +42,12 @@ function ReportsPage() {
         ))}
       </div>
 
-      {loading || !report ? (
+      {isError ? (
         <p className="mt-6 text-sm text-muted-foreground">
-          {isError ? 'Could not load your reports.' : 'Loading…'}
+          Could not load your reports.
         </p>
+      ) : loading || !report ? (
+        <ReportsContentSkeleton />
       ) : (
         // Left column: the (potentially tall) Period comparison breakdown.
         // Right column: the two charts stacked. Single column below lg.
