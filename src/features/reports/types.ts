@@ -4,7 +4,7 @@
 // source is swapped (see #/data/reports), the axios impl deserializes this same
 // contract, so nothing above the repository changes. See docs/adr/0001.
 
-import type { CategorySpend } from '#/features/transactions/types'
+import type { CategorySpend } from '#/features/transactions/types/transaction.type'
 
 export type ReportView = 'period' | 'calendar-month' | 'calendar-week'
 

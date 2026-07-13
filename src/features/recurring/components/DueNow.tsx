@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
-import type { QuickAddFormValues } from '#/features/transactions/schema'
+import type { QuickAddFormValues } from '#/features/transactions/schemas/transaction.schema'
 import type { DueOccurrence } from '#/features/recurring/types'
 
 // Seed the confirm form from a Due item: the template's default amount (cents →

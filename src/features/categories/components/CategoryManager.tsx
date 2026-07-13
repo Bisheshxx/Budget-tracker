@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -17,27 +17,8 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import { Skeleton } from '#/components/ui/skeleton'
+import { useInfiniteScrollSentinel } from '#/shared/hooks/use-infinite-scroll-sentinel'
 import type { Category } from '#/features/categories/types'
-
-function useInfiniteScrollSentinel(
-  onLoadMore: () => void,
-  hasNextPage: boolean,
-  isFetchingNextPage: boolean,
-) {
-  const sentinelRef = useRef<HTMLLIElement | null>(null)
-
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el || !hasNextPage) return
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !isFetchingNextPage) onLoadMore()
-    })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage, onLoadMore])
-
-  return sentinelRef
-}
 
 // Manage categories directly inside the Dashboard's Categories card. The list
 // is newest-created first and paged; system categories are read-only, while the
@@ -54,7 +35,7 @@ export function CategoryManager() {
   const [createOpen, setCreateOpen] = useState(false)
   // The category queued for the confirm modal.
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null)
-  const sentinelRef = useInfiniteScrollSentinel(
+  const sentinelRef = useInfiniteScrollSentinel<HTMLLIElement>(
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -161,7 +142,10 @@ function CategoryListSkeleton() {
     >
       <span className="sr-only">Loading categories</span>
       {Array.from({ length: 6 }, (_, index) => (
-        <li key={index} className="flex items-center justify-between gap-2 py-2">
+        <li
+          key={index}
+          className="flex items-center justify-between gap-2 py-2"
+        >
           <span className="flex min-w-0 flex-1 items-center gap-2">
             <Skeleton className="size-3 shrink-0 rounded-full" />
             <Skeleton className="size-4 shrink-0" />

@@ -1,57 +1,28 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import {
   useDeleteTransaction,
   useTransactionsInfinite,
-} from '#/features/transactions/use-transactions'
+} from '#/features/transactions/hooks/use-transactions'
 import {
   groupByDay,
   formatDayLabel,
-} from '#/features/transactions/group-by-day'
-import { rangeToBounds } from '#/features/transactions/range'
-import type { Range } from '#/features/transactions/range'
+} from '#/features/transactions/utils/group-by-day.util'
+import { rangeToHookBounds } from '#/features/transactions/utils/range.util'
+import type { Range } from '#/features/transactions/utils/range.util'
 import { useProfile } from '#/features/profile/use-profile'
 import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
 import { Money } from '#/shared/components/Money'
 import { Dialog } from '#/shared/components/Dialog'
 import { useDialog } from '#/shared/hooks/use-dialog'
+import { useInfiniteScrollSentinel } from '#/shared/hooks/use-infinite-scroll-sentinel'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { Button } from '#/components/ui/button'
-import { Skeleton } from '#/components/ui/skeleton'
 import { todayYmd } from '#/shared/lib/period'
-import type { Transaction } from '#/features/transactions/types'
+import { TransactionsListSkeleton } from '#/shared/components/skeleton-loaders/DashboardSkeleton'
+import type { Transaction } from '#/features/transactions/types/transaction.type'
 import type { Category } from '#/features/categories/types'
-
-// Map an inclusive Range to the infinite-list hook's half-open {from, to}
-// window (the single +1-day conversion lives in rangeToBounds), or undefined for
-// no Range — which the hook falls back to the current Period.
-function rangeToHookBounds(range: Range | null | undefined) {
-  if (!range) return undefined
-  const { start, end } = rangeToBounds(range)
-  return { from: start, to: end }
-}
-
-// Observe a bottom sentinel and load the next page when it scrolls into view.
-// Returns the ref to attach to the sentinel element. Kept out of the list
-// component so its render body stays declarative.
-function useInfiniteScrollSentinel(
-  onLoadMore: () => void,
-  hasNextPage: boolean,
-  isFetchingNextPage: boolean,
-) {
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el || !hasNextPage) return
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !isFetchingNextPage) onLoadMore()
-    })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage, onLoadMore])
-  return sentinelRef
-}
 
 // The Dashboard transaction list: keyset-paginated infinite scroll, segmented
 // into per-day groups with a divider per calendar day (date label + that day's
@@ -88,7 +59,7 @@ export function RecentTransactions({
   )
 
   if (loading || categoriesLoading) {
-    return <RecentTransactionsSkeleton />
+    return <TransactionsListSkeleton />
   }
 
   if (transactions.length === 0) {
@@ -149,39 +120,6 @@ export function RecentTransactions({
         onClose={() => setPendingDelete(null)}
       />
     </>
-  )
-}
-
-function RecentTransactionsSkeleton() {
-  return (
-    <div aria-busy="true" aria-live="polite" className="flex flex-col gap-4">
-      <span className="sr-only">Loading transactions</span>
-      {Array.from({ length: 3 }, (_day, dayIndex) => (
-        <div key={dayIndex}>
-          <div className="mb-1 flex items-baseline justify-between border-b border-border pb-1">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-3 w-16" />
-          </div>
-          <ul className="flex flex-col divide-y divide-border">
-            {Array.from({ length: 3 }, (_row, rowIndex) => (
-              <li key={rowIndex} className="flex items-center gap-2 py-3">
-                <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <Skeleton className="h-5 w-32 max-w-full" />
-                    <Skeleton className="mt-2 h-3 w-48 max-w-full" />
-                  </div>
-                  <Skeleton className="h-5 w-20 shrink-0" />
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <Skeleton className="size-8" />
-                  <Skeleton className="size-8" />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
   )
 }
 

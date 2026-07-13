@@ -5,10 +5,10 @@
 // the future Node.js backend reimplements the same contract. All arithmetic is
 // on integer cents.
 
-import { rollup } from '#/features/transactions/summary'
+import { rollup } from '#/features/transactions/utils/summary.util'
 import { DAYS_PER_WEEK } from './constants/reports.constant'
 import { MS_PER_DAY } from '#/shared/constants/period.constant'
-import type { Transaction } from '#/features/transactions/types'
+import type { Transaction } from '#/features/transactions/types/transaction.type'
 import type { PeriodRange } from '#/shared/lib/period'
 import type { CategoryDelta, Delta, PeriodComparison, WeekSlice } from './types'
 

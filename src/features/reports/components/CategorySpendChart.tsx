@@ -2,7 +2,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { formatMoney } from '#/lib/money'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
-import type { CategorySpend } from '#/features/transactions/types'
+import type { CategorySpend } from '#/features/transactions/types/transaction.type'
 
 // Spend-by-category for the current Period as a donut. Each slice is colored by
 // the category's own stored colorHex (runtime data from the DB, not a source

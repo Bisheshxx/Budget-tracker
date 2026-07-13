@@ -1,5 +1,5 @@
 import { computeComparison, computeWeeks } from '#/features/reports/comparison'
-import { rollup } from '#/features/transactions/summary'
+import { rollup } from '#/features/transactions/utils/summary.util'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 import type { PeriodRange } from '#/shared/lib/period'
 import type { PeriodReport } from '#/features/reports/types'

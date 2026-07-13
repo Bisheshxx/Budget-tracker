@@ -1,10 +1,13 @@
-import { usePeriodSummary } from '#/features/transactions/use-transactions'
+import { usePeriodSummary } from '#/features/transactions/hooks/use-transactions'
 import { useProfile } from '#/features/profile/use-profile'
 import { useCategoryLookup } from '#/features/categories/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
 import { RangeFilter } from '#/features/transactions/components/RangeFilter'
-import { formatRangeLabel, rangeToBounds } from '#/features/transactions/range'
-import type { Range } from '#/features/transactions/range'
+import {
+  formatRangeLabel,
+  rangeToBounds,
+} from '#/features/transactions/utils/range.util'
+import type { Range } from '#/features/transactions/utils/range.util'
 import { Money } from '#/shared/components/Money'
 import { MoneyBadge } from '#/shared/components/MoneyBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
@@ -13,7 +16,7 @@ import { parseYmd, todayYmd } from '#/shared/lib/period'
 import type {
   CategorySpend,
   PeriodSummary,
-} from '#/features/transactions/types'
+} from '#/features/transactions/types/transaction.type'
 
 const MONTH_NAMES = [
   'January',
@@ -96,7 +99,10 @@ function PeriodSummarySkeleton() {
       <span className="sr-only">Loading cashflow summary</span>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {Array.from({ length: 3 }, (_, index) => (
-          <div key={index} className="rounded-xl border border-border px-4 py-3">
+          <div
+            key={index}
+            className="rounded-xl border border-border px-4 py-3"
+          >
             <Skeleton className="h-3 w-24" />
             <Skeleton className="mt-2 h-7 w-28" />
           </div>
@@ -108,7 +114,10 @@ function PeriodSummarySkeleton() {
         <Skeleton className="mt-3 h-3 w-full" />
         <div className="mt-3 flex flex-col gap-3">
           {Array.from({ length: 3 }, (_, index) => (
-            <div key={index} className="flex items-center justify-between gap-3">
+            <div
+              key={index}
+              className="flex items-center justify-between gap-3"
+            >
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <Skeleton className="h-5 w-28 max-w-full" />
                 <Skeleton className="h-3 w-10" />

@@ -9,7 +9,8 @@ vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }))
 
 const { RangeFilter } =
   await import('#/features/transactions/components/RangeFilter.tsx')
-const { formatRangeLabel } = await import('#/features/transactions/range.ts')
+const { formatRangeLabel } =
+  await import('#/features/transactions/utils/range.util.ts')
 
 // Radix's popover positioning (floating-ui) needs ResizeObserver, which jsdom
 // doesn't provide.

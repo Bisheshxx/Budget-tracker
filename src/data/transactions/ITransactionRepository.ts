@@ -3,7 +3,7 @@ import type {
   TransactionCreate,
   TransactionPageParams,
   TransactionUpdate,
-} from '#/features/transactions/types'
+} from '#/features/transactions/types/transaction.type'
 
 export interface ITransactionRepository {
   /**

@@ -11,10 +11,13 @@ import { RecentTransactions } from '#/features/transactions/components/RecentTra
 import { DueNow } from '#/features/recurring/components/DueNow'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { CategoryManager } from '#/features/categories/components/CategoryManager'
-import { rangeSearchSchema } from '#/features/transactions/schema'
-import { formatRangeLabel, searchToRange } from '#/features/transactions/range'
-import type { QuickAddFormValues } from '#/features/transactions/schema'
-import type { Transaction } from '#/features/transactions/types'
+import { rangeSearchSchema } from '#/features/transactions/schemas/transaction.schema'
+import {
+  formatRangeLabel,
+  searchToRange,
+} from '#/features/transactions/utils/range.util'
+import type { QuickAddFormValues } from '#/features/transactions/schemas/transaction.schema'
+import type { Transaction } from '#/features/transactions/types/transaction.type'
 
 // Protected shell: the Cashflow summary (issue 05) plus quick-add + recent list
 // (issue 03). `?from=&to=` re-scopes the summary card and the list to a Range

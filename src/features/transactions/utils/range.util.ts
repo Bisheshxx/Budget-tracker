@@ -35,6 +35,16 @@ export function rangeToBounds(range: Range): PeriodRange {
 }
 
 /**
+ * Map an inclusive Range to the infinite-list hook's half-open {from, to}
+ * window, or undefined so the hook falls back to the current Period.
+ */
+export function rangeToHookBounds(range: Range | null | undefined) {
+  if (!range) return undefined
+  const { start, end } = rangeToBounds(range)
+  return { from: start, to: end }
+}
+
+/**
  * The Range's display label for the card title and list heading, e.g.
  * "3 Jan – 18 Mar 2026". Both ends are inclusive dates ('YYYY-MM-DD').
  */

@@ -1,10 +1,10 @@
 import { recurringSchema } from './schema'
 import { computeDue } from './due'
 import { toCents } from '#/lib/money'
-import { quickAddSchema } from '#/features/transactions/schema'
+import { quickAddSchema } from '#/features/transactions/schemas/transaction.schema'
 import { addDays } from '#/shared/lib/period'
 import type { RecurringInput } from './schema'
-import type { QuickAddInput } from '#/features/transactions/schema'
+import type { QuickAddInput } from '#/features/transactions/schemas/transaction.schema'
 import type {
   DueOccurrence,
   RecurringExpense,

@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement } from 'react'
 import { resolvePeriod, todayYmd } from '#/shared/lib/period.ts'
 import type { ReactNode } from 'react'
-import type { Transaction } from '#/features/transactions/types.ts'
+import type { Transaction } from '#/features/transactions/types/transaction.type.ts'
 
 // Mock the profile hook and the service singleton so the hook is exercised
 // without Supabase; the cursor logic (nextPageCursor) runs for real.
@@ -18,7 +18,7 @@ vi.mock('#/features/transactions', () => ({
 }))
 
 const { useTransactionsInfinite } =
-  await import('#/features/transactions/use-transactions.ts')
+  await import('#/features/transactions/hooks/use-transactions.ts')
 
 const PAGE_SIZE = 25
 

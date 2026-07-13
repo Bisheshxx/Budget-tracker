@@ -5,7 +5,7 @@ import {
   rangeSchema,
   rangeSearchSchema,
   today,
-} from '#/features/transactions/schema.ts'
+} from '#/features/transactions/schemas/transaction.schema.ts'
 
 // The message of the first validation issue on a given field, or undefined when
 // the parse succeeded or no issue targets that field.
@@ -144,8 +144,9 @@ describe('rangeSchema', () => {
 
 describe('rangeSearchSchema', () => {
   it('passes valid params through and accepts absent ones', () => {
-    expect(rangeSearchSchema.parse({ from: '2026-01-03', to: '2026-03-18' }))
-      .toEqual({ from: '2026-01-03', to: '2026-03-18' })
+    expect(
+      rangeSearchSchema.parse({ from: '2026-01-03', to: '2026-03-18' }),
+    ).toEqual({ from: '2026-01-03', to: '2026-03-18' })
     expect(rangeSearchSchema.parse({})).toEqual({})
   })
 

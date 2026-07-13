@@ -2,7 +2,10 @@
 // I/O. Kept separate from the hook so the cursor logic is unit-testable on its
 // own (the hook just hands it to useInfiniteQuery's getNextPageParam).
 
-import type { Transaction, TransactionPageCursor } from './types'
+import type {
+  Transaction,
+  TransactionPageCursor,
+} from '#/features/transactions/types/transaction.type'
 
 /**
  * Resolve the cursor for the page after `page`, given the page size. A page

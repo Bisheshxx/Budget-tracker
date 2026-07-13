@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   formatDayLabel,
   groupByDay,
-} from '#/features/transactions/group-by-day.ts'
-import type { Transaction } from '#/features/transactions/types.ts'
+} from '#/features/transactions/utils/group-by-day.util.ts'
+import type { Transaction } from '#/features/transactions/types/transaction.type.ts'
 
 // Build a transaction with only the fields grouping reads.
 function tx(

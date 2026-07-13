@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { fromCents } from '#/lib/money'
-import { TRANSACTION_TYPES } from './constants/transactions.constant'
-import type { Transaction } from './types'
+import { TRANSACTION_TYPES } from '#/features/transactions/constants/transactions.constant'
+import type { Transaction } from '#/features/transactions/types/transaction.type'
 
 // Single source of truth for the quick-add form. Used by the form (via
 // @hookform/resolvers' zodResolver) AND by TransactionService as a backstop, so

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import type { PeriodSummary } from '#/features/transactions/types.ts'
+import type { PeriodSummary } from '#/features/transactions/types/transaction.type.ts'
 import type { Category } from '#/features/categories/types.ts'
 
 // Mock the three hooks the component reads so it renders in isolation — no
@@ -11,7 +11,7 @@ const { usePeriodSummary } = vi.hoisted(() => ({ usePeriodSummary: vi.fn() }))
 const { useProfile } = vi.hoisted(() => ({ useProfile: vi.fn() }))
 const { useCategories } = vi.hoisted(() => ({ useCategories: vi.fn() }))
 
-vi.mock('#/features/transactions/use-transactions', () => ({
+vi.mock('#/features/transactions/hooks/use-transactions', () => ({
   usePeriodSummary,
 }))
 vi.mock('#/features/profile/use-profile', () => ({ useProfile }))
@@ -19,7 +19,8 @@ vi.mock('#/features/categories/use-categories', () => ({ useCategories }))
 
 const { CashflowSummary } =
   await import('#/features/transactions/components/CashflowSummary.tsx')
-const { formatRangeLabel } = await import('#/features/transactions/range.ts')
+const { formatRangeLabel } =
+  await import('#/features/transactions/utils/range.util.ts')
 
 const food: Category = {
   id: 'food',

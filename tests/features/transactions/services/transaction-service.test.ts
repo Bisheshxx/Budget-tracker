@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
-import { TransactionService } from '#/features/transactions/transaction-service.ts'
+import { TransactionService } from '#/features/transactions/services/transaction-service.ts'
 import type {
   Transaction,
   TransactionCreate,
   TransactionPageParams,
   TransactionUpdate,
-} from '#/features/transactions/types.ts'
+} from '#/features/transactions/types/transaction.type.ts'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository.ts'
-import type { QuickAddInput } from '#/features/transactions/schema.ts'
+import type { QuickAddInput } from '#/features/transactions/schemas/transaction.schema.ts'
 
 // Minimal in-memory fake — the whole point of ADR 0001's repository pattern.
 // `create` echoes the input back with DB-assigned fields so we can assert what
@@ -82,7 +82,10 @@ describe('TransactionService', () => {
       const repo = makeFakeRepo()
       const service = new TransactionService(repo)
 
-      await service.create('profile-1', { ...validExpense, categoryId: 'cat-9' })
+      await service.create('profile-1', {
+        ...validExpense,
+        categoryId: 'cat-9',
+      })
 
       expect(repo.create).toHaveBeenCalledWith(
         expect.objectContaining({ categoryId: 'cat-9' }),

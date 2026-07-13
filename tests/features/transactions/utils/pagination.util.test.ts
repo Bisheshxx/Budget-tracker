@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { nextPageCursor } from '#/features/transactions/pagination.ts'
-import type { Transaction } from '#/features/transactions/types.ts'
+import { nextPageCursor } from '#/features/transactions/utils/pagination.util.ts'
+import type { Transaction } from '#/features/transactions/types/transaction.type.ts'
 
 // Build a transaction with only the fields the cursor reads.
 function tx(id: string, transactionDate: string): Transaction {

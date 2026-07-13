@@ -4,7 +4,10 @@
 // and the Reports Period Comparison both build on it, so the two never drift in
 // how a Period is totalled. All arithmetic is on integer cents.
 
-import type { PeriodSummary, Transaction } from './types'
+import type {
+  PeriodSummary,
+  Transaction,
+} from '#/features/transactions/types/transaction.type'
 
 export function rollup(transactions: Transaction[]): PeriodSummary {
   let incomeCents = 0

@@ -4,7 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement } from 'react'
 import type { ReactNode } from 'react'
-import type { PeriodSummary } from '#/features/transactions/types.ts'
+import type { PeriodSummary } from '#/features/transactions/types/transaction.type.ts'
 
 // Mock the profile hook and the service singleton so the hook is exercised
 // without Supabase. vi.hoisted keeps the spies reachable in the factories.
@@ -17,7 +17,7 @@ vi.mock('#/features/transactions', () => ({
 }))
 
 const { usePeriodSummary } =
-  await import('#/features/transactions/use-transactions.ts')
+  await import('#/features/transactions/hooks/use-transactions.ts')
 
 // Each test gets a fresh QueryClient (retries off) so failures surface fast.
 function wrapper({ children }: { children: ReactNode }) {

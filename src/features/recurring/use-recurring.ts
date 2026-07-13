@@ -8,7 +8,7 @@ import { recurringService } from '#/features/recurring'
 import { useProfile } from '#/features/profile/use-profile'
 import { resolvePeriod, todayYmd } from '#/shared/lib/period'
 import type { RecurringInput } from './schema'
-import type { QuickAddInput } from '#/features/transactions/schema'
+import type { QuickAddInput } from '#/features/transactions/schemas/transaction.schema'
 import type {
   DueOccurrence,
   RecurringExpense,

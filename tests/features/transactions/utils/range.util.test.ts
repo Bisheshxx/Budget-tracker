@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   formatRangeLabel,
   rangeToBounds,
+  rangeToHookBounds,
   searchToRange,
-} from '#/features/transactions/range.ts'
+} from '#/features/transactions/utils/range.util.ts'
 
 describe('searchToRange', () => {
   it('is active when both ends resolve and are in order', () => {
@@ -49,6 +50,22 @@ describe('rangeToBounds', () => {
       start: '2026-02-10',
       end: '2026-02-11',
     })
+  })
+})
+
+describe('rangeToHookBounds', () => {
+  it('maps an inclusive range to hook from/to bounds', () => {
+    expect(rangeToHookBounds({ from: '2026-01-03', to: '2026-03-18' })).toEqual(
+      {
+        from: '2026-01-03',
+        to: '2026-03-19',
+      },
+    )
+  })
+
+  it('is undefined when no range is active', () => {
+    expect(rangeToHookBounds(null)).toBeUndefined()
+    expect(rangeToHookBounds(undefined)).toBeUndefined()
   })
 })
 

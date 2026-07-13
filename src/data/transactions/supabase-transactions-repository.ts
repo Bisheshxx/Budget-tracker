@@ -6,7 +6,7 @@ import type {
   TransactionPageParams,
   TransactionType,
   TransactionUpdate,
-} from '#/features/transactions/types'
+} from '#/features/transactions/types/transaction.type'
 import type { ITransactionRepository } from './ITransactionRepository'
 
 type TransactionRow = Database['public']['Tables']['transactions']['Row']

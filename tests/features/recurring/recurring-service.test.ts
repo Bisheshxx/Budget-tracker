@@ -13,7 +13,7 @@ import type { ITransactionRepository } from '#/data/transactions/ITransactionRep
 import type {
   Transaction,
   TransactionCreate,
-} from '#/features/transactions/types.ts'
+} from '#/features/transactions/types/transaction.type.ts'
 
 function makeFakeRepo(overrides: Partial<IRecurringExpenseRepository> = {}) {
   return {

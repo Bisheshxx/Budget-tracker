@@ -3,18 +3,18 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
   useCreateTransaction,
   useUpdateTransaction,
-} from '#/features/transactions/use-transactions'
+} from '#/features/transactions/hooks/use-transactions'
 import {
   TRANSACTION_TYPES,
   quickAddSchema,
   today,
   transactionToFormValues,
-} from '#/features/transactions/schema'
+} from '#/features/transactions/schemas/transaction.schema'
 import type {
   QuickAddFormValues,
   QuickAddInput,
-} from '#/features/transactions/schema'
-import type { Transaction } from '#/features/transactions/types'
+} from '#/features/transactions/schemas/transaction.schema'
+import type { Transaction } from '#/features/transactions/types/transaction.type'
 import { CategoryPicker } from '#/features/categories/components/CategoryPicker'
 import { MoneyAmountField } from '#/shared/components/MoneyAmountField'
 import { Button } from '#/components/ui/button'

@@ -3,7 +3,7 @@
 // component so the grouping logic is unit-testable on its own.
 
 import { addDays, parseYmd } from '#/shared/lib/period'
-import type { Transaction } from './types'
+import type { Transaction } from '#/features/transactions/types/transaction.type'
 
 // One calendar day's worth of transactions, with that day's net (income −
 // expenses) precomputed for the divider header.
