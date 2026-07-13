@@ -15,10 +15,10 @@ The layering pattern (zod schema → repository → service → hook → compone
 - **`src/lib/` is shared infrastructure only** — the Supabase client, generated `database.types.ts`, and cross-cutting utilities (`money.ts`, `utils.ts`). No feature-specific code.
 - **`src/components/` is cross-feature UI only** (`Header`, `Footer`, `ThemeToggle`, and `ui/` shadcn primitives). Feature-specific components live in their feature's `components/`.
 - **Naming:** component files are **PascalCase** (matching the exported component, e.g. `GoogleButton.tsx`); every other `.ts(x)` file — services, hooks, schemas, data — is **kebab-case**.
-- **Imports:** cross-directory imports use the `#/` alias; same-directory imports may be relative. To avoid an import cycle, a feature's `index.ts` only wires/exports leaf modules (the service class + repository); context and components are imported from their explicit module paths (`#/features/auth/auth-context`), never re-exported by the barrel.
+- **Imports:** cross-directory imports use the `#/` alias; same-directory imports may be relative. To avoid an import cycle, a feature's `index.ts` only wires/exports leaf modules (the service class + repository); context and components are imported from their explicit module paths (`#/features/auth/contexts/auth-context`), never re-exported by the barrel.
 
 ## Consequences
 
 - To add a feature, create `src/features/<name>/` and keep everything for it there — do not spread it across the top-level layer folders.
-- Tests mirror the new tree under `tests/features/<feature>/`. Service unit tests still import the **class** directly (`#/features/auth/auth-service`) and inject a fake repository, so they stay free of Supabase/env per ADR 0001 (the barrel — which instantiates the real repository — is never imported in unit tests).
+- Tests mirror the new tree under `tests/features/<feature>/`. Service unit tests still import the **class** directly (`#/features/auth/services/auth-service`) and inject a fake repository, so they stay free of Supabase/env per ADR 0001 (the barrel — which instantiates the real repository — is never imported in unit tests).
 - Deferred follow-ups (not done in this change): collapsing the duplicate `#/` + `@/` path aliases into one, moving devtools packages to `devDependencies`, and adding a typed `env` module + `.env.example`.
