@@ -3,7 +3,7 @@
 // that traffics in these lives in #/data/categories/ICategoryRepository.
 // See docs/adr/0004.
 
-import type { CategoryFormValues } from './schema'
+import type { CategoryFormValues } from '#/features/categories/schemas/category.schema'
 
 export interface Category {
   id: string

@@ -4,21 +4,21 @@ import {
   useCategories,
   useCreateCategory,
   useUpdateCategory,
-} from '#/features/categories/use-categories'
+} from '#/features/categories/hooks/use-categories'
 import {
   CATEGORY_COLORS,
   DEFAULT_CATEGORY_COLOR,
   categorySchema,
-} from '#/features/categories/schema'
+} from '#/features/categories/schemas/category.schema'
 import {
   CATEGORY_ICON_NAMES,
   CategoryIcon,
-} from '#/features/categories/CategoryIcon'
+} from '#/features/categories/components/CategoryIcon'
 import type {
   CategoryCreateInput,
   CategoryFormValues,
-} from '#/features/categories/schema'
-import type { Category } from '#/features/categories/types'
+} from '#/features/categories/schemas/category.schema'
+import type { Category } from '#/features/categories/types/category.type'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { cn } from '#/lib/utils'

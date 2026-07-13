@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { CATEGORY_ICON_NAMES } from './CategoryIcon'
+import { CATEGORY_ICON_NAMES } from '#/features/categories/components/CategoryIcon'
 import {
   CATEGORY_COLORS,
   DEFAULT_CATEGORY_COLOR,
-} from './constants/categories.constant'
+} from '#/features/categories/constants/categories.constant'
 
 // Single source of truth for creating a category. Used by the create form (via
 // zodResolver) AND by CategoryService as a backstop. See CONTEXT.md.

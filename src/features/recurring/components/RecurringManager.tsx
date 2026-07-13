@@ -7,8 +7,8 @@ import {
 } from '#/features/recurring/use-recurring'
 import { describeSchedule } from '#/features/recurring/schema'
 import { RecurringForm } from '#/features/recurring/components/RecurringForm'
-import { useCategoryLookup } from '#/features/categories/use-category-lookup'
-import { CategoryIcon } from '#/features/categories/CategoryIcon'
+import { useCategoryLookup } from '#/features/categories/hooks/use-category-lookup'
+import { CategoryIcon } from '#/features/categories/components/CategoryIcon'
 import { useProfile } from '#/features/profile/use-profile'
 import { Money } from '#/shared/components/Money'
 import { RecurringRowsSkeleton } from '#/shared/components/skeleton-loaders/RecurringSkeleton'
@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from '#/components/ui/dialog'
 import type { RecurringExpense } from '#/features/recurring/types'
-import type { Category } from '#/features/categories/types'
+import type { Category } from '#/features/categories/types/category.type'
 
 // The Recurring screen body: lists the user's templates and drives create, edit,
 // deactivate, and (for already-deactivated templates) hard delete. The form lives

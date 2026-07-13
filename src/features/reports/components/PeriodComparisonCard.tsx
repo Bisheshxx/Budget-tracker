@@ -1,4 +1,4 @@
-import { useCategoryLookup } from '#/features/categories/use-category-lookup'
+import { useCategoryLookup } from '#/features/categories/hooks/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
 import { Money } from '#/shared/components/Money'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'

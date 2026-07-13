@@ -1,6 +1,6 @@
 import { usePeriodSummary } from '#/features/transactions/hooks/use-transactions'
 import { useProfile } from '#/features/profile/use-profile'
-import { useCategoryLookup } from '#/features/categories/use-category-lookup'
+import { useCategoryLookup } from '#/features/categories/hooks/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
 import { RangeFilter } from '#/features/transactions/components/RangeFilter'
 import {

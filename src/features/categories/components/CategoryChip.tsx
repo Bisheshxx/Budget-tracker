@@ -1,6 +1,6 @@
-import { CategoryIcon } from '#/features/categories/CategoryIcon'
+import { CategoryIcon } from '#/features/categories/components/CategoryIcon'
 import { cn } from '#/lib/utils'
-import type { Category } from '#/features/categories/types'
+import type { Category } from '#/features/categories/types/category.type'
 
 // The standard category label: color dot + icon + name. Callers resolve the
 // real Category (including the seeded Uncategorized row) and pass it in; the

@@ -14,7 +14,7 @@ import type {
   RecurringInput,
 } from '#/features/recurring/schema'
 import type { RecurringExpense } from '#/features/recurring/types'
-import { useCategories } from '#/features/categories/use-categories'
+import { useCategories } from '#/features/categories/hooks/use-categories'
 import { MoneyAmountField } from '#/shared/components/MoneyAmountField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'

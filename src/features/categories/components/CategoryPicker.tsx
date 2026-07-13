@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
-import { useCategories } from '#/features/categories/use-categories'
-import { CategoryIcon } from '#/features/categories/CategoryIcon'
+import { useCategories } from '#/features/categories/hooks/use-categories'
+import { CategoryIcon } from '#/features/categories/components/CategoryIcon'
 import { Button } from '#/components/ui/button'
 import {
   SelectMenu,
@@ -8,7 +8,7 @@ import {
   SelectMenuItem,
   SelectMenuTrigger,
 } from '#/components/ui/select-menu'
-import type { Category } from '#/features/categories/types'
+import type { Category } from '#/features/categories/types/category.type'
 
 // Radix Select disallows an empty-string item value, so Uncategorized uses a
 // sentinel internally and maps back to '' (→ null transaction.category_id).
@@ -30,7 +30,9 @@ export function CategoryPicker({
   const selectable = categories.filter(
     (c) => !(c.isSystem && c.name === 'Uncategorized'),
   )
-  const selected = value ? (categories.find((c) => c.id === value) ?? null) : null
+  const selected = value
+    ? (categories.find((c) => c.id === value) ?? null)
+    : null
 
   return (
     <div className="flex items-center gap-2">

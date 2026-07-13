@@ -19,4 +19,3 @@ export const CATEGORY_COLORS = [
 /* eslint-enable no-restricted-syntax */
 
 export const DEFAULT_CATEGORY_COLOR = CATEGORY_COLORS[0]
-

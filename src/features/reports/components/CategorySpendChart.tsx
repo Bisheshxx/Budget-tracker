@@ -1,5 +1,5 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
-import { useCategoryLookup } from '#/features/categories/use-category-lookup'
+import { useCategoryLookup } from '#/features/categories/hooks/use-category-lookup'
 import { formatMoney } from '#/lib/money'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import type { CategorySpend } from '#/features/transactions/types/transaction.type'

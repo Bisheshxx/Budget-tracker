@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import type { PeriodSummary } from '#/features/transactions/types/transaction.type.ts'
-import type { Category } from '#/features/categories/types.ts'
+import type { Category } from '#/features/categories/types/category.type.ts'
 
 // Mock the three hooks the component reads so it renders in isolation — no
 // QueryClient, no Supabase. vi.hoisted keeps the spies reachable in the
@@ -15,7 +15,7 @@ vi.mock('#/features/transactions/hooks/use-transactions', () => ({
   usePeriodSummary,
 }))
 vi.mock('#/features/profile/use-profile', () => ({ useProfile }))
-vi.mock('#/features/categories/use-categories', () => ({ useCategories }))
+vi.mock('#/features/categories/hooks/use-categories', () => ({ useCategories }))
 
 const { CashflowSummary } =
   await import('#/features/transactions/components/CashflowSummary.tsx')

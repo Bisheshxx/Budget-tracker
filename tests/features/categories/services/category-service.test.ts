@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { CategoryService } from '#/features/categories/category-service.ts'
+import { CategoryService } from '#/features/categories/services/category-service.ts'
 import type {
   Category,
   CategoryCreate,
   CategoryUpdate,
-} from '#/features/categories/types.ts'
+} from '#/features/categories/types/category.type.ts'
 import type { ICategoryRepository } from '#/data/categories/ICategoryRepository.ts'
 
 function makeFakeRepo(overrides: Partial<ICategoryRepository> = {}) {

@@ -11,7 +11,7 @@ import {
 import { rangeToHookBounds } from '#/features/transactions/utils/range.util'
 import type { Range } from '#/features/transactions/utils/range.util'
 import { useProfile } from '#/features/profile/use-profile'
-import { useCategoryLookup } from '#/features/categories/use-category-lookup'
+import { useCategoryLookup } from '#/features/categories/hooks/use-category-lookup'
 import { CategoryChip } from '#/features/categories/components/CategoryChip'
 import { Money } from '#/shared/components/Money'
 import { Dialog } from '#/shared/components/Dialog'
@@ -22,7 +22,7 @@ import { Button } from '#/components/ui/button'
 import { todayYmd } from '#/shared/lib/period'
 import { TransactionsListSkeleton } from '#/shared/components/skeleton-loaders/DashboardSkeleton'
 import type { Transaction } from '#/features/transactions/types/transaction.type'
-import type { Category } from '#/features/categories/types'
+import type { Category } from '#/features/categories/types/category.type'
 
 // The Dashboard transaction list: keyset-paginated infinite scroll, segmented
 // into per-day groups with a divider per calendar day (date label + that day's

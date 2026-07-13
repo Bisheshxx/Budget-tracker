@@ -7,12 +7,16 @@ import {
 } from '@tanstack/react-query'
 import { categoryService } from '#/features/categories'
 import { useProfile } from '#/features/profile/use-profile'
-import { CATEGORY_PAGE_SIZE } from './constants/categories.constant'
-import type { CategoryCreateInput, CategoryUpdateInput } from './schema'
+import { CATEGORY_PAGE_SIZE } from '#/features/categories/constants/categories.constant'
+import { nextCategoryPageCursor } from '#/features/categories/utils/pagination.util'
+import type {
+  CategoryCreateInput,
+  CategoryUpdateInput,
+} from '#/features/categories/schemas/category.schema'
 import type {
   Category,
   CategoryPageCursor,
-} from '#/features/categories/types'
+} from '#/features/categories/types/category.type'
 
 const categoriesQueryOptions = (userId: string) =>
   queryOptions({
@@ -31,15 +35,6 @@ interface InfiniteCategoriesResult extends CategoriesResult {
   hasNextPage: boolean
   isFetchingNextPage: boolean
   fetchNextPage: () => void
-}
-
-function nextCategoryPageCursor(
-  page: Category[],
-  pageSize: number,
-): CategoryPageCursor | undefined {
-  if (page.length < pageSize) return undefined
-  const last = page[page.length - 1]
-  return { createdAt: last.createdAt, id: last.id }
 }
 
 // System + own categories for the current user's profile. Disabled until the

@@ -4,8 +4,8 @@ import { toast } from 'sonner'
 import {
   useCategoriesInfinite,
   useDeleteCategory,
-} from '#/features/categories/use-categories'
-import { CategoryIcon } from '#/features/categories/CategoryIcon'
+} from '#/features/categories/hooks/use-categories'
+import { CategoryIcon } from '#/features/categories/components/CategoryIcon'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
@@ -18,7 +18,7 @@ import {
 } from '#/components/ui/dialog'
 import { Skeleton } from '#/components/ui/skeleton'
 import { useInfiniteScrollSentinel } from '#/shared/hooks/use-infinite-scroll-sentinel'
-import type { Category } from '#/features/categories/types'
+import type { Category } from '#/features/categories/types/category.type'
 
 // Manage categories directly inside the Dashboard's Categories card. The list
 // is newest-created first and paged; system categories are read-only, while the
