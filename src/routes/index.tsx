@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { useAuth } from '#/features/auth/auth-context'
+import { useAuth } from '#/features/auth/contexts/auth-context'
 import { Money } from '#/shared/components/Money'
 import { MoneyBadge } from '#/shared/components/MoneyBadge'
 

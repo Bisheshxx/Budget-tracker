@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useAuth } from '#/features/auth/auth-context'
+import { useAuth } from '#/features/auth/contexts/auth-context'
 import { useProfile } from '#/features/profile/use-profile'
 import { profileService } from '#/features/profile'
 import {

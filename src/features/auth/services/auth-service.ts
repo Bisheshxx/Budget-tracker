@@ -1,5 +1,5 @@
-import { credentialsSchema } from './schema'
-import type { AuthSession, Credentials } from '#/features/auth/types'
+import { credentialsSchema } from '#/features/auth/schemas/auth.schema'
+import type { AuthSession, Credentials } from '#/features/auth/types/auth.type'
 import type { IAuthRepository } from '#/data/auth/IAuthRepository'
 
 // Thin service over the auth repository. Holds app-level auth rules (e.g. input
@@ -30,7 +30,9 @@ export class AuthService {
     return this.repo.getSession()
   }
 
-  onAuthStateChange(callback: (session: AuthSession | null) => void): () => void {
+  onAuthStateChange(
+    callback: (session: AuthSession | null) => void,
+  ): () => void {
     return this.repo.onAuthStateChange(callback)
   }
 

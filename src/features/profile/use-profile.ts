@@ -1,6 +1,6 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { profileService } from '#/features/profile'
-import { useAuth } from '#/features/auth/auth-context'
+import { useAuth } from '#/features/auth/contexts/auth-context'
 import type { UserProfile } from '#/features/profile/types'
 
 interface ProfileResult {

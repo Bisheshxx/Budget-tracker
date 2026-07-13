@@ -8,7 +8,7 @@ const { signInWithGoogle } = vi.hoisted(() => ({
   signInWithGoogle: vi.fn(),
 }))
 
-vi.mock('#/features/auth/auth-context.tsx', () => ({
+vi.mock('#/features/auth/contexts/auth-context.tsx', () => ({
   useAuth: () => ({ signInWithGoogle }),
 }))
 
@@ -25,7 +25,9 @@ describe('GoogleButton', () => {
     signInWithGoogle.mockResolvedValue(undefined)
     render(<GoogleButton />)
 
-    fireEvent.click(screen.getByRole('button', { name: /continue with google/i }))
+    fireEvent.click(
+      screen.getByRole('button', { name: /continue with google/i }),
+    )
 
     expect(signInWithGoogle).toHaveBeenCalledOnce()
   })

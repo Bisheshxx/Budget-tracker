@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { AuthService } from '#/features/auth/auth-service.ts'
-import type { AuthSession, Credentials } from '#/features/auth/types.ts'
+import { AuthService } from '#/features/auth/services/auth-service.ts'
+import type {
+  AuthSession,
+  Credentials,
+} from '#/features/auth/types/auth.type.ts'
 import type { IAuthRepository } from '#/data/auth/IAuthRepository.ts'
 
 const session: AuthSession = {
@@ -78,7 +81,10 @@ describe('AuthService', () => {
       const repo = makeFakeRepo()
       const service = new AuthService(repo)
 
-      await service.signInWithOAuth('google', 'http://localhost:3000/auth/callback')
+      await service.signInWithOAuth(
+        'google',
+        'http://localhost:3000/auth/callback',
+      )
       expect(repo.signInWithOAuth).toHaveBeenCalledWith(
         'google',
         'http://localhost:3000/auth/callback',

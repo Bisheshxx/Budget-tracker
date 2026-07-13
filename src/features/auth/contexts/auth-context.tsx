@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { authService } from '#/features/auth'
 import type { ReactNode } from 'react'
-import type { AuthSession, Credentials } from '#/features/auth/types'
+import type { AuthSession, Credentials } from '#/features/auth/types/auth.type'
 
 interface AuthContextValue {
   session: AuthSession | null

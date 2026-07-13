@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
-import { useAuth } from '#/features/auth/auth-context'
+import { useAuth } from '#/features/auth/contexts/auth-context'
 import { useProfile } from '#/features/profile/use-profile'
 import { UserAvatar } from '#/shared/components/UserAvatar'
 import type { UserProfile } from '#/features/profile/types'
