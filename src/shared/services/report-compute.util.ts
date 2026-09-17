@@ -1,16 +1,25 @@
 // Pure Reports math — no React, no I/O. Given lists of transactions (already
-// fetched for two Period ranges), produce the Period Comparison, the weekly
-// breakdown, and the per-Period rollup. Kept pure so it is exhaustively
-// unit-testable and so the V1 Supabase report repo can run it client-side while
-// the future Node.js backend reimplements the same contract. All arithmetic is
-// on integer cents.
+// fetched for two Period ranges), produce the Period Comparison and the weekly
+// breakdown. Lives in shared (not the reports feature) because the data layer's
+// Reports repository calls it directly (see #/data/reports) — a data port may
+// only reach into shared, never a feature's internals, so this pure compute
+// moved out of the feature alongside the rollup it builds on. Kept pure so it is
+// exhaustively unit-testable and so the V1 Supabase report repo can run it
+// client-side while the future Node.js backend reimplements the same contract.
+// All arithmetic is on integer cents. See docs/adr/0009.
 
-import { rollup } from '#/features/transactions/utils/summary.util'
-import { DAYS_PER_WEEK } from './constants/reports.constant'
+import { rollup } from '#/shared/utils/summary.util'
 import { MS_PER_DAY } from '#/shared/constants/period.constant'
-import type { Transaction } from '#/features/transactions/types/transaction.type'
+import type { Transaction } from '#/shared/types/transaction.type'
 import type { PeriodRange } from '#/shared/lib/period'
-import type { CategoryDelta, Delta, PeriodComparison, WeekSlice } from './types'
+import type {
+  CategoryDelta,
+  Delta,
+  PeriodComparison,
+  WeekSlice,
+} from '#/features/reports/types'
+
+const DAYS_PER_WEEK = 7
 
 function parseYmd(date: string): { year: number; month: number; day: number } {
   const [year, month, day] = date.split('-').map(Number)

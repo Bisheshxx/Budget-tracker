@@ -1,7 +1,7 @@
 import { onboardingSchema } from './schema'
 import { toCents } from '#/lib/money'
 import type { OnboardingInput } from './schema'
-import type { UserProfile } from '#/features/profile/types'
+import type { UserProfile } from '#/shared/types/user-profile.type'
 import type { IProfileRepository } from '#/data/profile/IProfileRepository'
 
 // Thin service over the profile repository. Holds the app-level rules for

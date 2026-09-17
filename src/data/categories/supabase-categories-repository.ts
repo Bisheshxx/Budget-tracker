@@ -6,7 +6,7 @@ import type {
   CategoryCreate,
   CategoryPageRequest,
   CategoryUpdate,
-} from '#/features/categories/types/category.type'
+} from '#/shared/types/category.type'
 import type { ICategoryRepository } from './ICategoryRepository'
 
 type CategoryRow = Database['public']['Tables']['categories']['Row']

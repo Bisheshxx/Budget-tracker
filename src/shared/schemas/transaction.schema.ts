@@ -1,12 +1,14 @@
 import { z } from 'zod'
 import { fromCents } from '#/lib/money'
-import { TRANSACTION_TYPES } from '#/features/transactions/constants/transactions.constant'
-import type { Transaction } from '#/features/transactions/types/transaction.type'
+import { TRANSACTION_TYPES } from '#/shared/constants/transactions.constant'
+import type { Transaction } from '#/shared/types/transaction.type'
 
 // Single source of truth for the quick-add form. Used by the form (via
 // @hookform/resolvers' zodResolver) AND by TransactionService as a backstop, so
 // the rules never drift between UI and service. Amounts are entered in display
-// units (e.g. dollars); the service converts to integer cents. See CONTEXT.md.
+// units (e.g. dollars); the service converts to integer cents. Lives in shared
+// because recurring reuses the quick-add shape to confirm occurrences. See
+// CONTEXT.md and docs/adr/0009.
 
 export { TRANSACTION_TYPES }
 

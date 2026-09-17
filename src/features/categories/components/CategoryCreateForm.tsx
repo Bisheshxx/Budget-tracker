@@ -4,21 +4,21 @@ import {
   useCategories,
   useCreateCategory,
   useUpdateCategory,
-} from '#/features/categories/hooks/use-categories'
+} from '#/shared/hooks/use-categories'
 import {
   CATEGORY_COLORS,
   DEFAULT_CATEGORY_COLOR,
   categorySchema,
-} from '#/features/categories/schemas/category.schema'
+} from '#/shared/schemas/category.schema'
 import {
   CATEGORY_ICON_NAMES,
   CategoryIcon,
-} from '#/features/categories/components/CategoryIcon'
+} from '#/shared/components/CategoryIcon'
 import type {
   CategoryCreateInput,
   CategoryFormValues,
-} from '#/features/categories/schemas/category.schema'
-import type { Category } from '#/features/categories/types/category.type'
+} from '#/shared/schemas/category.schema'
+import type { Category } from '#/shared/types/category.type'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { cn } from '#/lib/utils'
@@ -41,7 +41,9 @@ function defaultValuesFor(category?: Category): CategoryFormValues {
   }
   return {
     name: category.name,
-    colorHex: category.colorHex,
+    // Stored as a plain string on the domain type, but always one of
+    // CATEGORY_COLORS in practice — the create/update schema is the only writer.
+    colorHex: category.colorHex as CategoryFormValues['colorHex'],
     icon: category.icon ?? CATEGORY_ICON_NAMES[0],
   }
 }

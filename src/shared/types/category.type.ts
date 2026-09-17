@@ -1,16 +1,14 @@
-// Domain types owned by the categories feature — the vocabulary the service,
-// hooks, components, and the repository port all speak. The persistence port
-// that traffics in these lives in #/data/categories/ICategoryRepository.
-// See docs/adr/0004.
-
-import type { CategoryFormValues } from '#/features/categories/schemas/category.schema'
+// Domain types for categories — a cross-feature vocabulary (categories, transactions,
+// recurring, and reports all speak it), so it lives in shared rather than a single
+// feature. The persistence port lives in #/data/categories/ICategoryRepository. See
+// docs/adr/0004 and docs/adr/0009.
 
 export interface Category {
   id: string
   /** Null = a system/preset category visible to everyone; otherwise the owner's profile id. */
   userId: string | null
   name: string
-  colorHex: CategoryFormValues['colorHex']
+  colorHex: string
   /** A lucide icon name (e.g. 'home'), or null. */
   icon: string | null
   isSystem: boolean

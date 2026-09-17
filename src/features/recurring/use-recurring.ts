@@ -5,10 +5,10 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { recurringService } from '#/features/recurring'
-import { useProfile } from '#/features/profile/use-profile'
+import { useProfile } from '#/shared/hooks/use-profile'
 import { resolvePeriod, todayYmd } from '#/shared/lib/period'
 import type { RecurringInput } from './schema'
-import type { QuickAddInput } from '#/features/transactions/schemas/transaction.schema'
+import type { QuickAddInput } from '#/shared/schemas/transaction.schema'
 import type {
   DueOccurrence,
   RecurringExpense,

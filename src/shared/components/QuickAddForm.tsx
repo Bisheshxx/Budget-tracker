@@ -3,19 +3,19 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
   useCreateTransaction,
   useUpdateTransaction,
-} from '#/features/transactions/hooks/use-transactions'
+} from '#/shared/hooks/use-transaction-mutations'
 import {
   TRANSACTION_TYPES,
   quickAddSchema,
   today,
   transactionToFormValues,
-} from '#/features/transactions/schemas/transaction.schema'
+} from '#/shared/schemas/transaction.schema'
 import type {
   QuickAddFormValues,
   QuickAddInput,
-} from '#/features/transactions/schemas/transaction.schema'
-import type { Transaction } from '#/features/transactions/types/transaction.type'
-import { CategoryPicker } from '#/features/categories/components/CategoryPicker'
+} from '#/shared/schemas/transaction.schema'
+import type { Transaction } from '#/shared/types/transaction.type'
+import { CategoryPicker } from '#/shared/components/CategoryPicker'
 import { MoneyAmountField } from '#/shared/components/MoneyAmountField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -43,7 +43,8 @@ const BLANK: QuickAddFormValues = {
 // refreshes the recent list and Cashflow totals), then calls `onSuccess` (the
 // parent uses this to close the dialog). `defaultValues` restores a draft after
 // the create-category dialog swap; `onCreateCategory` hands the current values up
-// so the parent can preserve them.
+// so the parent can preserve them. Lives in shared (not the transactions feature)
+// because recurring reuses it to confirm occurrences. See docs/adr/0009.
 export function QuickAddForm({
   transaction,
   defaultValues,

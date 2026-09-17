@@ -6,17 +6,17 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { categoryService } from '#/features/categories'
-import { useProfile } from '#/features/profile/use-profile'
-import { CATEGORY_PAGE_SIZE } from '#/features/categories/constants/categories.constant'
+import { useProfile } from '#/shared/hooks/use-profile'
+import { CATEGORY_PAGE_SIZE } from '#/shared/constants/categories.constant'
 import { nextPageCursor } from '#/shared/utils/pagination.util'
 import type {
   CategoryCreateInput,
   CategoryUpdateInput,
-} from '#/features/categories/schemas/category.schema'
+} from '#/shared/schemas/category.schema'
 import type {
   Category,
   CategoryPageCursor,
-} from '#/features/categories/types/category.type'
+} from '#/shared/types/category.type'
 
 const categoriesQueryOptions = (userId: string) =>
   queryOptions({
@@ -38,7 +38,8 @@ interface InfiniteCategoriesResult extends CategoriesResult {
 }
 
 // System + own categories for the current user's profile. Disabled until the
-// profile resolves.
+// profile resolves. Lives in shared (not the categories feature) because
+// transactions, recurring, and reports all consume it. See docs/adr/0009.
 export function useCategories(): CategoriesResult {
   const { profile, loading: profileLoading } = useProfile()
   const userId = profile?.id ?? null

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_CATEGORY_COLOR,
   createCategorySchema,
-} from '#/features/categories/schemas/category.schema.ts'
+} from '#/shared/schemas/category.schema.ts'
 
 describe('createCategorySchema', () => {
   it('accepts a name and trims it; color defaults', () => {

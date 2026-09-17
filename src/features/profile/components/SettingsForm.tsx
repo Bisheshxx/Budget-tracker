@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useAuth } from '#/features/auth/contexts/auth-context'
-import { useProfile } from '#/features/profile/use-profile'
+import { useProfile } from '#/shared/hooks/use-profile'
 import { profileService } from '#/features/profile'
 import { CURRENCIES, onboardingSchema } from '#/features/profile/schema'
 import { DAYS_OF_WEEK } from '#/features/profile/constants/profile.constant'
@@ -11,7 +11,7 @@ import type {
   OnboardingFormValues,
   OnboardingInput,
 } from '#/features/profile/schema'
-import type { UserProfile } from '#/features/profile/types'
+import type { UserProfile } from '#/shared/types/user-profile.type'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 import { Select } from '#/components/ui/select'

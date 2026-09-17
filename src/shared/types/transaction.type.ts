@@ -1,7 +1,7 @@
-// Domain types owned by the transactions feature — the vocabulary the service,
-// hooks, components, and the repository port all speak. The persistence port
-// that traffics in these lives in #/data/transactions/ITransactionRepository.
-// See docs/adr/0004.
+// Domain types for transactions — read by recurring (quick-add) and reports
+// (comparison/category spend) as well as the transactions feature itself, so
+// they live in shared. The persistence port lives in
+// #/data/transactions/ITransactionRepository. See docs/adr/0004 and docs/adr/0009.
 
 export type TransactionType = 'income' | 'expense'
 

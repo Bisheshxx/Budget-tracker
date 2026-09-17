@@ -7,7 +7,7 @@ import {
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useAuth } from '#/features/auth/contexts/auth-context'
-import { useProfile } from '#/features/profile/use-profile'
+import { useProfile } from '#/shared/hooks/use-profile'
 import { DashboardSkeleton } from '#/shared/components/skeleton-loaders/DashboardSkeleton'
 import { RecurringSkeleton } from '#/shared/components/skeleton-loaders/RecurringSkeleton'
 import { ReportsSkeleton } from '#/shared/components/skeleton-loaders/ReportsSkeleton'

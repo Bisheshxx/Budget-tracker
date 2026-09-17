@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
-import { useCategories } from '#/features/categories/hooks/use-categories'
-import { CategoryIcon } from '#/features/categories/components/CategoryIcon'
+import { useCategories } from '#/shared/hooks/use-categories'
+import { CategoryIcon } from '#/shared/components/CategoryIcon'
 import { Button } from '#/components/ui/button'
 import {
   SelectMenu,
@@ -8,7 +8,7 @@ import {
   SelectMenuItem,
   SelectMenuTrigger,
 } from '#/components/ui/select-menu'
-import type { Category } from '#/features/categories/types/category.type'
+import type { Category } from '#/shared/types/category.type'
 
 // Radix Select disallows an empty-string item value, so Uncategorized uses a
 // sentinel internally and maps back to '' (→ null transaction.category_id).

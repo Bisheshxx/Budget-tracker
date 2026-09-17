@@ -1,12 +1,14 @@
 import { z } from 'zod'
-import { CATEGORY_ICON_NAMES } from '#/features/categories/components/CategoryIcon'
+import { CATEGORY_ICON_NAMES } from '#/shared/components/CategoryIcon'
 import {
   CATEGORY_COLORS,
   DEFAULT_CATEGORY_COLOR,
-} from '#/features/categories/constants/categories.constant'
+} from '#/shared/constants/categories.constant'
 
 // Single source of truth for creating a category. Used by the create form (via
-// zodResolver) AND by CategoryService as a backstop. See CONTEXT.md.
+// zodResolver) AND by CategoryService as a backstop. Lives in shared because the
+// category read/mutate hooks (also shared, see docs/adr/0009) need the input
+// types. See CONTEXT.md.
 
 export { CATEGORY_COLORS, DEFAULT_CATEGORY_COLOR }
 

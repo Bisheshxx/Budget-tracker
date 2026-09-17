@@ -1,15 +1,12 @@
 import {
   createCategorySchema,
   updateCategorySchema,
-} from '#/features/categories/schemas/category.schema'
+} from '#/shared/schemas/category.schema'
 import type {
   CategoryCreateInput,
   CategoryUpdateInput,
-} from '#/features/categories/schemas/category.schema'
-import type {
-  Category,
-  CategoryPageRequest,
-} from '#/features/categories/types/category.type'
+} from '#/shared/schemas/category.schema'
+import type { Category, CategoryPageRequest } from '#/shared/types/category.type'
 import type { ICategoryRepository } from '#/data/categories/ICategoryRepository'
 
 // Thin service over the category repository. Validates via the shared schema (the

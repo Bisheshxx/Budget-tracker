@@ -1,21 +1,15 @@
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { transactionService } from '#/features/transactions'
-import { TRANSACTION_PAGE_SIZE } from '#/features/transactions/constants/transactions.constant'
-import { useProfile } from '#/features/profile/use-profile'
+import { TRANSACTION_PAGE_SIZE } from '#/shared/constants/transactions.constant'
+import { useProfile } from '#/shared/hooks/use-profile'
 import { daysIntoPeriod, resolvePeriod, todayYmd } from '#/shared/lib/period'
 import { nextPageCursor } from '#/shared/utils/pagination.util'
 import type { PeriodRange } from '#/shared/lib/period'
-import type { QuickAddInput } from '#/features/transactions/schemas/transaction.schema'
 import type {
   PeriodSummary,
   Transaction,
   TransactionPageCursor,
-} from '#/features/transactions/types/transaction.type'
+} from '#/shared/types/transaction.type'
 
 interface InfiniteTransactionsResult {
   transactions: Transaction[]
@@ -114,11 +108,11 @@ export function usePeriodSummary(bounds?: PeriodRange): PeriodSummaryResult {
   }
 }
 
-// Refresh the infinite list and the Period summary so every mutation
-// (create/update/delete) reflects in the list and the Cashflow totals. Each key
-// omits its trailing dimensions (date window / period start) so the prefix match
-// invalidates every cached window. Returns the promise so mutateAsync resolves
-// only after the caches have refreshed (the dialog closes on resolve).
+// Refresh the infinite list and the Period summary so a delete reflects in the
+// list and the Cashflow totals. Each key omits its trailing dimensions (date
+// window / period start) so the prefix match invalidates every cached window.
+// Returns the promise so mutateAsync resolves only after the caches have
+// refreshed.
 function invalidateTransactionCaches(
   queryClient: ReturnType<typeof useQueryClient>,
   userId: string,
@@ -131,41 +125,6 @@ function invalidateTransactionCaches(
       queryKey: ['transactions', 'period-summary', userId],
     }),
   ])
-}
-
-// Create mutation that refreshes the recent list and Period summary on success.
-export function useCreateTransaction() {
-  const { profile } = useProfile()
-  const userId = profile?.id ?? null
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (input: QuickAddInput) => {
-      if (!userId) throw new Error('No profile loaded')
-      return transactionService.create(userId, input)
-    },
-    onSuccess: () => {
-      if (!userId) return
-      return invalidateTransactionCaches(queryClient, userId)
-    },
-  })
-}
-
-// Edit mutation. Refreshes the recent list and Period summary so an edited
-// amount/type/category/date is reflected in both the list and the totals.
-export function useUpdateTransaction() {
-  const { profile } = useProfile()
-  const userId = profile?.id ?? null
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: QuickAddInput }) =>
-      transactionService.update(id, input),
-    onSuccess: () => {
-      if (!userId) return
-      return invalidateTransactionCaches(queryClient, userId)
-    },
-  })
 }
 
 // Delete mutation. Refreshes the recent list and Period summary so a deleted

@@ -1,7 +1,7 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { profileService } from '#/features/profile'
 import { useAuth } from '#/features/auth/contexts/auth-context'
-import type { UserProfile } from '#/features/profile/types'
+import type { UserProfile } from '#/shared/types/user-profile.type'
 
 interface ProfileResult {
   profile: UserProfile | null
@@ -25,6 +25,8 @@ const profileQueryOptions = (authUserId: string) =>
 // The profile is server state (a Supabase row), so it lives in the TanStack
 // Query cache — which dedupes by query key, so every caller shares one fetch
 // without a React Context. This hook is a thin, typed wrapper over that query.
+// Lives in shared (not the profile feature) because transactions, categories,
+// recurring, and reports all read it. See docs/adr/0009.
 export function useProfile(): ProfileResult {
   const { session, loading: authLoading } = useAuth()
   const authUserId = session?.user.id ?? null

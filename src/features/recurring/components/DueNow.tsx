@@ -5,8 +5,8 @@ import {
   useDueRecurring,
   useSkipDue,
 } from '#/features/recurring/use-recurring'
-import { QuickAddForm } from '#/features/transactions/components/QuickAddForm'
-import { useProfile } from '#/features/profile/use-profile'
+import { QuickAddForm } from '#/shared/components/QuickAddForm'
+import { useProfile } from '#/shared/hooks/use-profile'
 import { fromCents } from '#/lib/money'
 import { Money } from '#/shared/components/Money'
 import { Button } from '#/components/ui/button'
@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
-import type { QuickAddFormValues } from '#/features/transactions/schemas/transaction.schema'
+import type { QuickAddFormValues } from '#/shared/schemas/transaction.schema'
 import type { DueOccurrence } from '#/features/recurring/types'
 
 // Seed the confirm form from a Due item: the template's default amount (cents →

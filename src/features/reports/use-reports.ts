@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { reportService } from '#/features/reports'
-import { useProfile } from '#/features/profile/use-profile'
+import { useProfile } from '#/shared/hooks/use-profile'
 import {
   defaultLocaleWeekStartDay,
   getPeriodKey,

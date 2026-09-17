@@ -1,5 +1,5 @@
-import { useCategories } from '#/features/categories/hooks/use-categories'
-import type { Category } from '#/features/categories/types/category.type'
+import { useCategories } from '#/shared/hooks/use-categories'
+import type { Category } from '#/shared/types/category.type'
 
 // Resolve a transaction's categoryId to a real Category row. A null id (or an id
 // that no longer exists, e.g. a deleted custom category) falls back to the seeded

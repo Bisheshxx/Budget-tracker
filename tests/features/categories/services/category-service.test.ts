@@ -4,7 +4,7 @@ import type {
   Category,
   CategoryCreate,
   CategoryUpdate,
-} from '#/features/categories/types/category.type.ts'
+} from '#/shared/types/category.type.ts'
 import type { ICategoryRepository } from '#/data/categories/ICategoryRepository.ts'
 
 function makeFakeRepo(overrides: Partial<ICategoryRepository> = {}) {

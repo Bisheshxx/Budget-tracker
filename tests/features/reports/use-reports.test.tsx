@@ -11,7 +11,7 @@ import type { PeriodReport } from '#/features/reports/types.ts'
 const { useProfile } = vi.hoisted(() => ({ useProfile: vi.fn() }))
 const { getReport } = vi.hoisted(() => ({ getReport: vi.fn() }))
 
-vi.mock('#/features/profile/use-profile', () => ({ useProfile }))
+vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
 vi.mock('#/features/reports', () => ({
   reportService: { getReport },
 }))

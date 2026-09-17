@@ -5,19 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Dialog } from '#/shared/components/Dialog'
 import { useDialog } from '#/shared/hooks/use-dialog'
 import { DIALOG } from '#/shared/stores/ui-store'
-import { QuickAddForm } from '#/features/transactions/components/QuickAddForm'
+import { QuickAddForm } from '#/shared/components/QuickAddForm'
 import { CashflowSummary } from '#/features/transactions/components/CashflowSummary'
 import { RecentTransactions } from '#/features/transactions/components/RecentTransactions'
 import { DueNow } from '#/features/recurring/components/DueNow'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { CategoryManager } from '#/features/categories/components/CategoryManager'
-import { rangeSearchSchema } from '#/features/transactions/schemas/transaction.schema'
+import { rangeSearchSchema } from '#/shared/schemas/transaction.schema'
 import {
   formatRangeLabel,
   searchToRange,
 } from '#/features/transactions/utils/range.util'
-import type { QuickAddFormValues } from '#/features/transactions/schemas/transaction.schema'
-import type { Transaction } from '#/features/transactions/types/transaction.type'
+import type { QuickAddFormValues } from '#/shared/schemas/transaction.schema'
+import type { Transaction } from '#/shared/types/transaction.type'
 
 // Protected shell: the Cashflow summary (issue 05) plus quick-add + recent list
 // (issue 03). `?from=&to=` re-scopes the summary card and the list to a Range

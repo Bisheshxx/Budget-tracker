@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useReports } from '#/features/reports/use-reports'
-import { useProfile } from '#/features/profile/use-profile'
+import { useProfile } from '#/shared/hooks/use-profile'
 import { PeriodComparisonCard } from '#/features/reports/components/PeriodComparisonCard'
 import { WeeklyCashflowChart } from '#/features/reports/components/WeeklyCashflowChart'
 import { CategorySpendChart } from '#/features/reports/components/CategorySpendChart'

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useProfile } from '#/features/profile/use-profile'
+import { useProfile } from '#/shared/hooks/use-profile'
 import { SettingsForm } from '#/features/profile/components/SettingsForm'
 import {
   Card,

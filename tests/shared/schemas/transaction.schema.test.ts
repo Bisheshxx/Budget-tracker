@@ -5,7 +5,7 @@ import {
   rangeSchema,
   rangeSearchSchema,
   today,
-} from '#/features/transactions/schemas/transaction.schema.ts'
+} from '#/shared/schemas/transaction.schema.ts'
 
 // The message of the first validation issue on a given field, or undefined when
 // the parse succeeded or no issue targets that field.

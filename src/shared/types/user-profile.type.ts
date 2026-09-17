@@ -1,6 +1,7 @@
-// Domain types owned by the profile feature — the vocabulary services, hooks,
-// components, and the repository port all speak. The persistence port that
-// traffics in these lives in #/data/profile/IProfileRepository. See docs/adr/0004.
+// Domain types for the user profile — read by every feature (transactions,
+// categories, recurring, reports) for currency/Period settings, so it lives in
+// shared rather than the profile feature alone. The persistence port lives in
+// #/data/profile/IProfileRepository. See docs/adr/0004 and docs/adr/0009.
 
 export interface UserProfile {
   id: string

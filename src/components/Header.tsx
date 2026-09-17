@@ -10,9 +10,9 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
 import { useAuth } from '#/features/auth/contexts/auth-context'
-import { useProfile } from '#/features/profile/use-profile'
+import { useProfile } from '#/shared/hooks/use-profile'
 import { UserAvatar } from '#/shared/components/UserAvatar'
-import type { UserProfile } from '#/features/profile/types'
+import type { UserProfile } from '#/shared/types/user-profile.type'
 
 const Menu: {
   link: string

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { useAuth } from '#/features/auth/contexts/auth-context'
-import { useProfile } from '#/features/profile/use-profile'
+import { useProfile } from '#/shared/hooks/use-profile'
 import { OnboardingForm } from '#/features/profile/components/OnboardingForm'
 import {
   Card,

@@ -1,13 +1,11 @@
 // Pure transaction-rollup math — no React, no I/O. Totals a list of transactions
-// into income/expenses/net plus expense spend-by-category. Lives here (not in the
-// service) so it is unit-testable and reusable: the Dashboard's Cashflow summary
-// and the Reports Period Comparison both build on it, so the two never drift in
-// how a Period is totalled. All arithmetic is on integer cents.
+// into income/expenses/net plus expense spend-by-category. Lives in shared (not a
+// feature service) so it is unit-testable and reusable: the Dashboard's Cashflow
+// summary, the data layer's Reports repository, and the Reports Period Comparison
+// all build on it, so the three never drift in how a Period is totalled. All
+// arithmetic is on integer cents.
 
-import type {
-  PeriodSummary,
-  Transaction,
-} from '#/features/transactions/types/transaction.type'
+import type { PeriodSummary, Transaction } from '#/shared/types/transaction.type'
 
 export function rollup(transactions: Transaction[]): PeriodSummary {
   let incomeCents = 0

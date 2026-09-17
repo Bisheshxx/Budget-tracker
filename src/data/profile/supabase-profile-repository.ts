@@ -1,6 +1,6 @@
 import { supabase } from '#/lib/supabase'
 import type { Database } from '#/lib/database.types'
-import type { ProfileUpdate, UserProfile } from '#/features/profile/types'
+import type { ProfileUpdate, UserProfile } from '#/shared/types/user-profile.type'
 import type { IProfileRepository } from './IProfileRepository'
 
 type ProfileRow = Database['public']['Tables']['user_profiles']['Row']
