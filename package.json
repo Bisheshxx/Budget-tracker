@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
+    "generate-types": "supabase gen types typescript --local > src/lib/database.types.ts",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",

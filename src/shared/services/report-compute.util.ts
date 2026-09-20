@@ -10,6 +10,7 @@
 
 import { rollup } from '#/shared/utils/summary.util'
 import { MS_PER_DAY } from '#/shared/constants/period.constant'
+import { parseYmd } from '#/shared/lib/period'
 import type { Transaction } from '#/shared/types/transaction.type'
 import type { PeriodRange } from '#/shared/lib/period'
 import type {
@@ -20,11 +21,6 @@ import type {
 } from '#/features/reports/types'
 
 const DAYS_PER_WEEK = 7
-
-function parseYmd(date: string): { year: number; month: number; day: number } {
-  const [year, month, day] = date.split('-').map(Number)
-  return { year, month, day }
-}
 
 function epochDay(date: string): number {
   const { year, month, day } = parseYmd(date)

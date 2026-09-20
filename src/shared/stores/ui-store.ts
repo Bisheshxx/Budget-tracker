@@ -15,6 +15,8 @@ export const DIALOG = {
   editTransaction: 'editTransaction',
   confirmDeleteTransaction: 'confirmDeleteTransaction',
   createCategory: 'createCategory',
+  confirmUndoRecurring: 'confirmUndoRecurring',
+  editRecentlyPosted: 'editRecentlyPosted',
 } as const
 
 export type DialogName = (typeof DIALOG)[keyof typeof DIALOG]

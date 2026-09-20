@@ -1,6 +1,15 @@
 {
-  "include": ["**/*.ts", "**/*.tsx", "eslint.config.js", "prettier.config.js", "vite.config.js"],
-  
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "eslint.config.js",
+    "prettier.config.js",
+    "vite.config.js"
+  ],
+  // Deno Edge Functions run in an isolated runtime (Deno globals, jsr:/https:
+  // imports, no #/ alias) and are never bundled by Vite — see docs/adr/0010.
+  "exclude": ["supabase/functions/**"],
+
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",

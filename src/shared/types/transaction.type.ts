@@ -66,10 +66,11 @@ export interface TransactionCreate {
   note: string | null
   transactionDate: string
   /**
-   * Links this transaction to the Recurring Expense it confirmed (see ADR 0006);
-   * omitted/null for ordinary transactions. "Recurring" is derived from this FK.
+   * Links this transaction to the Recurring Transaction that auto-posted it
+   * (see ADR 0010); omitted/null for ordinary transactions. "Recurring" is
+   * derived from this FK.
    */
-  recurringExpenseId?: string | null
+  recurringTransactionId?: string | null
 }
 
 // The editable fields an update writes. The id targets the row (passed

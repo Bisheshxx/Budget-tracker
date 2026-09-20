@@ -8,7 +8,7 @@ import { DIALOG } from '#/shared/stores/ui-store'
 import { QuickAddForm } from '#/shared/components/QuickAddForm'
 import { CashflowSummary } from '#/features/transactions/components/CashflowSummary'
 import { RecentTransactions } from '#/features/transactions/components/RecentTransactions'
-import { DueNow } from '#/features/recurring/components/DueNow'
+import { RecentlyPosted } from '#/features/recurring/components/RecentlyPosted'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { CategoryManager } from '#/features/categories/components/CategoryManager'
 import { rangeSearchSchema } from '#/shared/schemas/transaction.schema'
@@ -73,7 +73,7 @@ function DashboardPage() {
       <div className="mt-6 grid grid-cols-1 gap-6 lg:h-[calc(100dvh-260px)] lg:grid-cols-12">
         <div className="flex flex-col gap-6 lg:col-span-5 lg:pr-1">
           <CashflowSummary range={activeRange} />
-          <DueNow />
+          <RecentlyPosted />
           <CategoryManager />
         </div>
 
