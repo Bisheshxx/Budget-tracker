@@ -171,56 +171,77 @@ async function reconcileUserDue(
   return { posted, skippedAsDuplicate }
 }
 
-// Post a single Due occurrence: create its transaction and record the
-// occurrence confirmed. Safe to call concurrently (client on load + this same
-// cron) — recordConfirmed is an idempotent upsert, and if this call's
-// transaction loses the race (someone else's already won the slot), the
-// orphan transaction it created is deleted. Returns whether this call is the
+// Post a single Due occurrence: create its transaction (or reuse the one a
+// concurrent reconcile — the client on load, or this same cron running
+// again — already created for this exact slot) and record the occurrence
+// confirmed. Both writes are conflict-safe upserts keyed on unique
+// constraints (transactions: recurring_transaction_id + transaction_date;
+// occurrences: recurring_transaction_id + occurrence_date), so this never
+// creates a duplicate transaction regardless of how many times it races —
+// see transactions_recurring_transaction_id_transaction_date_key and
+// RecurringService.reconcileDue's comment. Returns whether this call is the
 // one that newly posted it.
 async function postDueItem(
   supabase: SupabaseClient,
   userId: string,
   item: DueOccurrence<RecurringTransactionRow>,
 ): Promise<boolean> {
-  const { data: transaction, error: transactionError } = await supabase
+  const { data: insertedTx, error: insertError } = await supabase
     .from('transactions')
-    .insert({
-      user_id: userId,
-      category_id: item.recurringTransaction.category_id,
-      type: item.recurringTransaction.kind,
-      amount_cents: item.recurringTransaction.amount_cents,
-      note: null,
-      transaction_date: item.occurrenceDate,
-      recurring_transaction_id: item.recurringTransaction.id,
-    })
+    .upsert(
+      {
+        user_id: userId,
+        category_id: item.recurringTransaction.category_id,
+        type: item.recurringTransaction.kind,
+        amount_cents: item.recurringTransaction.amount_cents,
+        note: null,
+        transaction_date: item.occurrenceDate,
+        recurring_transaction_id: item.recurringTransaction.id,
+      },
+      {
+        onConflict: 'recurring_transaction_id,transaction_date',
+        ignoreDuplicates: true,
+      },
+    )
     .select('id')
-    .single()
-  if (transactionError) throw transactionError
+  if (insertError) throw insertError
 
-  const { data: occurrence, error: occurrenceError } = await supabase
+  const wasNew = insertedTx.length > 0
+  const transactionId = wasNew
+    ? (insertedTx[0].id as string)
+    : await findExistingTransactionId(supabase, item)
+
+  const { error: occurrenceError } = await supabase
     .from('recurring_transaction_occurrences')
     .upsert(
       {
         recurring_transaction_id: item.recurringTransaction.id,
         occurrence_date: item.occurrenceDate,
         status: 'confirmed',
-        transaction_id: transaction.id,
+        transaction_id: transactionId,
       },
       {
         onConflict: 'recurring_transaction_id,occurrence_date',
-        ignoreDuplicates: false,
+        ignoreDuplicates: true,
       },
     )
-    .select('transaction_id')
-    .single()
   if (occurrenceError) throw occurrenceError
 
-  if (occurrence.transaction_id !== transaction.id) {
-    // Lost the race (client-triggered reconcile already posted this slot).
-    await supabase.from('transactions').delete().eq('id', transaction.id)
-    return false
-  }
-  return true
+  return wasNew
+}
+
+async function findExistingTransactionId(
+  supabase: SupabaseClient,
+  item: DueOccurrence<RecurringTransactionRow>,
+): Promise<string> {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('id')
+    .eq('recurring_transaction_id', item.recurringTransaction.id)
+    .eq('transaction_date', item.occurrenceDate)
+    .single()
+  if (error) throw error
+  return data.id as string
 }
 
 function addOneDay(date: string): string {

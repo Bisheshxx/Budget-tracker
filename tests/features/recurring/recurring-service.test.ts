@@ -111,6 +111,18 @@ function makeFakeTxRepo(overrides: Partial<ITransactionRepository> = {}) {
         createdAt: '2026-06-22T00:00:00.000Z',
       }),
     ),
+    createForRecurringOccurrence: vi.fn(
+      async (input: TransactionCreate): Promise<Transaction> => ({
+        id: 'tx-1',
+        userId: input.userId,
+        categoryId: input.categoryId,
+        type: input.type,
+        amountCents: input.amountCents,
+        note: input.note,
+        transactionDate: input.transactionDate,
+        createdAt: '2026-06-22T00:00:00.000Z',
+      }),
+    ),
     update: vi.fn(),
     delete: vi.fn(async (_id: string) => {}),
     ...overrides,
@@ -437,7 +449,7 @@ describe('RecurringService', () => {
 
       const results = await service.reconcileDue('profile-1', '2026-06-20', 1)
 
-      expect(txRepo.create).toHaveBeenCalledWith({
+      expect(txRepo.createForRecurringOccurrence).toHaveBeenCalledWith({
         userId: 'profile-1',
         categoryId: 'cat-9',
         type: 'income',
@@ -455,11 +467,12 @@ describe('RecurringService', () => {
       expect(results[0].status).toBe('confirmed')
     })
 
-    it('deletes its own transaction when it loses the race to a concurrent reconcile', async () => {
+    it('never deletes a transaction when it loses the race to a concurrent reconcile', async () => {
+      // createForRecurringOccurrence is conflict-safe (unique constraint on
+      // recurring_transaction_id + transaction_date): a losing call gets back
+      // the winner's own transaction, not a fresh one of its own.
       const repo = makeFakeRepo({
         listActive: vi.fn(async () => [makeTemplate({ id: 're-9' })]),
-        // Simulate another caller having already confirmed this occurrence with
-        // a different transaction.
         recordConfirmed: vi.fn(
           async (recurringTransactionId, occurrenceDate) => ({
             id: 'occ-winner',
@@ -471,13 +484,26 @@ describe('RecurringService', () => {
           }),
         ),
       })
-      const txRepo = makeFakeTxRepo()
+      const txRepo = makeFakeTxRepo({
+        createForRecurringOccurrence: vi.fn(
+          async (): Promise<Transaction> => ({
+            id: 'tx-winner',
+            userId: 'profile-1',
+            categoryId: 'cat-1',
+            type: 'expense',
+            amountCents: 120000,
+            note: null,
+            transactionDate: '2026-06-05',
+            createdAt: '2026-06-05T00:00:00.000Z',
+          }),
+        ),
+      })
       const service = makeService(repo, txRepo)
 
       const results = await service.reconcileDue('profile-1', '2026-06-20', 1)
 
-      expect(txRepo.create).toHaveBeenCalledTimes(1)
-      expect(txRepo.delete).toHaveBeenCalledWith('tx-1')
+      expect(txRepo.createForRecurringOccurrence).toHaveBeenCalledTimes(1)
+      expect(txRepo.delete).not.toHaveBeenCalled()
       expect(results[0].transactionId).toBe('tx-winner')
     })
   })

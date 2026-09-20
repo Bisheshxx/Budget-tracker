@@ -29,6 +29,13 @@ function makeFakeRepo(overrides: Partial<ITransactionRepository> = {}) {
         ...input,
       }),
     ),
+    createForRecurringOccurrence: vi.fn(
+      async (input: TransactionCreate): Promise<Transaction> => ({
+        id: 'tx-1',
+        createdAt: '2026-06-12T00:00:00Z',
+        ...input,
+      }),
+    ),
     update: vi.fn(
       async (id: string, input: TransactionUpdate): Promise<Transaction> => ({
         id,

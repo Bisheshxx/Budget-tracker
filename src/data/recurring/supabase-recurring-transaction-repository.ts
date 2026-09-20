@@ -297,23 +297,35 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
     occurrenceDate: string,
     transactionId: string,
   ): Promise<RecurringOccurrence> {
-    const dbUpsert: Database['public']['Tables']['recurring_transaction_occurrences']['Insert'] =
+    const dbInsert: Database['public']['Tables']['recurring_transaction_occurrences']['Insert'] =
       {
         recurring_transaction_id: recurringTransactionId,
         occurrence_date: occurrenceDate,
         status: 'confirmed',
         transaction_id: transactionId,
       }
-    const { data, error } = await supabase
+    // First writer wins: DO NOTHING on conflict (not overwrite) so concurrent
+    // callers racing for the same slot (client on load + the daily cron) can't
+    // clobber each other's transaction_id. A caller that loses the race gets
+    // no row back here and must look up the actual winner below.
+    const { data: inserted, error: insertError } = await supabase
       .from('recurring_transaction_occurrences')
-      .upsert(dbUpsert, {
+      .upsert(dbInsert, {
         onConflict: 'recurring_transaction_id,occurrence_date',
-        ignoreDuplicates: false,
+        ignoreDuplicates: true,
       })
       .select('*')
+    if (insertError) throw insertError
+    if (inserted.length > 0) return toOccurrence(inserted[0])
+
+    const { data: existing, error: selectError } = await supabase
+      .from('recurring_transaction_occurrences')
+      .select('*')
+      .eq('recurring_transaction_id', recurringTransactionId)
+      .eq('occurrence_date', occurrenceDate)
       .single()
-    if (error) throw error
-    return toOccurrence(data)
+    if (selectError) throw selectError
+    return toOccurrence(existing)
   }
 
   async recordSkipped(

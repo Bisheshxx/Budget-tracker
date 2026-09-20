@@ -171,9 +171,13 @@ export class RecurringService {
   // Auto-post every currently Due occurrence: create the transaction it stands
   // for (amount/date from the template default, type from kind) linked to the
   // template, then record it confirmed so the slot isn't posted again. Safe to
-  // call concurrently (client on load + the daily cron) — recordConfirmed is an
-  // idempotent upsert, and if this call's transaction loses the race (someone
-  // else's already won the slot), the orphan transaction it created is deleted.
+  // call concurrently (client on load + the daily cron, or two overlapping
+  // client calls) — both createForRecurringOccurrence (a unique constraint on
+  // (recurring_transaction_id, transaction_date)) and recordConfirmed (a
+  // unique constraint on (recurring_transaction_id, occurrence_date)) are
+  // first-writer-wins upserts, so a losing call gets back the same winning
+  // transaction/occurrence a concurrent call already created — no orphan to
+  // clean up.
   async reconcileDue(
     userId: string,
     today: string,
@@ -183,7 +187,7 @@ export class RecurringService {
     const results: RecurringOccurrence[] = []
 
     for (const item of due) {
-      const transaction = await this.transactionRepo.create({
+      const transaction = await this.transactionRepo.createForRecurringOccurrence({
         userId,
         categoryId: item.recurringTransaction.categoryId,
         type: item.recurringTransaction.kind,
@@ -197,10 +201,6 @@ export class RecurringService {
         item.occurrenceDate,
         transaction.id,
       )
-      if (occurrence.transactionId !== transaction.id) {
-        // Lost the race — someone else's transaction already won this slot.
-        await this.transactionRepo.delete(transaction.id)
-      }
       results.push(occurrence)
     }
 
