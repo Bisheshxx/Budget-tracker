@@ -1,0 +1,65 @@
+name: Fallow duplicate audit
+
+on:
+  pull_request:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: fallow-audit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run fallow audit
+        id: audit
+        run: |
+          BASE="origin/${{ github.event.pull_request.base.ref }}"
+          set +e
+          pnpm exec fallow audit --format json --quiet --explain --changed-since "$BASE" > fallow-audit.json
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+          echo "verdict=$(jq -r '.verdict // "unknown"' fallow-audit.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Render PR comment
+        if: always()
+        run: |
+          BASE="origin/${{ github.event.pull_request.base.ref }}"
+          pnpm exec fallow audit --format pr-comment-github --quiet --explain --changed-since "$BASE" > fallow-comment.md
+
+      - name: Upsert PR comment
+        if: always()
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: fallow-audit
+          path: fallow-comment.md
+
+      - name: Fail on fallow verdict
+        if: steps.audit.outputs.verdict == 'fail'
+        run: |
+          echo "fallow audit verdict: fail (see PR comment for duplication/dead-code/complexity findings)"
+          exit 1
