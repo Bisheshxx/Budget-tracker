@@ -1,6 +1,9 @@
 # Recurring Expenses: templates, prompt-to-confirm, and data retention
 
-Status: accepted
+Status: accepted — §1 (prompt-to-confirm) and the "income out of scope"
+non-goal are superseded by
+[ADR 0010](./0010-recurring-transactions-auto-posting.md); §2's data-retention
+framing still holds.
 
 ## Context
 

@@ -142,6 +142,34 @@ export function addDays(date: string, delta: number): string {
   )
 }
 
+/** The number of days in a given (year, 1-based month). */
+function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate()
+}
+
+/**
+ * The date ('YYYY-MM-DD') of the nth occurrence of `weekday` in (year, month),
+ * or the last occurrence when `nth` is -1. Every weekday occurs at least 4
+ * times in every month, so nth 1-4 always resolve. Used for "nth weekday of
+ * month" recurring rules (e.g. "last Friday") — see #/features/recurring/due.
+ */
+export function nthWeekdayOfMonth(
+  year: number,
+  month: number,
+  weekday: 0 | 1 | 2 | 3 | 4 | 5 | 6,
+  nth: 1 | 2 | 3 | 4 | -1,
+): string {
+  if (nth === -1) {
+    const lastDay = daysInMonth(year, month)
+    const lastDow = new Date(Date.UTC(year, month - 1, lastDay)).getUTCDay()
+    const day = lastDay - ((lastDow - weekday + 7) % 7)
+    return formatYmd(year, month, day)
+  }
+  const firstDow = new Date(Date.UTC(year, month - 1, 1)).getUTCDay()
+  const firstOccurrence = 1 + ((weekday - firstDow + 7) % 7)
+  return formatYmd(year, month, firstOccurrence + (nth - 1) * 7)
+}
+
 export function resolveCalendarMonth(today: string): PeriodRange {
   const { year, month } = parseYmd(today)
   const [endYear, endMonth] = addMonths(year, month, 1)

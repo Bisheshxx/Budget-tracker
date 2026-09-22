@@ -1,7 +1,7 @@
 import { usePeriodSummary } from '#/features/transactions/hooks/use-transactions'
-import { useProfile } from '#/features/profile/use-profile'
-import { useCategoryLookup } from '#/features/categories/use-category-lookup'
-import { CategoryChip } from '#/features/categories/components/CategoryChip'
+import { useProfile } from '#/shared/hooks/use-profile'
+import { useCategoryLookup } from '#/shared/hooks/use-category-lookup'
+import { CategoryChip } from '#/shared/components/CategoryChip'
 import { RangeFilter } from '#/features/transactions/components/RangeFilter'
 import {
   formatRangeLabel,
@@ -13,10 +13,7 @@ import { MoneyBadge } from '#/shared/components/MoneyBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { parseYmd, todayYmd } from '#/shared/lib/period'
-import type {
-  CategorySpend,
-  PeriodSummary,
-} from '#/features/transactions/types/transaction.type'
+import type { CategorySpend, PeriodSummary } from '#/shared/types/transaction.type'
 
 const MONTH_NAMES = [
   'January',

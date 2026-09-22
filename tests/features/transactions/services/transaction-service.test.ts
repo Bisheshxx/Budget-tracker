@@ -5,9 +5,9 @@ import type {
   TransactionCreate,
   TransactionPageParams,
   TransactionUpdate,
-} from '#/features/transactions/types/transaction.type.ts'
+} from '#/shared/types/transaction.type.ts'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository.ts'
-import type { QuickAddInput } from '#/features/transactions/schemas/transaction.schema.ts'
+import type { QuickAddInput } from '#/shared/schemas/transaction.schema.ts'
 
 // Minimal in-memory fake — the whole point of ADR 0001's repository pattern.
 // `create` echoes the input back with DB-assigned fields so we can assert what
@@ -23,6 +23,13 @@ function makeFakeRepo(overrides: Partial<ITransactionRepository> = {}) {
         [] as Transaction[],
     ),
     create: vi.fn(
+      async (input: TransactionCreate): Promise<Transaction> => ({
+        id: 'tx-1',
+        createdAt: '2026-06-12T00:00:00Z',
+        ...input,
+      }),
+    ),
+    createForRecurringOccurrence: vi.fn(
       async (input: TransactionCreate): Promise<Transaction> => ({
         id: 'tx-1',
         createdAt: '2026-06-12T00:00:00Z',

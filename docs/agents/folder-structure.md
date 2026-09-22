@@ -7,6 +7,7 @@ Use this as the Budget-tracker source of truth when reorganizing code. The globa
 - `src/routes/` is the TanStack Start app layer. Keep route files, search validation, loaders, layout, and page composition here.
 - `src/features/<feature>/` owns feature-specific UI, hooks, schemas, services, domain types, constants, and utils.
 - `src/shared/` owns code reused by 2+ features and has no barrel. Import leaf modules directly.
+- Feature boundaries are ESLint-enforced (`eslint-plugin-boundaries`, see `docs/adr/0009`): a feature may import only itself, `shared`, its own `index.ts`, or (auth only) `#/features/auth/contexts/*` — never another feature's internals. A feature's `types.ts`/`types/**` counts as public too, since `data/<feature>` ports depend on it. If lint flags a cross-feature import, promote the code to `src/shared/` rather than carving out a lint exception.
 - `src/data/<domain>/` stays flat by default: `I<X>Repository.ts`, `supabase-<domain>-repository.ts`, and `index.ts` as the swap point.
 - `src/lib/` is shared infrastructure only.
 - `src/components/ui/` stays the shadcn location configured by `components.json`.

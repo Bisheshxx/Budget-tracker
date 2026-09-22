@@ -6,7 +6,7 @@ import type {
   TransactionPageParams,
   TransactionType,
   TransactionUpdate,
-} from '#/features/transactions/types/transaction.type'
+} from '#/shared/types/transaction.type'
 import type { ITransactionRepository } from './ITransactionRepository'
 
 type TransactionRow = Database['public']['Tables']['transactions']['Row']
@@ -84,7 +84,7 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
       amount_cents: input.amountCents,
       note: input.note,
       transaction_date: input.transactionDate,
-      recurring_expense_id: input.recurringExpenseId ?? null,
+      recurring_transaction_id: input.recurringTransactionId ?? null,
     }
     const { data, error } = await supabase
       .from('transactions')
@@ -93,6 +93,42 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
       .single()
     if (error) throw error
     return toTransaction(data)
+  }
+
+  async createForRecurringOccurrence(
+    input: TransactionCreate,
+  ): Promise<Transaction> {
+    const dbInsert: Database['public']['Tables']['transactions']['Insert'] = {
+      user_id: input.userId,
+      category_id: input.categoryId,
+      type: input.type,
+      amount_cents: input.amountCents,
+      note: input.note,
+      transaction_date: input.transactionDate,
+      recurring_transaction_id: input.recurringTransactionId ?? null,
+    }
+    // First writer wins: DO NOTHING on conflict (not overwrite), mirroring
+    // SupabaseRecurringTransactionRepository.recordConfirmed's pattern — see
+    // that method's comment and the transactions_recurring_transaction_id_
+    // transaction_date_key migration.
+    const { data: inserted, error: insertError } = await supabase
+      .from('transactions')
+      .upsert(dbInsert, {
+        onConflict: 'recurring_transaction_id,transaction_date',
+        ignoreDuplicates: true,
+      })
+      .select('*')
+    if (insertError) throw insertError
+    if (inserted.length > 0) return toTransaction(inserted[0])
+
+    const { data: existing, error: selectError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('recurring_transaction_id', input.recurringTransactionId as string)
+      .eq('transaction_date', input.transactionDate)
+      .single()
+    if (selectError) throw selectError
+    return toTransaction(existing)
   }
 
   async update(id: string, input: TransactionUpdate): Promise<Transaction> {

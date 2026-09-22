@@ -80,12 +80,12 @@ export type Database = {
           },
         ]
       }
-      recurring_expense_occurrences: {
+      recurring_transaction_occurrences: {
         Row: {
           created_at: string
           id: string
           occurrence_date: string
-          recurring_expense_id: string
+          recurring_transaction_id: string
           status: string
           transaction_id: string | null
         }
@@ -93,7 +93,7 @@ export type Database = {
           created_at?: string
           id?: string
           occurrence_date: string
-          recurring_expense_id: string
+          recurring_transaction_id: string
           status: string
           transaction_id?: string | null
         }
@@ -101,20 +101,20 @@ export type Database = {
           created_at?: string
           id?: string
           occurrence_date?: string
-          recurring_expense_id?: string
+          recurring_transaction_id?: string
           status?: string
           transaction_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: 'recurring_expense_occurrences_recurring_expense_id_fkey'
-            columns: ['recurring_expense_id']
+            foreignKeyName: 'recurring_transaction_occurrences_recurring_transaction_id_fkey'
+            columns: ['recurring_transaction_id']
             isOneToOne: false
-            referencedRelation: 'recurring_expenses'
+            referencedRelation: 'recurring_transactions'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'recurring_expense_occurrences_transaction_id_fkey'
+            foreignKeyName: 'recurring_transaction_occurrences_transaction_id_fkey'
             columns: ['transaction_id']
             isOneToOne: false
             referencedRelation: 'transactions'
@@ -122,7 +122,7 @@ export type Database = {
           },
         ]
       }
-      recurring_expenses: {
+      recurring_transactions: {
         Row: {
           active: boolean
           amount_cents: number
@@ -132,6 +132,10 @@ export type Database = {
           first_due_date: string
           frequency: string
           id: string
+          kind: string
+          monthly_nth: number | null
+          monthly_rule_type: string | null
+          monthly_weekday: number | null
           name: string
           user_id: string
         }
@@ -144,6 +148,10 @@ export type Database = {
           first_due_date: string
           frequency: string
           id?: string
+          kind?: string
+          monthly_nth?: number | null
+          monthly_rule_type?: string | null
+          monthly_weekday?: number | null
           name: string
           user_id: string
         }
@@ -156,19 +164,23 @@ export type Database = {
           first_due_date?: string
           frequency?: string
           id?: string
+          kind?: string
+          monthly_nth?: number | null
+          monthly_rule_type?: string | null
+          monthly_weekday?: number | null
           name?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: 'recurring_expenses_category_id_fkey'
+            foreignKeyName: 'recurring_transactions_category_id_fkey'
             columns: ['category_id']
             isOneToOne: false
             referencedRelation: 'categories'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'recurring_expenses_user_id_fkey'
+            foreignKeyName: 'recurring_transactions_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'user_profiles'
@@ -227,7 +239,7 @@ export type Database = {
           created_at: string
           id: string
           note: string | null
-          recurring_expense_id: string | null
+          recurring_transaction_id: string | null
           transaction_date: string
           type: string
           user_id: string
@@ -238,7 +250,7 @@ export type Database = {
           created_at?: string
           id?: string
           note?: string | null
-          recurring_expense_id?: string | null
+          recurring_transaction_id?: string | null
           transaction_date?: string
           type: string
           user_id: string
@@ -249,7 +261,7 @@ export type Database = {
           created_at?: string
           id?: string
           note?: string | null
-          recurring_expense_id?: string | null
+          recurring_transaction_id?: string | null
           transaction_date?: string
           type?: string
           user_id?: string
@@ -263,10 +275,10 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'transactions_recurring_expense_id_fkey'
-            columns: ['recurring_expense_id']
+            foreignKeyName: 'transactions_recurring_transaction_id_fkey'
+            columns: ['recurring_transaction_id']
             isOneToOne: false
-            referencedRelation: 'recurring_expenses'
+            referencedRelation: 'recurring_transactions'
             referencedColumns: ['id']
           },
           {

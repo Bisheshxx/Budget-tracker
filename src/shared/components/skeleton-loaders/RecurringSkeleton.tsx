@@ -8,11 +8,11 @@ export function RecurringSkeleton() {
       aria-live="polite"
       className="mx-auto w-full max-w-2xl px-4 py-10"
     >
-      <span className="sr-only">Loading recurring expenses</span>
+      <span className="sr-only">Loading recurring transactions</span>
       <h1 className="text-2xl font-semibold">Recurring</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Your fixed commitments. When one is due, the Dashboard will prompt you
-        to confirm it — with the amount and date still editable.
+        Your fixed commitments and income. When one is due, it posts
+        automatically — you can still edit or undo it afterward.
       </p>
       <div className="mt-8">
         <RecurringManagerSkeleton />
@@ -24,10 +24,10 @@ export function RecurringSkeleton() {
 function RecurringManagerSkeleton() {
   return (
     <div aria-busy="true" aria-live="polite" className="flex flex-col gap-6">
-      <span className="sr-only">Loading recurring expense templates</span>
+      <span className="sr-only">Loading recurring transaction templates</span>
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold">Recurring expenses</h2>
-        <Button disabled>Add Recurring Expense</Button>
+        <h2 className="text-lg font-semibold">Recurring transactions</h2>
+        <Button disabled>Add Recurring Transaction</Button>
       </div>
 
       <RecurringRowsSkeleton />
@@ -38,7 +38,7 @@ function RecurringManagerSkeleton() {
 export function RecurringRowsSkeleton() {
   return (
     <div aria-busy="true" aria-live="polite">
-      <span className="sr-only">Loading recurring expense templates</span>
+      <span className="sr-only">Loading recurring transaction templates</span>
       <ul className="flex flex-col divide-y rounded-md border border-border">
         {Array.from({ length: 5 }, (_item, index) => (
           <li

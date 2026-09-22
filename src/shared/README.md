@@ -17,7 +17,7 @@ carries **domain meaning** — so it doesn't belong in `src/lib/` (pure infra) o
 
 ## Conventions
 
-- Subfolders: `components/`, `hooks/`, `services/`, `stores/`, `lib/`,
+- Subfolders: `components/`, `hooks/`, `services/`, `schemas/`, `stores/`, `lib/`,
   `utils/`,
   `database/`, `types/`, `constants/` (add others only when the ownership is
   clear).
@@ -36,3 +36,8 @@ carries **domain meaning** — so it doesn't belong in `src/lib/` (pure infra) o
 - Naming: component files PascalCase (`MoneyAmount.tsx`); hooks/services/schemas
   kebab-case (`use-media-query.ts`).
 - Tests mirror this tree under `tests/shared/`.
+- **`eslint-plugin-boundaries` enforces this at lint time** (see ADR 0009): a
+  feature may import only itself, `shared`, its own barrel, or (auth only)
+  `#/features/auth/contexts/*` — never another feature's internals. That's what
+  keeps this folder honest going forward instead of drifting like `categories`/
+  `profile`/`transactions` did before ADR 0009's promotions.

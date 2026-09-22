@@ -1,5 +1,5 @@
-import { computeComparison, computeWeeks } from '#/features/reports/comparison'
-import { rollup } from '#/features/transactions/utils/summary.util'
+import { computeComparison, computeWeeks } from '#/shared/services/report-compute.util'
+import { rollup } from '#/shared/utils/summary.util'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 import type { PeriodRange } from '#/shared/lib/period'
 import type { PeriodReport } from '#/features/reports/types'
@@ -11,7 +11,9 @@ import type { IReportRepository } from './IReportRepository'
 // here. This repo intentionally holds computation, unlike the app's other thin
 // repos: it stands in for the future computing backend, so when this is swapped
 // for an axios impl that GETs a Node.js endpoint, the computation moves
-// server-side and the returned PeriodReport shape is unchanged.
+// server-side and the returned PeriodReport shape is unchanged. The compute
+// helpers live in shared (not the reports feature) so this data-layer port only
+// ever reaches into shared, never a feature's internals. See docs/adr/0009.
 export class SupabaseReportRepository implements IReportRepository {
   constructor(private readonly transactions: ITransactionRepository) {}
 

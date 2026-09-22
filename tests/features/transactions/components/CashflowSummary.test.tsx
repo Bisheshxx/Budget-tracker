@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
-import type { PeriodSummary } from '#/features/transactions/types/transaction.type.ts'
-import type { Category } from '#/features/categories/types.ts'
+import type { PeriodSummary } from '#/shared/types/transaction.type.ts'
+import type { Category } from '#/shared/types/category.type.ts'
 
 // Mock the three hooks the component reads so it renders in isolation — no
 // QueryClient, no Supabase. vi.hoisted keeps the spies reachable in the
@@ -14,8 +14,8 @@ const { useCategories } = vi.hoisted(() => ({ useCategories: vi.fn() }))
 vi.mock('#/features/transactions/hooks/use-transactions', () => ({
   usePeriodSummary,
 }))
-vi.mock('#/features/profile/use-profile', () => ({ useProfile }))
-vi.mock('#/features/categories/use-categories', () => ({ useCategories }))
+vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
+vi.mock('#/shared/hooks/use-categories', () => ({ useCategories }))
 
 const { CashflowSummary } =
   await import('#/features/transactions/components/CashflowSummary.tsx')
@@ -26,7 +26,7 @@ const food: Category = {
   id: 'food',
   userId: 'profile-1',
   name: 'Food',
-  colorHex: '#abcabc' as any,
+  colorHex: '#abcabc',
   icon: null,
   isSystem: false,
   isDefault: false,
@@ -36,7 +36,7 @@ const uncategorized: Category = {
   id: 'uncat',
   userId: null,
   name: 'Uncategorized',
-  colorHex: '#cccccc' as any,
+  colorHex: '#cccccc',
   icon: null,
   isSystem: true,
   isDefault: true,

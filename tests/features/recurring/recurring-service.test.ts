@@ -2,25 +2,28 @@ import { describe, expect, it, vi } from 'vitest'
 import { RecurringService } from '#/features/recurring/recurring-service.ts'
 import type { RecurringInput } from '#/features/recurring/schema.ts'
 import type {
-  DueOccurrence,
-  RecurringExpense,
-  RecurringExpenseCreate,
-  RecurringExpenseUpdate,
   RecurringOccurrence,
+  RecurringTransaction,
+  RecurringTransactionCreate,
+  RecurringTransactionUpdate,
 } from '#/features/recurring/types.ts'
-import type { IRecurringExpenseRepository } from '#/data/recurring/IRecurringExpenseRepository.ts'
+import type { IRecurringTransactionRepository } from '#/data/recurring/IRecurringTransactionRepository.ts'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository.ts'
 import type {
   Transaction,
   TransactionCreate,
-} from '#/features/transactions/types/transaction.type.ts'
+} from '#/shared/types/transaction.type.ts'
 
-function makeFakeRepo(overrides: Partial<IRecurringExpenseRepository> = {}) {
+function makeFakeRepo(
+  overrides: Partial<IRecurringTransactionRepository> = {},
+) {
   return {
-    listActive: vi.fn(async (_userId: string) => [] as RecurringExpense[]),
-    listAll: vi.fn(async (_userId: string) => [] as RecurringExpense[]),
+    listActive: vi.fn(async (_userId: string) => [] as RecurringTransaction[]),
+    listAll: vi.fn(async (_userId: string) => [] as RecurringTransaction[]),
     create: vi.fn(
-      async (input: RecurringExpenseCreate): Promise<RecurringExpense> => ({
+      async (
+        input: RecurringTransactionCreate,
+      ): Promise<RecurringTransaction> => ({
         id: 're-1',
         active: true,
         createdAt: '2026-06-22T00:00:00.000Z',
@@ -31,8 +34,8 @@ function makeFakeRepo(overrides: Partial<IRecurringExpenseRepository> = {}) {
     update: vi.fn(
       async (
         id: string,
-        input: RecurringExpenseUpdate,
-      ): Promise<RecurringExpense> => ({
+        input: RecurringTransactionUpdate,
+      ): Promise<RecurringTransaction> => ({
         id,
         userId: 'profile-1',
         active: true,
@@ -42,13 +45,15 @@ function makeFakeRepo(overrides: Partial<IRecurringExpenseRepository> = {}) {
       }),
     ),
     deactivate: vi.fn(
-      async (id: string): Promise<RecurringExpense> => ({
+      async (id: string): Promise<RecurringTransaction> => ({
         id,
         userId: 'profile-1',
         categoryId: 'cat-1',
         name: 'Rent',
         amountCents: 120000,
+        kind: 'expense',
         frequency: 'monthly',
+        monthlyRule: { type: 'day-of-month', day: 1 },
         firstDueDate: '2026-06-01',
         active: false,
         createdAt: '2026-06-22T00:00:00.000Z',
@@ -56,15 +61,16 @@ function makeFakeRepo(overrides: Partial<IRecurringExpenseRepository> = {}) {
       }),
     ),
     delete: vi.fn(async (_id: string) => {}),
+    hasConfirmedHistory: vi.fn(async (_id: string) => false),
     listOccurrencesInRange: vi.fn(async () => [] as RecurringOccurrence[]),
     recordConfirmed: vi.fn(
       async (
-        recurringExpenseId: string,
+        recurringTransactionId: string,
         occurrenceDate: string,
         transactionId: string,
       ): Promise<RecurringOccurrence> => ({
         id: 'occ-1',
-        recurringExpenseId,
+        recurringTransactionId,
         occurrenceDate,
         status: 'confirmed',
         transactionId,
@@ -73,19 +79,20 @@ function makeFakeRepo(overrides: Partial<IRecurringExpenseRepository> = {}) {
     ),
     recordSkipped: vi.fn(
       async (
-        recurringExpenseId: string,
+        recurringTransactionId: string,
         occurrenceDate: string,
       ): Promise<RecurringOccurrence> => ({
         id: 'occ-2',
-        recurringExpenseId,
+        recurringTransactionId,
         occurrenceDate,
         status: 'skipped',
         transactionId: null,
         createdAt: '2026-06-22T00:00:00.000Z',
       }),
     ),
+    listRecentlyConfirmed: vi.fn(async () => []),
     ...overrides,
-  } satisfies IRecurringExpenseRepository
+  } satisfies IRecurringTransactionRepository
 }
 
 function makeFakeTxRepo(overrides: Partial<ITransactionRepository> = {}) {
@@ -104,6 +111,18 @@ function makeFakeTxRepo(overrides: Partial<ITransactionRepository> = {}) {
         createdAt: '2026-06-22T00:00:00.000Z',
       }),
     ),
+    createForRecurringOccurrence: vi.fn(
+      async (input: TransactionCreate): Promise<Transaction> => ({
+        id: 'tx-1',
+        userId: input.userId,
+        categoryId: input.categoryId,
+        type: input.type,
+        amountCents: input.amountCents,
+        note: input.note,
+        transactionDate: input.transactionDate,
+        createdAt: '2026-06-22T00:00:00.000Z',
+      }),
+    ),
     update: vi.fn(),
     delete: vi.fn(async (_id: string) => {}),
     ...overrides,
@@ -111,27 +130,21 @@ function makeFakeTxRepo(overrides: Partial<ITransactionRepository> = {}) {
 }
 
 function makeTemplate(
-  overrides: Partial<RecurringExpense> = {},
-): RecurringExpense {
+  overrides: Partial<RecurringTransaction> = {},
+): RecurringTransaction {
   return {
     id: 're-1',
     userId: 'profile-1',
     categoryId: 'cat-1',
     name: 'Rent',
     amountCents: 120000,
+    kind: 'expense',
     frequency: 'monthly',
+    monthlyRule: { type: 'day-of-month', day: 5 },
     firstDueDate: '2026-06-05',
     active: true,
     createdAt: '2026-06-01T00:00:00.000Z',
     deactivatedAt: null,
-    ...overrides,
-  }
-}
-
-function makeDue(overrides: Partial<DueOccurrence> = {}): DueOccurrence {
-  return {
-    recurringExpense: makeTemplate(),
-    occurrenceDate: '2026-06-05',
     ...overrides,
   }
 }
@@ -148,7 +161,9 @@ function validInput(overrides: Partial<RecurringInput> = {}): RecurringInput {
     name: 'Rent',
     categoryId: 'cat-1',
     amount: 1200,
+    kind: 'expense',
     frequency: 'monthly',
+    monthlyRuleType: 'day-of-month',
     firstDueDate: '2026-06-01',
     ...overrides,
   }
@@ -167,7 +182,9 @@ describe('RecurringService', () => {
         categoryId: 'cat-1',
         name: 'Rent',
         amountCents: 120000,
+        kind: 'expense',
         frequency: 'monthly',
+        monthlyRule: { type: 'day-of-month', day: 1 },
         firstDueDate: '2026-06-01',
       })
     })
@@ -182,12 +199,15 @@ describe('RecurringService', () => {
       expect(repo.create).not.toHaveBeenCalled()
     })
 
-    it('requires a category', async () => {
+    it('requires a category regardless of kind', async () => {
       const repo = makeFakeRepo()
       const service = makeService(repo)
 
       await expect(
-        service.create('profile-1', validInput({ categoryId: '' })),
+        service.create(
+          'profile-1',
+          validInput({ categoryId: '', kind: 'income' }),
+        ),
       ).rejects.toThrow(/category/i)
       expect(repo.create).not.toHaveBeenCalled()
     })
@@ -231,6 +251,53 @@ describe('RecurringService', () => {
         }),
       )
     })
+
+    it('derives firstDueDate from an nth-weekday rule rather than trusting client input', async () => {
+      const repo = makeFakeRepo()
+      const service = makeService(repo)
+
+      // 2nd Tuesday of June 2026 is the 9th; "today" is before it.
+      await service.create(
+        'profile-1',
+        validInput({
+          frequency: 'monthly',
+          monthlyRuleType: 'nth-weekday',
+          monthlyWeekday: 2,
+          monthlyNth: 2,
+          firstDueDate: undefined,
+        }),
+        '2026-06-01',
+      )
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          monthlyRule: { type: 'nth-weekday', weekday: 2, nth: 2 },
+          firstDueDate: '2026-06-09',
+        }),
+      )
+    })
+
+    it('rolls an nth-weekday firstDueDate to next month when this month already passed', async () => {
+      const repo = makeFakeRepo()
+      const service = makeService(repo)
+
+      // 2nd Tuesday of June 2026 (the 9th) has already passed by the 20th.
+      await service.create(
+        'profile-1',
+        validInput({
+          frequency: 'monthly',
+          monthlyRuleType: 'nth-weekday',
+          monthlyWeekday: 2,
+          monthlyNth: 2,
+          firstDueDate: undefined,
+        }),
+        '2026-06-20',
+      )
+
+      expect(repo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ firstDueDate: '2026-07-14' }),
+      )
+    })
   })
 
   describe('update', () => {
@@ -244,7 +311,9 @@ describe('RecurringService', () => {
         categoryId: 'cat-1',
         name: 'Rent',
         amountCents: 150000,
+        kind: 'expense',
         frequency: 'monthly',
+        monthlyRule: { type: 'day-of-month', day: 1 },
         firstDueDate: '2026-06-01',
       })
     })
@@ -265,13 +334,24 @@ describe('RecurringService', () => {
   })
 
   describe('delete', () => {
-    it('delegates a hard delete to the repository', async () => {
+    it('delegates a hard delete to the repository, which always severs linked transactions', async () => {
       const repo = makeFakeRepo()
       const service = makeService(repo)
 
       await service.delete('re-1')
 
       expect(repo.delete).toHaveBeenCalledWith('re-1')
+    })
+  })
+
+  describe('hasConfirmedHistory', () => {
+    it('delegates to the repository (confirm-dialog copy only, not a delete gate)', async () => {
+      const repo = makeFakeRepo({
+        hasConfirmedHistory: vi.fn(async () => true),
+      })
+      const service = makeService(repo)
+
+      await expect(service.hasConfirmedHistory('re-1')).resolves.toBe(true)
     })
   })
 
@@ -315,7 +395,7 @@ describe('RecurringService', () => {
         listOccurrencesInRange: vi.fn(async () => [
           {
             id: 'occ-1',
-            recurringExpenseId: 're-1',
+            recurringTransactionId: 're-1',
             occurrenceDate: '2026-06-05',
             status: 'confirmed' as const,
             transactionId: 'tx-1',
@@ -328,35 +408,6 @@ describe('RecurringService', () => {
       const due = await service.listDue('profile-1', '2026-06-20', 1)
 
       expect(due).toEqual([])
-    })
-
-    it('confirmAll creates one default expense transaction per occurrence', async () => {
-      const repo = makeFakeRepo()
-      const txRepo = makeFakeTxRepo()
-      const service = makeService(repo, txRepo)
-      const template = makeTemplate({ id: 're-9', categoryId: 'cat-9' })
-
-      await service.confirmAll('profile-1', [
-        makeDue({ recurringExpense: template, occurrenceDate: '2026-06-05' }),
-        makeDue({ recurringExpense: template, occurrenceDate: '2026-07-05' }),
-      ])
-
-      expect(txRepo.create).toHaveBeenCalledTimes(2)
-      expect(txRepo.create).toHaveBeenNthCalledWith(1, {
-        userId: 'profile-1',
-        categoryId: 'cat-9',
-        type: 'expense',
-        amountCents: 120000,
-        note: null,
-        transactionDate: '2026-06-05',
-        recurringExpenseId: 're-9',
-      })
-      expect(repo.recordConfirmed).toHaveBeenNthCalledWith(
-        2,
-        're-9',
-        '2026-07-05',
-        'tx-1',
-      )
     })
 
     it('returns nothing and skips the occurrence query when no active templates', async () => {
@@ -386,75 +437,141 @@ describe('RecurringService', () => {
     })
   })
 
-  describe('confirm', () => {
-    it('creates a linked expense transaction and records a confirmed occurrence', async () => {
-      const repo = makeFakeRepo()
+  describe('reconcileDue', () => {
+    it('auto-posts one transaction per Due occurrence, typed from kind', async () => {
+      const repo = makeFakeRepo({
+        listActive: vi.fn(async () => [
+          makeTemplate({ id: 're-9', categoryId: 'cat-9', kind: 'income' }),
+        ]),
+      })
       const txRepo = makeFakeTxRepo()
       const service = makeService(repo, txRepo)
-      const due = makeDue({
-        recurringExpense: makeTemplate({ id: 're-9', categoryId: 'cat-9' }),
-        occurrenceDate: '2026-06-05',
-      })
 
-      // User edits the amount (1300) and the actual pay date (06-07); the
-      // occurrence is still recorded against the fixed Due date (06-05).
-      await service.confirm('profile-1', due, {
-        amount: 1300,
-        type: 'expense',
-        categoryId: 'cat-9',
-        transactionDate: '2026-06-07',
-        note: undefined,
-      })
+      const results = await service.reconcileDue('profile-1', '2026-06-20', 1)
 
-      expect(txRepo.create).toHaveBeenCalledWith({
+      expect(txRepo.createForRecurringOccurrence).toHaveBeenCalledWith({
         userId: 'profile-1',
         categoryId: 'cat-9',
-        type: 'expense',
-        amountCents: 130000,
+        type: 'income',
+        amountCents: 120000,
         note: null,
-        transactionDate: '2026-06-07',
-        recurringExpenseId: 're-9',
+        transactionDate: '2026-06-05',
+        recurringTransactionId: 're-9',
       })
       expect(repo.recordConfirmed).toHaveBeenCalledWith(
         're-9',
         '2026-06-05',
         'tx-1',
       )
+      expect(results).toHaveLength(1)
+      expect(results[0].status).toBe('confirmed')
     })
 
-    it('rejects a non-positive amount without creating anything', async () => {
+    it('never deletes a transaction when it loses the race to a concurrent reconcile', async () => {
+      // createForRecurringOccurrence is conflict-safe (unique constraint on
+      // recurring_transaction_id + transaction_date): a losing call gets back
+      // the winner's own transaction, not a fresh one of its own.
+      const repo = makeFakeRepo({
+        listActive: vi.fn(async () => [makeTemplate({ id: 're-9' })]),
+        recordConfirmed: vi.fn(
+          async (recurringTransactionId, occurrenceDate) => ({
+            id: 'occ-winner',
+            recurringTransactionId,
+            occurrenceDate,
+            status: 'confirmed' as const,
+            transactionId: 'tx-winner',
+            createdAt: '2026-06-05T00:00:00.000Z',
+          }),
+        ),
+      })
+      const txRepo = makeFakeTxRepo({
+        createForRecurringOccurrence: vi.fn(
+          async (): Promise<Transaction> => ({
+            id: 'tx-winner',
+            userId: 'profile-1',
+            categoryId: 'cat-1',
+            type: 'expense',
+            amountCents: 120000,
+            note: null,
+            transactionDate: '2026-06-05',
+            createdAt: '2026-06-05T00:00:00.000Z',
+          }),
+        ),
+      })
+      const service = makeService(repo, txRepo)
+
+      const results = await service.reconcileDue('profile-1', '2026-06-20', 1)
+
+      expect(txRepo.createForRecurringOccurrence).toHaveBeenCalledTimes(1)
+      expect(txRepo.delete).not.toHaveBeenCalled()
+      expect(results[0].transactionId).toBe('tx-winner')
+    })
+  })
+
+  describe('listRecentlyPosted', () => {
+    it('delegates to the repository', async () => {
+      const repo = makeFakeRepo()
+      const service = makeService(repo)
+
+      await service.listRecentlyPosted('profile-1', '2026-06-01')
+
+      expect(repo.listRecentlyConfirmed).toHaveBeenCalledWith(
+        'profile-1',
+        '2026-06-01',
+      )
+    })
+  })
+
+  describe('skipUpcoming', () => {
+    it('records a skipped occurrence ahead of time, without touching transactions', async () => {
       const repo = makeFakeRepo()
       const txRepo = makeFakeTxRepo()
       const service = makeService(repo, txRepo)
 
-      await expect(
-        service.confirm('profile-1', makeDue(), {
-          amount: 0,
-          type: 'expense',
-          categoryId: 'cat-1',
-          transactionDate: '2026-06-05',
-          note: undefined,
-        }),
-      ).rejects.toThrow(/greater than 0/)
-      expect(txRepo.create).not.toHaveBeenCalled()
-      expect(repo.recordConfirmed).not.toHaveBeenCalled()
+      await service.skipUpcoming('re-9', '2026-07-05')
+
+      expect(repo.recordSkipped).toHaveBeenCalledWith('re-9', '2026-07-05')
+      expect(txRepo.delete).not.toHaveBeenCalled()
     })
   })
 
   describe('skip', () => {
-    it('records a skipped occurrence and creates no transaction', async () => {
+    it('deletes the linked transaction and records the occurrence skipped', async () => {
       const repo = makeFakeRepo()
       const txRepo = makeFakeTxRepo()
       const service = makeService(repo, txRepo)
-      const due = makeDue({
-        recurringExpense: makeTemplate({ id: 're-9' }),
+      const occurrence: RecurringOccurrence = {
+        id: 'occ-1',
+        recurringTransactionId: 're-9',
         occurrenceDate: '2026-06-05',
-      })
+        status: 'confirmed',
+        transactionId: 'tx-1',
+        createdAt: '2026-06-05T00:00:00.000Z',
+      }
 
-      await service.skip(due)
+      await service.skip(occurrence)
 
+      expect(txRepo.delete).toHaveBeenCalledWith('tx-1')
       expect(repo.recordSkipped).toHaveBeenCalledWith('re-9', '2026-06-05')
-      expect(txRepo.create).not.toHaveBeenCalled()
+    })
+
+    it('does not try to delete a transaction when there is none', async () => {
+      const repo = makeFakeRepo()
+      const txRepo = makeFakeTxRepo()
+      const service = makeService(repo, txRepo)
+      const occurrence: RecurringOccurrence = {
+        id: 'occ-2',
+        recurringTransactionId: 're-9',
+        occurrenceDate: '2026-06-05',
+        status: 'skipped',
+        transactionId: null,
+        createdAt: '2026-06-05T00:00:00.000Z',
+      }
+
+      await service.skip(occurrence)
+
+      expect(txRepo.delete).not.toHaveBeenCalled()
+      expect(repo.recordSkipped).toHaveBeenCalledWith('re-9', '2026-06-05')
     })
   })
 })

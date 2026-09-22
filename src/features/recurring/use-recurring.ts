@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import {
   queryOptions,
   useMutation,
@@ -5,13 +6,13 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { recurringService } from '#/features/recurring'
-import { useProfile } from '#/features/profile/use-profile'
+import { useProfile } from '#/shared/hooks/use-profile'
 import { resolvePeriod, todayYmd } from '#/shared/lib/period'
+import type { RecentlyPostedItem } from '#/data/recurring/IRecurringTransactionRepository'
 import type { RecurringInput } from './schema'
-import type { QuickAddInput } from '#/features/transactions/schemas/transaction.schema'
 import type {
-  DueOccurrence,
-  RecurringExpense,
+  RecurringOccurrence,
+  RecurringTransaction,
 } from '#/features/recurring/types'
 
 const recurringQueryOptions = (userId: string) =>
@@ -21,7 +22,7 @@ const recurringQueryOptions = (userId: string) =>
   })
 
 interface RecurringResult {
-  recurringExpenses: RecurringExpense[]
+  recurringTransactions: RecurringTransaction[]
   loading: boolean
   isError: boolean
   error: unknown
@@ -29,7 +30,7 @@ interface RecurringResult {
 
 // All of the current user's recurring templates (active + deactivated), for the
 // management screen. Disabled until the profile resolves.
-export function useRecurringExpenses(): RecurringResult {
+export function useRecurringTransactions(): RecurringResult {
   const { profile, loading: profileLoading } = useProfile()
   const userId = profile?.id ?? null
 
@@ -39,7 +40,7 @@ export function useRecurringExpenses(): RecurringResult {
   })
 
   return {
-    recurringExpenses: query.data ?? [],
+    recurringTransactions: query.data ?? [],
     loading: profileLoading || query.isLoading,
     isError: query.isError,
     error: query.error,
@@ -98,40 +99,35 @@ export function useDeleteRecurring() {
   })
 }
 
-interface DueResult {
-  due: DueOccurrence[]
-  loading: boolean
-  isError: boolean
-  error: unknown
-}
-
-// The Due items to prompt for in the current Period. Keyed by the Period start
-// (via resolvePeriod) so it refreshes when the Period rolls over. Disabled until
-// the profile resolves.
-export function useDueRecurring(): DueResult {
-  const { profile, loading: profileLoading } = useProfile()
-  const id = profile?.id ?? ''
-  const startDay = profile?.budgetPeriodStartDay ?? 1
-  const today = todayYmd()
-  const periodKey = resolvePeriod(today, startDay).start
-
-  const query = useQuery({
-    queryKey: ['recurring', 'due', id, periodKey] as const,
-    queryFn: () => recurringService.listDue(id, today, startDay),
-    enabled: !!id,
+// Whether a template has confirmed history — drives the delete confirm
+// dialog's copy only, not delete's actual (always-safe) behavior.
+export function useHasConfirmedHistory(id: string) {
+  return useQuery({
+    queryKey: ['recurring', 'confirmed-history', id] as const,
+    queryFn: () => recurringService.hasConfirmedHistory(id),
   })
-
-  return {
-    due: query.data ?? [],
-    loading: profileLoading || query.isLoading,
-    isError: query.isError,
-    error: query.error,
-  }
 }
 
-// Invalidate everything a confirm/skip touches: the Due list (the resolved item
-// drops off) plus, for confirm, the recent list and Cashflow totals the new
-// transaction feeds.
+// Skip the next (not-yet-posted) occurrence of a template ahead of time, e.g.
+// "don't post rent this month". Invalidates the recurring list so any shown
+// "next occurrence" recomputes.
+export function useSkipUpcoming() {
+  const invalidate = useInvalidateRecurring()
+
+  return useMutation({
+    mutationFn: ({
+      recurringTransactionId,
+      occurrenceDate,
+    }: {
+      recurringTransactionId: string
+      occurrenceDate: string
+    }) => recurringService.skipUpcoming(recurringTransactionId, occurrenceDate),
+    onSuccess: invalidate,
+  })
+}
+
+// Invalidate everything a reconcile/skip touches: the recently-posted list plus
+// the Cashflow totals the affected transaction feeds.
 function useInvalidateAfterResolve() {
   const { profile } = useProfile()
   const userId = profile?.id ?? null
@@ -140,7 +136,9 @@ function useInvalidateAfterResolve() {
   return () => {
     if (!userId) return
     return Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['recurring', 'due', userId] }),
+      queryClient.invalidateQueries({
+        queryKey: ['recurring', 'recent', userId],
+      }),
       queryClient.invalidateQueries({
         queryKey: ['transactions', 'recent', userId],
       }),
@@ -152,45 +150,79 @@ function useInvalidateAfterResolve() {
   }
 }
 
-export function useConfirmDue() {
+function useReconcileDue() {
   const { profile } = useProfile()
   const userId = profile?.id ?? null
+  const startDay = profile?.budgetPeriodStartDay ?? 1
   const invalidate = useInvalidateAfterResolve()
 
   return useMutation({
-    mutationFn: ({
-      due,
-      input,
-    }: {
-      due: DueOccurrence
-      input: QuickAddInput
-    }) => {
+    mutationFn: () => {
       if (!userId) throw new Error('No profile loaded')
-      return recurringService.confirm(userId, due, input)
+      return recurringService.reconcileDue(userId, todayYmd(), startDay)
     },
     onSuccess: invalidate,
   })
 }
 
-export function useConfirmAllDue() {
+// Fires reconcileDue once per Period (keyed like useRecentlyPosted's periodKey)
+// so it doesn't re-run on every render. Intended to be called from the
+// component that also renders the recently-posted list, so importing that
+// component is the only wiring a route needs.
+export function useAutoReconcile() {
   const { profile } = useProfile()
-  const userId = profile?.id ?? null
-  const invalidate = useInvalidateAfterResolve()
+  const startDay = profile?.budgetPeriodStartDay ?? 1
+  const periodKey = resolvePeriod(todayYmd(), startDay).start
+  const reconcile = useReconcileDue()
+  const mutateRef = useRef(reconcile.mutate)
+  mutateRef.current = reconcile.mutate
 
-  return useMutation({
-    mutationFn: (dueItems: DueOccurrence[]) => {
-      if (!userId) throw new Error('No profile loaded')
-      return recurringService.confirmAll(userId, dueItems)
-    },
-    onSuccess: invalidate,
-  })
+  useEffect(() => {
+    if (!profile) return
+    mutateRef.current()
+    // Deliberately keyed on [profile?.id, periodKey], not `profile` itself or
+    // `mutate` — this should re-fire only when the user or the Period changes.
+  }, [profile?.id, periodKey])
 }
 
+interface RecentlyPostedResult {
+  items: RecentlyPostedItem[]
+  loading: boolean
+  isError: boolean
+  error: unknown
+}
+
+// Occurrences reconcileDue auto-posted in the current Period, joined with their
+// template and the transaction they created — the Dashboard's "Recently
+// posted" list.
+export function useRecentlyPosted(): RecentlyPostedResult {
+  const { profile, loading: profileLoading } = useProfile()
+  const id = profile?.id ?? ''
+  const startDay = profile?.budgetPeriodStartDay ?? 1
+  const periodKey = resolvePeriod(todayYmd(), startDay).start
+
+  const query = useQuery({
+    queryKey: ['recurring', 'recent', id, periodKey] as const,
+    queryFn: () => recurringService.listRecentlyPosted(id, periodKey),
+    enabled: !!id,
+  })
+
+  return {
+    items: query.data ?? [],
+    loading: profileLoading || query.isLoading,
+    isError: query.isError,
+    error: query.error,
+  }
+}
+
+// Undo an auto-posted transaction: deletes it and flips its occurrence to
+// skipped.
 export function useSkipDue() {
   const invalidate = useInvalidateAfterResolve()
 
   return useMutation({
-    mutationFn: (due: DueOccurrence) => recurringService.skip(due),
+    mutationFn: (occurrence: RecurringOccurrence) =>
+      recurringService.skip(occurrence),
     onSuccess: invalidate,
   })
 }

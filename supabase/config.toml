@@ -362,6 +362,12 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Invoked by pg_cron with no user session (see
+# supabase/migrations/*_recurring_reconcile_cron.sql), so JWT verification is
+# disabled here and the function checks its own shared-secret header instead.
+[functions.reconcile-recurring]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

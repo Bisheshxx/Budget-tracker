@@ -3,7 +3,7 @@ import type {
   CategoryCreate,
   CategoryPageRequest,
   CategoryUpdate,
-} from '#/features/categories/types'
+} from '#/shared/types/category.type'
 
 export interface ICategoryRepository {
   /** System categories (user_id null) + the user's own, name-ordered. */

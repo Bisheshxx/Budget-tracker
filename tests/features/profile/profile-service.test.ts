@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ProfileService } from '#/features/profile/profile-service.ts'
-import type { ProfileUpdate, UserProfile } from '#/features/profile/types.ts'
+import type { ProfileUpdate, UserProfile } from '#/shared/types/user-profile.type.ts'
 import type { IProfileRepository } from '#/data/profile/IProfileRepository.ts'
 import type { OnboardingInput } from '#/features/profile/schema.ts'
 

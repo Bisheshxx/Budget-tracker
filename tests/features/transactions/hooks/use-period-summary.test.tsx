@@ -4,14 +4,14 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement } from 'react'
 import type { ReactNode } from 'react'
-import type { PeriodSummary } from '#/features/transactions/types/transaction.type.ts'
+import type { PeriodSummary } from '#/shared/types/transaction.type.ts'
 
 // Mock the profile hook and the service singleton so the hook is exercised
 // without Supabase. vi.hoisted keeps the spies reachable in the factories.
 const { useProfile } = vi.hoisted(() => ({ useProfile: vi.fn() }))
 const { getPeriodSummary } = vi.hoisted(() => ({ getPeriodSummary: vi.fn() }))
 
-vi.mock('#/features/profile/use-profile', () => ({ useProfile }))
+vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
 vi.mock('#/features/transactions', () => ({
   transactionService: { getPeriodSummary },
 }))

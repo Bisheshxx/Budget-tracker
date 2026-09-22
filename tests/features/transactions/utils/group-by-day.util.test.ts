@@ -3,7 +3,7 @@ import {
   formatDayLabel,
   groupByDay,
 } from '#/features/transactions/utils/group-by-day.util.ts'
-import type { Transaction } from '#/features/transactions/types/transaction.type.ts'
+import type { Transaction } from '#/shared/types/transaction.type.ts'
 
 // Build a transaction with only the fields grouping reads.
 function tx(

@@ -1,8 +1,8 @@
-import { SupabaseRecurringExpenseRepository } from './supabase-recurring-expense-repository'
-import type { IRecurringExpenseRepository } from './IRecurringExpenseRepository'
+import { SupabaseRecurringTransactionRepository } from './supabase-recurring-transaction-repository'
+import type { IRecurringTransactionRepository } from './IRecurringTransactionRepository'
 
-// THE swap point for recurring-expense data. Replace this one construction to
-// move to an axios/REST backend later; nothing else references the concrete
+// THE swap point for recurring-transaction data. Replace this one construction
+// to move to an axios/REST backend later; nothing else references the concrete
 // implementation.
-export const recurringExpenseRepository: IRecurringExpenseRepository =
-  new SupabaseRecurringExpenseRepository()
+export const recurringTransactionRepository: IRecurringTransactionRepository =
+  new SupabaseRecurringTransactionRepository()

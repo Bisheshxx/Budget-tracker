@@ -1,79 +1,149 @@
 import { recurringSchema } from './schema'
 import { computeDue } from './due'
 import { toCents } from '#/lib/money'
-import { quickAddSchema } from '#/features/transactions/schemas/transaction.schema'
-import { addDays } from '#/shared/lib/period'
+import {
+  addDays,
+  addMonths,
+  nthWeekdayOfMonth,
+  parseYmd,
+  todayYmd,
+} from '#/shared/lib/period'
 import type { RecurringInput } from './schema'
-import type { QuickAddInput } from '#/features/transactions/schemas/transaction.schema'
 import type {
   DueOccurrence,
-  RecurringExpense,
+  MonthlyNth,
+  MonthlyRule,
+  RecurringOccurrence,
+  RecurringTransaction,
 } from '#/features/recurring/types'
-import type { IRecurringExpenseRepository } from '#/data/recurring/IRecurringExpenseRepository'
+import type {
+  IRecurringTransactionRepository,
+  RecentlyPostedItem,
+} from '#/data/recurring/IRecurringTransactionRepository'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 
 const YMD_RE = /^\d{4}-\d{2}-\d{2}$/
 
-// Thin service over the recurring-expense repository. Validates via the shared
-// schema (the backstop, not just the UI), converts the display-unit amount to
-// integer cents, and persists. Inject fake repositories in tests — no Supabase,
-// no RLS. See ADR 0001 / 0006.
+// This month's (or, if it's already passed, next month's) date for an
+// nth-weekday rule — the anchor a freshly created/edited template starts from.
+// The service always derives this rather than trusting a client-supplied date,
+// so firstDueDate can never drift from the rule it's supposed to represent.
+function deriveNthWeekdayFirstDueDate(
+  weekday: 0 | 1 | 2 | 3 | 4 | 5 | 6,
+  nth: MonthlyNth,
+  today: string,
+): string {
+  const { year, month } = parseYmd(today)
+  const thisMonth = nthWeekdayOfMonth(year, month, weekday, nth)
+  if (thisMonth >= today) return thisMonth
+  const [nextYear, nextMonth] = addMonths(year, month, 1)
+  return nthWeekdayOfMonth(nextYear, nextMonth, weekday, nth)
+}
+
+function resolveMonthlyRule(
+  v: RecurringInput,
+  today: string,
+): { monthlyRule: MonthlyRule | null; firstDueDate: string } {
+  if (v.frequency !== 'monthly') {
+    return { monthlyRule: null, firstDueDate: v.firstDueDate as string }
+  }
+  if (v.monthlyRuleType === 'nth-weekday') {
+    const weekday = v.monthlyWeekday as 0 | 1 | 2 | 3 | 4 | 5 | 6
+    const nth = v.monthlyNth as MonthlyNth
+    return {
+      monthlyRule: { type: 'nth-weekday', weekday, nth },
+      firstDueDate: deriveNthWeekdayFirstDueDate(weekday, nth, today),
+    }
+  }
+  const firstDueDate = v.firstDueDate as string
+  return {
+    monthlyRule: {
+      type: 'day-of-month',
+      day: Number(firstDueDate.slice(8, 10)),
+    },
+    firstDueDate,
+  }
+}
+
+// Thin service over the recurring-transaction repository. Validates via the
+// shared schema (the backstop, not just the UI), converts the display-unit
+// amount to integer cents, and persists. Inject fake repositories in tests —
+// no Supabase, no RLS. See ADR 0001 / 0010.
 export class RecurringService {
   constructor(
-    private readonly repo: IRecurringExpenseRepository,
+    private readonly repo: IRecurringTransactionRepository,
     private readonly transactionRepo: ITransactionRepository,
   ) {}
 
   // Every template the user owns, active or not — the management screen.
-  listAll(userId: string): Promise<RecurringExpense[]> {
+  listAll(userId: string): Promise<RecurringTransaction[]> {
     return this.repo.listAll(userId)
   }
 
   async create(
     userId: string,
     input: RecurringInput,
-  ): Promise<RecurringExpense> {
+    today: string = todayYmd(),
+  ): Promise<RecurringTransaction> {
     const v = this.validate(input)
+    const { monthlyRule, firstDueDate } = resolveMonthlyRule(v, today)
     return this.repo.create({
       userId,
       categoryId: v.categoryId,
       name: v.name,
       amountCents: toCents(v.amount),
+      kind: v.kind,
       frequency: v.frequency,
-      firstDueDate: v.firstDueDate,
+      monthlyRule,
+      firstDueDate,
     })
   }
 
-  // Edit a template. Re-validates through the same schema as create. Per ADR 0006,
-  // changing the default amount affects only future occurrences — already-confirmed
-  // occurrences kept their own transaction amount, so nothing to backfill here.
-  async update(id: string, input: RecurringInput): Promise<RecurringExpense> {
+  // Edit a template. Re-validates through the same schema as create. Per ADR
+  // 0010, changing the default amount affects only future occurrences —
+  // already-posted occurrences kept their own transaction amount, so nothing to
+  // backfill here.
+  async update(
+    id: string,
+    input: RecurringInput,
+    today: string = todayYmd(),
+  ): Promise<RecurringTransaction> {
     const v = this.validate(input)
+    const { monthlyRule, firstDueDate } = resolveMonthlyRule(v, today)
     return this.repo.update(id, {
       categoryId: v.categoryId,
       name: v.name,
       amountCents: toCents(v.amount),
+      kind: v.kind,
       frequency: v.frequency,
-      firstDueDate: v.firstDueDate,
+      monthlyRule,
+      firstDueDate,
     })
   }
 
-  // Soft-stop a template: it stops surfacing as Due but its history is retained
-  // for analytics (never deleted). See ADR 0006.
-  deactivate(id: string): Promise<RecurringExpense> {
+  // Soft-stop a template: it stops posting but its history is retained for
+  // analytics (never deleted). See ADR 0010.
+  deactivate(id: string): Promise<RecurringTransaction> {
     return this.repo.deactivate(id)
   }
 
-  // Hard delete, reserved for clearly-wrong templates. Confirmed transactions
-  // survive (the FK is `on delete set null`); only the template + its occurrence
-  // rows go.
+  // Hard delete, reserved for clearly-wrong templates. The repository always
+  // severs any linked transactions first, so confirmed transactions survive
+  // regardless of history — see IRecurringTransactionRepository.delete.
   delete(id: string): Promise<void> {
     return this.repo.delete(id)
   }
 
-  // The Due items to prompt for on the Dashboard: the active templates' computed
-  // occurrences from their First Due Date through today, minus any already resolved. Nothing is
-  // pre-materialized — "Due" is derived (see due.ts / ADR 0006).
+  // Whether the template has confirmed history — for the management UI's
+  // delete confirm-dialog copy only, not a gate on delete's actual behavior.
+  hasConfirmedHistory(id: string): Promise<boolean> {
+    return this.repo.hasConfirmedHistory(id)
+  }
+
+  // The Due items to auto-post in the current Period: the active templates'
+  // computed occurrences from their First Due Date through today, minus any
+  // already resolved. Nothing is pre-materialized — "Due" is derived (see
+  // due.ts / ADR 0010).
   async listDue(
     userId: string,
     today: string,
@@ -98,62 +168,74 @@ export class RecurringService {
     return computeDue(templates, period, today, resolved)
   }
 
-  // Confirm a Due occurrence: create the expense transaction it stands for
-  // (amount/date editable by the user, validated through the transaction schema)
-  // linked to the template, then record the `confirmed` occurrence against the
-  // fixed Due date so the slot isn't prompted again. The transaction counts in
-  // Cashflow.
-  async confirm(
+  // Auto-post every currently Due occurrence: create the transaction it stands
+  // for (amount/date from the template default, type from kind) linked to the
+  // template, then record it confirmed so the slot isn't posted again. Safe to
+  // call concurrently (client on load + the daily cron, or two overlapping
+  // client calls) — both createForRecurringOccurrence (a unique constraint on
+  // (recurring_transaction_id, transaction_date)) and recordConfirmed (a
+  // unique constraint on (recurring_transaction_id, occurrence_date)) are
+  // first-writer-wins upserts, so a losing call gets back the same winning
+  // transaction/occurrence a concurrent call already created — no orphan to
+  // clean up.
+  async reconcileDue(
     userId: string,
-    due: DueOccurrence,
-    input: QuickAddInput,
-  ): Promise<void> {
-    const result = quickAddSchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+    today: string,
+    periodStartDay: number,
+  ): Promise<RecurringOccurrence[]> {
+    const due = await this.listDue(userId, today, periodStartDay)
+    const results: RecurringOccurrence[] = []
 
-    const transaction = await this.transactionRepo.create({
-      userId,
-      categoryId: due.recurringExpense.categoryId,
-      type: 'expense',
-      amountCents: toCents(v.amount),
-      note: v.note ?? null,
-      transactionDate: v.transactionDate,
-      recurringExpenseId: due.recurringExpense.id,
-    })
-    await this.repo.recordConfirmed(
-      due.recurringExpense.id,
-      due.occurrenceDate,
-      transaction.id,
-    )
-  }
-
-  async confirmAll(userId: string, dueItems: DueOccurrence[]): Promise<void> {
-    for (const due of dueItems) {
-      const transaction = await this.transactionRepo.create({
+    for (const item of due) {
+      const transaction = await this.transactionRepo.createForRecurringOccurrence({
         userId,
-        categoryId: due.recurringExpense.categoryId,
-        type: 'expense',
-        amountCents: due.recurringExpense.amountCents,
+        categoryId: item.recurringTransaction.categoryId,
+        type: item.recurringTransaction.kind,
+        amountCents: item.recurringTransaction.amountCents,
         note: null,
-        transactionDate: due.occurrenceDate,
-        recurringExpenseId: due.recurringExpense.id,
+        transactionDate: item.occurrenceDate,
+        recurringTransactionId: item.recurringTransaction.id,
       })
-      await this.repo.recordConfirmed(
-        due.recurringExpense.id,
-        due.occurrenceDate,
+      const occurrence = await this.repo.recordConfirmed(
+        item.recurringTransaction.id,
+        item.occurrenceDate,
         transaction.id,
       )
+      results.push(occurrence)
     }
+
+    return results
   }
 
-  // Skip a Due occurrence: record a `skipped` row against the Due date so it
-  // isn't prompted again that window. No transaction is created — a month you
-  // didn't pay isn't recorded as spending.
-  async skip(due: DueOccurrence): Promise<void> {
-    await this.repo.recordSkipped(due.recurringExpense.id, due.occurrenceDate)
+  // Confirmed occurrences (auto-posted transactions) on/after `since`, for the
+  // Dashboard's "Recently posted" list.
+  listRecentlyPosted(
+    userId: string,
+    since: string,
+  ): Promise<RecentlyPostedItem[]> {
+    return this.repo.listRecentlyConfirmed(userId, since)
+  }
+
+  // Skip an occurrence that hasn't posted yet (e.g. "don't post rent this
+  // month") — records it skipped ahead of time so reconcileDue/computeDue treat
+  // it as already resolved and never post it.
+  async skipUpcoming(
+    recurringTransactionId: string,
+    occurrenceDate: string,
+  ): Promise<void> {
+    await this.repo.recordSkipped(recurringTransactionId, occurrenceDate)
+  }
+
+  // Undo an auto-posted transaction: delete it, then flip its occurrence to
+  // skipped (never posted again for that date).
+  async skip(occurrence: RecurringOccurrence): Promise<void> {
+    if (occurrence.transactionId) {
+      await this.transactionRepo.delete(occurrence.transactionId)
+    }
+    await this.repo.recordSkipped(
+      occurrence.recurringTransactionId,
+      occurrence.occurrenceDate,
+    )
   }
 
   private validate(input: RecurringInput) {

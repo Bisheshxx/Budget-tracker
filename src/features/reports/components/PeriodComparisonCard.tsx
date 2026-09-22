@@ -1,5 +1,5 @@
-import { useCategoryLookup } from '#/features/categories/use-category-lookup'
-import { CategoryChip } from '#/features/categories/components/CategoryChip'
+import { useCategoryLookup } from '#/shared/hooks/use-category-lookup'
+import { CategoryChip } from '#/shared/components/CategoryChip'
 import { Money } from '#/shared/components/Money'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { DeltaDisplay } from './DeltaDisplay'

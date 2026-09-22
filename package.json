@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
+    "generate-types": "supabase gen types typescript --local > src/lib/database.types.ts",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -57,6 +58,8 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^9.20.0",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-boundaries": "^7.2.0",
     "jsdom": "^28.1.0",
     "prettier": "^3.8.1",
     "typescript": "^6.0.2",

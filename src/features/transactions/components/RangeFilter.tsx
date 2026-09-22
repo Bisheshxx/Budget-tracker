@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CalendarIcon } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
-import { rangeSchema } from '#/features/transactions/schemas/transaction.schema'
+import { rangeSchema } from '#/shared/schemas/transaction.schema'
 import { formatRangeLabel } from '#/features/transactions/utils/range.util'
 import type { Range } from '#/features/transactions/utils/range.util'
 import { formatYmd, parseYmd } from '#/shared/lib/period'
