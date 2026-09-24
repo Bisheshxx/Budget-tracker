@@ -59,4 +59,33 @@ describe('ReportService', () => {
       service.getPeriodReport('user-1', '2026-06-13', 1),
     ).resolves.toBe(EMPTY_REPORT)
   })
+
+  it('resolves a custom range against its own mirrored previous range', async () => {
+    const repo = makeFakeRepo()
+    const service = new ReportService(repo)
+
+    await service.getReport(
+      'user-1',
+      '2026-06-13',
+      'custom',
+      1,
+      undefined,
+      { start: '2026-01-03', end: '2026-01-11' },
+    )
+
+    expect(repo.getPeriodReport).toHaveBeenCalledWith(
+      'user-1',
+      { start: '2026-01-03', end: '2026-01-11' },
+      { start: '2025-12-26', end: '2026-01-03' },
+    )
+  })
+
+  it('throws for the custom view without a customRange', () => {
+    const repo = makeFakeRepo()
+    const service = new ReportService(repo)
+
+    expect(() =>
+      service.getReport('user-1', '2026-06-13', 'custom', 1),
+    ).toThrow('custom view requires a customRange')
+  })
 })

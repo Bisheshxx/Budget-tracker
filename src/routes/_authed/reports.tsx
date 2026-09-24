@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useReports } from '#/features/reports/use-reports'
 import { useProfile } from '#/shared/hooks/use-profile'
@@ -6,19 +6,32 @@ import { PeriodComparisonCard } from '#/features/reports/components/PeriodCompar
 import { WeeklyCashflowChart } from '#/features/reports/components/WeeklyCashflowChart'
 import { CategorySpendChart } from '#/features/reports/components/CategorySpendChart'
 import { Button } from '#/components/ui/button'
+import { RangeFilter } from '#/shared/components/RangeFilter'
 import { ReportsContentSkeleton } from '#/shared/components/skeleton-loaders/ReportsSkeleton'
+import { rangeSearchSchema } from '#/shared/schemas/transaction.schema'
+import { searchToRange } from '#/shared/utils/range.util'
 import type { ReportView } from '#/features/reports/types'
 
 // Reports surface (issue 07): Period Comparison (this Period vs. last, % and
 // amount, overall + per category), income-vs-expenses / category-spend charts,
-// and a weekly breakdown. Read-only; no AI (deferred per ADR 0001).
+// and a weekly breakdown. Read-only; no AI (deferred per ADR 0001). `?from=&to=`
+// selects an arbitrary Custom range (mirrors the Dashboard's Range filter) —
+// present, it takes over from whichever preset button was last selected.
 export const Route = createFileRoute('/_authed/reports')({
+  validateSearch: (search) => rangeSearchSchema.parse(search),
   component: ReportsPage,
 })
 
+type PresetView = Exclude<ReportView, 'custom'>
+
 function ReportsPage() {
-  const [view, setView] = useState<ReportView>('period')
-  const { report, loading, isError } = useReports(view)
+  const navigate = useNavigate()
+  const { from, to } = Route.useSearch()
+  const customRange = searchToRange(from, to)
+  const [presetView, setPresetView] = useState<PresetView>('period')
+  const view: ReportView = customRange ? 'custom' : presetView
+
+  const { report, loading, isError } = useReports(view, customRange)
   const { profile } = useProfile()
   const currency = profile?.currency ?? 'USD'
 
@@ -35,11 +48,22 @@ function ReportsPage() {
             type="button"
             variant={view === option.value ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setView(option.value)}
+            onClick={() => {
+              setPresetView(option.value)
+              // Only one selection can be active — dropping a Custom range in
+              // favor of a preset clears `?from=&to=`.
+              if (customRange) navigate({ to: '/reports', search: {} })
+            }}
           >
             {option.label}
           </Button>
         ))}
+        <RangeFilter
+          range={customRange}
+          placeholder="Custom range"
+          onApply={(range) => navigate({ to: '/reports', search: range })}
+          onClear={() => navigate({ to: '/reports', search: {} })}
+        />
       </div>
 
       {isError ? (
@@ -71,7 +95,7 @@ function ReportsPage() {
   )
 }
 
-const REPORT_VIEWS: { value: ReportView; label: string }[] = [
+const REPORT_VIEWS: { value: PresetView; label: string }[] = [
   { value: 'period', label: 'Period' },
   { value: 'calendar-month', label: 'Calendar Month' },
   { value: 'calendar-week', label: 'Calendar Week' },

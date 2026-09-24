@@ -6,7 +6,11 @@
 
 import type { CategorySpend } from '#/shared/types/transaction.type'
 
-export type ReportView = 'period' | 'calendar-month' | 'calendar-week'
+export type ReportView =
+  | 'period'
+  | 'calendar-month'
+  | 'calendar-week'
+  | 'custom'
 
 // A single metric compared across two Periods: the raw amounts plus the change
 // as both an absolute amount and a percentage. `deltaPercent` is null when the

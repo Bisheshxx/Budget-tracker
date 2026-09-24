@@ -8,6 +8,8 @@ import {
   resolveCalendarWeek,
   todayYmd,
 } from '#/shared/lib/period'
+import { rangeToBounds } from '#/shared/utils/range.util'
+import type { Range } from '#/shared/utils/range.util'
 import type { PeriodReport, ReportView } from './types'
 
 interface ReportsResult {
@@ -22,7 +24,11 @@ interface ReportsResult {
 // day against today (pure helpers in #/shared/lib/period); the Period key doubles as
 // the cache key so crossing into a new Period refetches. Disabled until the
 // profile resolves. Mirrors usePeriodSummary in the transactions feature.
-export function useReports(view: ReportView = 'period'): ReportsResult {
+// `customRange` is required (and drives the query) when `view === 'custom'`.
+export function useReports(
+  view: ReportView = 'period',
+  customRange?: Range | null,
+): ReportsResult {
   const { profile, loading: profileLoading } = useProfile()
   const userId = profile?.id ?? null
   const startDay = profile?.budgetPeriodStartDay ?? 1
@@ -30,18 +36,29 @@ export function useReports(view: ReportView = 'period'): ReportsResult {
 
   const today = todayYmd()
   const id = userId ?? ''
+  const customBounds =
+    view === 'custom' && customRange ? rangeToBounds(customRange) : undefined
   const windowKey =
-    view === 'period'
-      ? getPeriodKey(today, startDay)
-      : view === 'calendar-month'
-        ? resolveCalendarMonth(today).start
-        : resolveCalendarWeek(today, weekStartDay).start
+    view === 'custom'
+      ? `${customBounds?.start}:${customBounds?.end}`
+      : view === 'period'
+        ? getPeriodKey(today, startDay)
+        : view === 'calendar-month'
+          ? resolveCalendarMonth(today).start
+          : resolveCalendarWeek(today, weekStartDay).start
 
   const query = useQuery({
     queryKey: ['reports', id, view, windowKey],
     queryFn: () =>
-      reportService.getReport(id, today, view, startDay, weekStartDay),
-    enabled: !!userId,
+      reportService.getReport(
+        id,
+        today,
+        view,
+        startDay,
+        weekStartDay,
+        customBounds,
+      ),
+    enabled: !!userId && (view !== 'custom' || !!customBounds),
   })
 
   return {

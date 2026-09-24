@@ -83,7 +83,47 @@ describe('useReports', () => {
       'period',
       25,
       expect.any(Number),
+      undefined,
     )
+  })
+
+  it('queries a custom range as half-open bounds and skips the profile window key', async () => {
+    useProfile.mockReturnValue({
+      profile: { id: 'profile-1', budgetPeriodStartDay: 25 },
+      loading: false,
+    })
+    getReport.mockResolvedValue(report)
+
+    const { result } = renderHook(
+      () =>
+        useReports('custom', { from: '2026-01-03', to: '2026-01-10' }),
+      { wrapper },
+    )
+
+    await waitFor(() => expect(result.current.report).toEqual(report))
+
+    expect(getReport).toHaveBeenCalledWith(
+      'profile-1',
+      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      'custom',
+      25,
+      expect.any(Number),
+      { start: '2026-01-03', end: '2026-01-11' },
+    )
+  })
+
+  it('stays disabled for the custom view until a range is given', () => {
+    useProfile.mockReturnValue({
+      profile: { id: 'profile-1', budgetPeriodStartDay: 25 },
+      loading: false,
+    })
+
+    const { result } = renderHook(() => useReports('custom', null), {
+      wrapper,
+    })
+
+    expect(result.current.loading).toBe(false)
+    expect(getReport).not.toHaveBeenCalled()
   })
 
   it('surfaces a query error', async () => {

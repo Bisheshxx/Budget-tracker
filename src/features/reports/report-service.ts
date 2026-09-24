@@ -6,6 +6,7 @@ import {
   resolveCalendarWeek,
   resolvePeriod,
 } from '#/shared/lib/period'
+import type { PeriodRange } from '#/shared/lib/period'
 import type { IReportRepository } from '#/data/reports/IReportRepository'
 import type { PeriodReport, ReportView } from './types'
 
@@ -34,6 +35,7 @@ export class ReportService {
     view: ReportView,
     startDay: number,
     weekStartDay?: number,
+    customRange?: PeriodRange,
   ): Promise<PeriodReport> {
     if (view === 'period') {
       return this.getPeriodReport(userId, today, startDay)
@@ -44,6 +46,17 @@ export class ReportService {
         userId,
         resolveCalendarMonth(today),
         previousCalendarMonth(today),
+      )
+    }
+
+    if (view === 'custom') {
+      if (!customRange) {
+        throw new Error('custom view requires a customRange')
+      }
+      return this.repo.getPeriodReport(
+        userId,
+        customRange,
+        previousRange(customRange),
       )
     }
 
