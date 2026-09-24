@@ -19,6 +19,7 @@ import { useDialog } from '#/shared/hooks/use-dialog'
 import { useInfiniteScrollSentinel } from '#/shared/hooks/use-infinite-scroll-sentinel'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { Button } from '#/components/ui/button'
+import { Badge } from '#/components/ui/badge'
 import { todayYmd } from '#/shared/lib/period'
 import { TransactionsListSkeleton } from '#/shared/components/skeleton-loaders/DashboardSkeleton'
 import type { Transaction } from '#/shared/types/transaction.type'
@@ -196,10 +197,12 @@ function TransactionRow({
     <li className="group flex items-center gap-2 py-3">
       <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
         <div className="min-w-0">
-          <CategoryChip category={category} className="font-medium" />
-          {tx.note && (
-            <p className="truncate text-xs text-muted-foreground">{tx.note}</p>
-          )}
+          <p className="truncate font-medium">
+            {tx.note || (category?.name ?? 'Uncategorized')}
+          </p>
+          <Badge variant="secondary" className="mt-1 font-normal">
+            <CategoryChip category={category} className="gap-1.5" />
+          </Badge>
         </div>
         <Money
           cents={tx.type === 'expense' ? -tx.amountCents : tx.amountCents}
