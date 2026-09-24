@@ -67,17 +67,17 @@ function DashboardPage() {
         <h1 className="text-2xl font-semibold">Dashboard</h1>
       </div>
 
-      {/* On lg+ the dashboard grid pins to the viewport. The transaction list
-          owns its scroll area; the left column stays natural-height, with the
-          Categories card scrolling only its list. */}
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:h-[calc(100dvh-260px)] lg:grid-cols-12">
+      {/* On lg+ the grid has a soft min-height floor so it doesn't look
+          cramped with little data, but grows naturally with content — the
+          page scrolls as a whole rather than clipping any card. */}
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:min-h-[calc(100dvh-260px)] lg:grid-cols-12">
         <div className="flex flex-col gap-6 lg:col-span-5 lg:pr-1">
           <CashflowSummary range={activeRange} />
           <RecentlyPosted />
           <CategoryManager />
         </div>
 
-        <Card className="flex min-h-0 flex-col lg:col-span-7">
+        <Card className="flex flex-col lg:col-span-7">
           <CardHeader className="gap-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               {/* Heading mirrors the card above: the Range when active, else the
@@ -90,7 +90,7 @@ function DashboardPage() {
               <Button onClick={openQuickAdd}>Add transaction</Button>
             </div>
           </CardHeader>
-          <CardContent className="min-h-0 flex-1 overflow-y-auto">
+          <CardContent>
             <RecentTransactions range={activeRange} onEdit={openEdit} />
           </CardContent>
         </Card>
