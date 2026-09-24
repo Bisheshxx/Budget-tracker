@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useProfile } from '#/shared/hooks/use-profile'
 import { SettingsForm } from '#/features/profile/components/SettingsForm'
+import { CategoryManager } from '#/features/categories/components/CategoryManager'
 import {
   Card,
   CardContent,
@@ -11,7 +12,9 @@ import {
 import { SettingsFormSkeleton } from '#/shared/components/skeleton-loaders/SettingsSkeleton'
 
 // Protected (nested under _authed, so session + onboarding are already
-// guaranteed). Edits the profile fields captured at Onboarding.
+// guaranteed). Edits the profile fields captured at Onboarding, plus category
+// management — moved here from the Dashboard since categories are account-wide
+// configuration, not day-to-day cashflow.
 export const Route = createFileRoute('/_authed/settings')({
   component: SettingsPage,
 })
@@ -40,6 +43,10 @@ function SettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      <div className="mt-8">
+        <CategoryManager />
+      </div>
     </main>
   )
 }

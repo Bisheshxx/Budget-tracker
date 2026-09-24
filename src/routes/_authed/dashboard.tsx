@@ -10,7 +10,6 @@ import { CashflowSummary } from '#/features/transactions/components/CashflowSumm
 import { RecentTransactions } from '#/features/transactions/components/RecentTransactions'
 import { RecentlyPosted } from '#/features/recurring/components/RecentlyPosted'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
-import { CategoryManager } from '#/features/categories/components/CategoryManager'
 import { rangeSearchSchema } from '#/shared/schemas/transaction.schema'
 import { formatRangeLabel, searchToRange } from '#/shared/utils/range.util'
 import type { QuickAddFormValues } from '#/shared/schemas/transaction.schema'
@@ -71,7 +70,6 @@ function DashboardPage() {
         <div className="flex flex-col gap-6 lg:col-span-5 lg:pr-1">
           <CashflowSummary range={activeRange} />
           <RecentlyPosted />
-          <CategoryManager />
         </div>
 
         <Card className="flex flex-col lg:col-span-7">
