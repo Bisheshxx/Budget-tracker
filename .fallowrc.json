@@ -9,7 +9,8 @@
     "fallow",
     "lucide-react",
     "class-variance-authority",
-    "radix-ui"
+    "radix-ui",
+    "eslint-import-resolver-typescript"
   ],
   "ignorePatterns": ["src/lib/database.types.ts", "src/components/ui/**"],
   "ignoreExports": [
