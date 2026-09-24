@@ -10,6 +10,7 @@ import Header from '#/components/Header'
 import { NotFound } from '#/components/NotFound'
 import { RootErrorBoundary } from '#/components/RootErrorBoundary'
 import { Toaster } from '#/components/ui/sonner'
+import { TooltipProvider } from '#/components/ui/tooltip'
 import { AuthProvider } from '#/features/auth/contexts/auth-context'
 
 import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
@@ -59,10 +60,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="flex flex-col font-sans antialiased [overflow-wrap:anywhere] selection:bg-primary/20">
         <AuthProvider>
-          <Header />
-          <div className="flex flex-1 flex-col">{children}</div>
-          <Footer />
-          <Toaster />
+          <TooltipProvider>
+            <Header />
+            <div className="flex flex-1 flex-col">{children}</div>
+            <Footer />
+            <Toaster />
+          </TooltipProvider>
         </AuthProvider>
         <TanStackDevtools
           config={{
