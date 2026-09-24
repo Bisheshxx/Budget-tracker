@@ -13,7 +13,7 @@ function Landing() {
   const primaryLabel = session ? 'Go to dashboard' : 'Get started'
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] text-foreground">
+    <main className="text-foreground">
       <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-6 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
         {/* Left — message + CTAs */}
         <section>

@@ -15,7 +15,7 @@ export function DashboardSkeleton() {
         <h1 className="text-2xl font-semibold">Dashboard</h1>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:h-[calc(100dvh-260px)] lg:grid-cols-12">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:min-h-[calc(100dvh-260px)] lg:grid-cols-12">
         <div className="flex flex-col gap-6 lg:col-span-5 lg:pr-1">
           <SummaryCardSkeleton />
           <CategoriesCardSkeleton />
@@ -112,7 +112,7 @@ function CategoriesCardSkeleton() {
 
 function TransactionsCardSkeleton() {
   return (
-    <Card className="flex min-h-0 flex-col lg:col-span-7">
+    <Card className="flex flex-col lg:col-span-7">
       <CardHeader className="gap-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <CardTitle>Recent transactions</CardTitle>
@@ -121,7 +121,7 @@ function TransactionsCardSkeleton() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="min-h-0 flex-1 overflow-hidden">
+      <CardContent>
         <TransactionsListSkeleton />
       </CardContent>
     </Card>
