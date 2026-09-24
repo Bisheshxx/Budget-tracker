@@ -195,7 +195,11 @@
 html,
 body,
 #app {
-  min-height: 100%;
+  /* Unlayered, so it always wins over @layer utilities like min-h-screen
+     (Tailwind's utilities live in a named layer, which unlayered CSS always
+     beats regardless of source order/specificity) — 100% is a no-op here
+     since html has no defined height, so this must be a viewport unit. */
+  min-height: 100dvh;
 }
 
 body {

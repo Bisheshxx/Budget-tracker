@@ -57,10 +57,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-primary/20">
+      <body className="flex flex-col font-sans antialiased [overflow-wrap:anywhere] selection:bg-primary/20">
         <AuthProvider>
           <Header />
-          {children}
+          <div className="flex flex-1 flex-col">{children}</div>
           <Footer />
           <Toaster />
         </AuthProvider>
