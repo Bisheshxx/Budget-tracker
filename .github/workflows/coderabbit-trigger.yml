@@ -1,0 +1,24 @@
+name: Trigger CodeRabbit review
+
+# CodeRabbit's free tier only auto-reviews PRs on repos past a star
+# threshold; below that, it needs a literal "@coderabbitai review" comment
+# to kick off a review. This posts that comment automatically on PR open so
+# nobody has to type it by hand. CodeRabbit still follows up on new commits
+# in the same PR on its own after this first nudge.
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  trigger-review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request CodeRabbit review
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: '@coderabbitai review'
