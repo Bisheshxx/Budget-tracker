@@ -8,8 +8,8 @@ import {
   groupByDay,
   formatDayLabel,
 } from '#/features/transactions/utils/group-by-day.util'
-import { rangeToHookBounds } from '#/features/transactions/utils/range.util'
-import type { Range } from '#/features/transactions/utils/range.util'
+import { rangeToHookBounds } from '#/shared/utils/range.util'
+import type { Range } from '#/shared/utils/range.util'
 import { useProfile } from '#/shared/hooks/use-profile'
 import { useCategoryLookup } from '#/shared/hooks/use-category-lookup'
 import { CategoryChip } from '#/shared/components/CategoryChip'

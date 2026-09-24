@@ -4,7 +4,7 @@ import {
   rangeToBounds,
   rangeToHookBounds,
   searchToRange,
-} from '#/features/transactions/utils/range.util.ts'
+} from '#/shared/utils/range.util.ts'
 
 describe('searchToRange', () => {
   it('is active when both ends resolve and are in order', () => {

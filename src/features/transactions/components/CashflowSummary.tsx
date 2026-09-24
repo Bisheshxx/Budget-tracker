@@ -1,13 +1,11 @@
+import { useNavigate } from '@tanstack/react-router'
 import { usePeriodSummary } from '#/features/transactions/hooks/use-transactions'
 import { useProfile } from '#/shared/hooks/use-profile'
 import { useCategoryLookup } from '#/shared/hooks/use-category-lookup'
 import { CategoryChip } from '#/shared/components/CategoryChip'
-import { RangeFilter } from '#/features/transactions/components/RangeFilter'
-import {
-  formatRangeLabel,
-  rangeToBounds,
-} from '#/features/transactions/utils/range.util'
-import type { Range } from '#/features/transactions/utils/range.util'
+import { RangeFilter } from '#/shared/components/RangeFilter'
+import { formatRangeLabel, rangeToBounds } from '#/shared/utils/range.util'
+import type { Range } from '#/shared/utils/range.util'
 import { Money } from '#/shared/components/Money'
 import { MoneyBadge } from '#/shared/components/MoneyBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
@@ -42,6 +40,7 @@ function currentMonthName(): string {
 // that drives `range` lives in this card header so the date scope sits with the
 // summary it changes.
 export function CashflowSummary({ range }: { range?: Range | null }) {
+  const navigate = useNavigate()
   const activeRange = range ?? null
   const { summary, daysIntoPeriod, loading } = usePeriodSummary(
     activeRange ? rangeToBounds(activeRange) : undefined,
@@ -66,7 +65,11 @@ export function CashflowSummary({ range }: { range?: Range | null }) {
               </p>
             )}
           </div>
-          <RangeFilter range={activeRange} />
+          <RangeFilter
+            range={activeRange}
+            onApply={(r) => navigate({ to: '/dashboard', search: r })}
+            onClear={() => navigate({ to: '/dashboard', search: {} })}
+          />
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">

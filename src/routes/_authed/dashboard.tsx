@@ -12,10 +12,7 @@ import { RecentlyPosted } from '#/features/recurring/components/RecentlyPosted'
 import { CategoryCreateForm } from '#/features/categories/components/CategoryCreateForm'
 import { CategoryManager } from '#/features/categories/components/CategoryManager'
 import { rangeSearchSchema } from '#/shared/schemas/transaction.schema'
-import {
-  formatRangeLabel,
-  searchToRange,
-} from '#/features/transactions/utils/range.util'
+import { formatRangeLabel, searchToRange } from '#/shared/utils/range.util'
 import type { QuickAddFormValues } from '#/shared/schemas/transaction.schema'
 import type { Transaction } from '#/shared/types/transaction.type'
 
