@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { CalendarIcon } from 'lucide-react'
-import { useNavigate } from '@tanstack/react-router'
 import { rangeSchema } from '#/shared/schemas/transaction.schema'
-import { formatRangeLabel } from '#/features/transactions/utils/range.util'
-import type { Range } from '#/features/transactions/utils/range.util'
+import { formatRangeLabel } from '#/shared/utils/range.util'
+import type { Range } from '#/shared/utils/range.util'
 import { formatYmd, parseYmd } from '#/shared/lib/period'
 import { Button } from '#/components/ui/button'
 import { Calendar } from '#/components/ui/calendar'
@@ -14,12 +13,14 @@ import {
 } from '#/components/ui/popover'
 import type { DateRange } from 'react-day-picker'
 
-// The Range filter in the Cashflow card header (see PRD B): a popover range
-// calendar plus Apply/Clear. Applying re-scopes both the Cashflow card and the
-// transaction list to an arbitrary span by writing `?from=&to=` to dashboard
-// search params; clearing removes them (back to the current Period). The active
-// Range lives in the URL — not local state — so it survives refresh and is
-// shareable. `range` seeds the calendar from whatever the URL carries.
+// A popover range calendar plus Apply/Clear, generic over where the applied
+// Range goes — the caller owns persistence (e.g. navigating to `?from=&to=`)
+// via `onApply`/`onClear`. Used by the Dashboard's Cashflow card and the
+// Reports page's Custom range option (promoted here per ADR 0003 once Reports
+// became a second consumer). `range` seeds the calendar from whatever the
+// caller currently considers active, and also drives the trigger's active
+// (`default` vs `outline`) styling — so a caller whose "custom" view is only
+// ever reachable via an applied Range gets the "active button" look for free.
 
 function ymdToDate(ymd: string): Date {
   const { year, month, day } = parseYmd(ymd)
@@ -35,15 +36,24 @@ function rangeToSelection(range: Range | null): DateRange | undefined {
   return { from: ymdToDate(range.from), to: ymdToDate(range.to) }
 }
 
-export function RangeFilter({ range }: { range: Range | null }) {
-  const navigate = useNavigate()
+export function RangeFilter({
+  range,
+  placeholder = 'Filter by date range',
+  onApply,
+  onClear,
+}: {
+  range: Range | null
+  placeholder?: string
+  onApply: (range: Range) => void
+  onClear: () => void
+}) {
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<DateRange | undefined>(() =>
     rangeToSelection(range),
   )
 
-  // The component stays mounted while the URL changes (back/forward, Clear,
-  // shared links), so re-seed the selection whenever the active Range moves.
+  // The component stays mounted while the active Range changes (back/forward,
+  // Clear, shared links), so re-seed the selection whenever it moves.
   useEffect(() => {
     setSelected(rangeToSelection(range))
   }, [range])
@@ -57,16 +67,16 @@ export function RangeFilter({ range }: { range: Range | null }) {
       : null
   const canApply = draft !== null && rangeSchema.safeParse(draft).success
 
-  function onApply() {
+  function handleApply() {
     if (!draft) return
     setOpen(false)
-    navigate({ to: '/dashboard', search: draft })
+    onApply(draft)
   }
 
-  function onClear() {
+  function handleClear() {
     setSelected(undefined)
     setOpen(false)
-    navigate({ to: '/dashboard', search: {} })
+    onClear()
   }
 
   return (
@@ -81,7 +91,7 @@ export function RangeFilter({ range }: { range: Range | null }) {
     >
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
+          variant={range ? 'default' : 'outline'}
           className="justify-start font-normal"
           aria-label="Filter by date range"
         >
@@ -89,7 +99,7 @@ export function RangeFilter({ range }: { range: Range | null }) {
           {range ? (
             formatRangeLabel(range)
           ) : (
-            <span className="text-muted-foreground">Filter by date range</span>
+            <span className="text-muted-foreground">{placeholder}</span>
           )}
         </Button>
       </PopoverTrigger>
@@ -104,7 +114,12 @@ export function RangeFilter({ range }: { range: Range | null }) {
         />
         <div className="flex justify-end gap-2 border-t p-3">
           {range && (
-            <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleClear}
+            >
               Clear
             </Button>
           )}
@@ -112,7 +127,7 @@ export function RangeFilter({ range }: { range: Range | null }) {
             type="button"
             size="sm"
             disabled={!canApply}
-            onClick={onApply}
+            onClick={handleApply}
           >
             Apply
           </Button>

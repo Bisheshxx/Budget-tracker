@@ -20,8 +20,8 @@ import { Skeleton } from '#/components/ui/skeleton'
 import { useInfiniteScrollSentinel } from '#/shared/hooks/use-infinite-scroll-sentinel'
 import type { Category } from '#/shared/types/category.type'
 
-// Manage categories directly inside the Dashboard's Categories card. The list
-// is newest-created first and paged; system categories are read-only, while the
+// Manage categories from the Settings page's Categories card. The list is
+// newest-created first and paged; system categories are read-only, while the
 // user's own categories can be edited or deleted inline.
 export function CategoryManager() {
   const {

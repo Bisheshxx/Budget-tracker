@@ -10,17 +10,18 @@ import type { Category } from '#/shared/types/category.type.ts'
 const { usePeriodSummary } = vi.hoisted(() => ({ usePeriodSummary: vi.fn() }))
 const { useProfile } = vi.hoisted(() => ({ useProfile: vi.fn() }))
 const { useCategories } = vi.hoisted(() => ({ useCategories: vi.fn() }))
+const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }))
 
 vi.mock('#/features/transactions/hooks/use-transactions', () => ({
   usePeriodSummary,
 }))
 vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
 vi.mock('#/shared/hooks/use-categories', () => ({ useCategories }))
+vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }))
 
 const { CashflowSummary } =
   await import('#/features/transactions/components/CashflowSummary.tsx')
-const { formatRangeLabel } =
-  await import('#/features/transactions/utils/range.util.ts')
+const { formatRangeLabel } = await import('#/shared/utils/range.util.ts')
 
 const food: Category = {
   id: 'food',

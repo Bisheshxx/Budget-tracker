@@ -1,16 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-
-// Mock the router so Apply/Clear record navigations instead of needing a real
-// router instance. vi.hoisted keeps the spy reachable in the factory.
-const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }))
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }))
-
-const { RangeFilter } =
-  await import('#/features/transactions/components/RangeFilter.tsx')
-const { formatRangeLabel } =
-  await import('#/features/transactions/utils/range.util.ts')
+import { RangeFilter } from '#/shared/components/RangeFilter.tsx'
+import { formatRangeLabel } from '#/shared/utils/range.util.ts'
 
 // Radix's popover positioning (floating-ui) needs ResizeObserver, which jsdom
 // doesn't provide.
@@ -38,7 +30,7 @@ function openPopover() {
 
 describe('RangeFilter', () => {
   it('shows the placeholder when no Range is active and disables Apply', () => {
-    render(<RangeFilter range={null} />)
+    render(<RangeFilter range={null} onApply={vi.fn()} onClear={vi.fn()} />)
 
     expect(screen.getByText('Filter by date range')).toBeDefined()
 
@@ -50,14 +42,28 @@ describe('RangeFilter', () => {
     expect(screen.queryByRole('button', { name: 'Clear' })).toBeNull()
   })
 
+  it('shows a custom placeholder when given one', () => {
+    render(
+      <RangeFilter
+        range={null}
+        placeholder="Custom range"
+        onApply={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Custom range')).toBeDefined()
+  })
+
   it('shows the active Range label on the trigger', () => {
-    render(<RangeFilter range={range} />)
+    render(<RangeFilter range={range} onApply={vi.fn()} onClear={vi.fn()} />)
 
     expect(screen.getByText(formatRangeLabel(range))).toBeDefined()
   })
 
-  it('applies the seeded Range back to the URL', () => {
-    render(<RangeFilter range={range} />)
+  it('applies the seeded Range', () => {
+    const onApply = vi.fn()
+    render(<RangeFilter range={range} onApply={onApply} onClear={vi.fn()} />)
 
     openPopover()
 
@@ -66,23 +72,22 @@ describe('RangeFilter', () => {
     expect(apply.hasAttribute('disabled')).toBe(false)
 
     fireEvent.click(apply)
-    expect(navigate).toHaveBeenCalledWith({
-      to: '/dashboard',
-      search: range,
-    })
+    expect(onApply).toHaveBeenCalledWith(range)
   })
 
-  it('clears the Range from the URL', () => {
-    render(<RangeFilter range={range} />)
+  it('clears the Range', () => {
+    const onClear = vi.fn()
+    render(<RangeFilter range={range} onApply={vi.fn()} onClear={onClear} />)
 
     openPopover()
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }))
 
-    expect(navigate).toHaveBeenCalledWith({ to: '/dashboard', search: {} })
+    expect(onClear).toHaveBeenCalled()
   })
 
-  it('navigates with a range picked on the calendar', () => {
-    render(<RangeFilter range={null} />)
+  it('applies a range picked on the calendar', () => {
+    const onApply = vi.fn()
+    render(<RangeFilter range={null} onApply={onApply} onClear={vi.fn()} />)
 
     openPopover()
 
@@ -102,10 +107,10 @@ describe('RangeFilter', () => {
     fireEvent.click(dayButton('5'))
     fireEvent.click(screen.getByRole('button', { name: 'Apply' }))
 
-    expect(navigate).toHaveBeenCalledTimes(1)
-    const search = navigate.mock.calls[0][0].search
-    expect(search.from <= search.to).toBe(true)
-    expect(search.from.endsWith('-03')).toBe(true)
-    expect(search.to.endsWith('-05')).toBe(true)
+    expect(onApply).toHaveBeenCalledTimes(1)
+    const applied = onApply.mock.calls[0][0]
+    expect(applied.from <= applied.to).toBe(true)
+    expect(applied.from.endsWith('-03')).toBe(true)
+    expect(applied.to.endsWith('-05')).toBe(true)
   })
 })

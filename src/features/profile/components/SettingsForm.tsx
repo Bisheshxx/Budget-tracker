@@ -5,7 +5,6 @@ import { useAuth } from '#/features/auth/contexts/auth-context'
 import { useProfile } from '#/shared/hooks/use-profile'
 import { profileService } from '#/features/profile'
 import { CURRENCIES, onboardingSchema } from '#/features/profile/schema'
-import { DAYS_OF_WEEK } from '#/features/profile/constants/profile.constant'
 import { fromCents } from '#/lib/money'
 import type {
   OnboardingFormValues,
@@ -153,27 +152,6 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
                 The day each monthly Period begins (1–28) — changing it shifts
                 the current Period boundaries.
               </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="groceryDayOfWeek"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Grocery day</FormLabel>
-              <FormControl>
-                <Select {...field} value={field.value as string}>
-                  <option value="">—</option>
-                  {DAYS_OF_WEEK.map((day, idx) => (
-                    <option key={day} value={idx}>
-                      {day}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
               <FormMessage />
             </FormItem>
           )}
