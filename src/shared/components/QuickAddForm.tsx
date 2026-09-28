@@ -17,9 +17,9 @@ import type {
 import type { Transaction } from '#/shared/types/transaction.type'
 import { CategoryPicker } from '#/shared/components/CategoryPicker'
 import { MoneyAmountField } from '#/shared/components/MoneyAmountField'
+import { EnumSelectField } from '#/shared/components/EnumSelectField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
 import {
   Form,
   FormControl,
@@ -28,6 +28,11 @@ import {
   FormLabel,
   FormMessage,
 } from '#/components/ui/form'
+
+const TYPE_OPTIONS = TRANSACTION_TYPES.map((t) => ({
+  value: t,
+  label: t[0].toUpperCase() + t.slice(1),
+}))
 
 const BLANK: QuickAddFormValues = {
   amount: '',
@@ -115,24 +120,11 @@ export function QuickAddForm({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <MoneyAmountField control={control} name="amount" label="Amount" />
 
-          <FormField
+          <EnumSelectField
             control={control}
             name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type</FormLabel>
-                <FormControl>
-                  <Select {...field}>
-                    {TRANSACTION_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t[0].toUpperCase() + t.slice(1)}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Type"
+            options={TYPE_OPTIONS}
           />
         </div>
 

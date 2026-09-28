@@ -18,10 +18,18 @@ import type {
 } from '#/features/recurring/schema'
 import type { RecurringTransaction } from '#/features/recurring/types'
 import { useCategories } from '#/shared/hooks/use-categories'
+import { CategoryIcon } from '#/shared/components/CategoryIcon'
 import { MoneyAmountField } from '#/shared/components/MoneyAmountField'
+import { EnumSelectField } from '#/shared/components/EnumSelectField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
+import {
+  SelectMenu,
+  SelectMenuContent,
+  SelectMenuItem,
+  SelectMenuTrigger,
+  SelectMenuValue,
+} from '#/components/ui/select-menu'
 import {
   Form,
   FormControl,
@@ -31,22 +39,41 @@ import {
   FormMessage,
 } from '#/components/ui/form'
 
+function capitalize(s: string): string {
+  return s[0].toUpperCase() + s.slice(1)
+}
+
+const KIND_OPTIONS = RECURRING_KINDS.map((k) => ({
+  value: k,
+  label: capitalize(k),
+}))
+
+const FREQUENCY_OPTIONS = RECURRING_FREQUENCIES.map((f) => ({
+  value: f,
+  label: capitalize(f),
+}))
+
+const MONTHLY_RULE_OPTIONS = MONTHLY_RULE_TYPES.map((t) => ({
+  value: t,
+  label: t === 'day-of-month' ? 'A day of the month' : 'A weekday of the month',
+}))
+
 const WEEKDAY_OPTIONS = [
-  { value: 0, label: 'Sunday' },
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' },
+  { value: '0', label: 'Sunday' },
+  { value: '1', label: 'Monday' },
+  { value: '2', label: 'Tuesday' },
+  { value: '3', label: 'Wednesday' },
+  { value: '4', label: 'Thursday' },
+  { value: '5', label: 'Friday' },
+  { value: '6', label: 'Saturday' },
 ]
 
 const NTH_OPTIONS = [
-  { value: 1, label: '1st' },
-  { value: 2, label: '2nd' },
-  { value: 3, label: '3rd' },
-  { value: 4, label: '4th' },
-  { value: -1, label: 'Last' },
+  { value: '1', label: '1st' },
+  { value: '2', label: '2nd' },
+  { value: '3', label: '3rd' },
+  { value: '4', label: '4th' },
+  { value: '-1', label: 'Last' },
 ]
 
 const BLANK: RecurringFormValues = {
@@ -146,68 +173,67 @@ export function RecurringForm({
             label="Default amount"
           />
 
-          <FormField
+          <EnumSelectField
             control={control}
             name="kind"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type</FormLabel>
-                <FormControl>
-                  <Select {...field}>
-                    {RECURRING_KINDS.map((k) => (
-                      <option key={k} value={k}>
-                        {k[0].toUpperCase() + k.slice(1)}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Type"
+            options={KIND_OPTIONS}
           />
         </div>
 
         <FormField
           control={control}
           name="categoryId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category</FormLabel>
-              <FormControl>
-                <Select {...field}>
-                  <option value="" disabled>
-                    Pick a category
-                  </option>
-                  {selectableCategories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const selected = selectableCategories.find(
+              (c) => c.id === field.value,
+            )
+            return (
+              <FormItem>
+                <FormLabel>Category</FormLabel>
+                <FormControl>
+                  <SelectMenu value={field.value} onValueChange={field.onChange}>
+                    <SelectMenuTrigger>
+                      {selected ? (
+                        <span className="flex items-center gap-2">
+                          <span
+                            className="size-3 shrink-0 rounded-full"
+                            style={{ backgroundColor: selected.colorHex }}
+                          />
+                          <CategoryIcon name={selected.icon} className="size-4" />
+                          <span>{selected.name}</span>
+                        </span>
+                      ) : (
+                        <SelectMenuValue placeholder="Pick a category" />
+                      )}
+                    </SelectMenuTrigger>
+                    <SelectMenuContent>
+                      {selectableCategories.map((c) => (
+                        <SelectMenuItem key={c.id} value={c.id}>
+                          <span className="flex items-center gap-2">
+                            <span
+                              className="size-3 shrink-0 rounded-full"
+                              style={{ backgroundColor: c.colorHex }}
+                            />
+                            <CategoryIcon name={c.icon} className="size-4" />
+                            <span>{c.name}</span>
+                          </span>
+                        </SelectMenuItem>
+                      ))}
+                    </SelectMenuContent>
+                  </SelectMenu>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )
+          }}
         />
 
-        <FormField
+        <EnumSelectField
           control={control}
           name="frequency"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Frequency</FormLabel>
-              <FormControl>
-                <Select {...field}>
-                  {RECURRING_FREQUENCIES.map((f) => (
-                    <option key={f} value={f}>
-                      {f[0].toUpperCase() + f.slice(1)}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Frequency"
+          options={FREQUENCY_OPTIONS}
         />
 
         <MonthlyRuleFields
@@ -255,75 +281,30 @@ function MonthlyRuleFields({
   return (
     <>
       {isMonthly && (
-        <FormField
+        <EnumSelectField
           control={control}
           name="monthlyRuleType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Repeats on</FormLabel>
-              <FormControl>
-                <Select {...field} value={field.value as string}>
-                  {MONTHLY_RULE_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {t === 'day-of-month'
-                        ? 'A day of the month'
-                        : 'A weekday of the month'}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Repeats on"
+          options={MONTHLY_RULE_OPTIONS}
         />
       )}
 
       {isNthWeekday ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
+          <EnumSelectField
             control={control}
             name="monthlyNth"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Occurrence</FormLabel>
-                <FormControl>
-                  <Select {...field} value={field.value as string}>
-                    <option value="" disabled>
-                      Pick which one
-                    </option>
-                    {NTH_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Occurrence"
+            placeholder="Pick which one"
+            options={NTH_OPTIONS}
           />
 
-          <FormField
+          <EnumSelectField
             control={control}
             name="monthlyWeekday"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Weekday</FormLabel>
-                <FormControl>
-                  <Select {...field} value={field.value as string}>
-                    <option value="" disabled>
-                      Pick a weekday
-                    </option>
-                    {WEEKDAY_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Weekday"
+            placeholder="Pick a weekday"
+            options={WEEKDAY_OPTIONS}
           />
         </div>
       ) : (

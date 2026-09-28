@@ -11,9 +11,9 @@ import type {
   OnboardingInput,
 } from '#/features/profile/schema'
 import type { UserProfile } from '#/shared/types/user-profile.type'
+import { EnumSelectField } from '#/shared/components/EnumSelectField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
 import {
   Form,
   FormControl,
@@ -23,6 +23,8 @@ import {
   FormLabel,
   FormMessage,
 } from '#/components/ui/form'
+
+const CURRENCY_OPTIONS = CURRENCIES.map((c) => ({ value: c, label: c }))
 
 // Seed the (string-typed) form inputs from the saved profile. Budget Target is
 // hidden/deprecated, but preserved in form state so saving settings does not wipe
@@ -110,27 +112,12 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
           )}
         />
 
-        <FormField
+        <EnumSelectField
           control={control}
           name="currency"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Currency</FormLabel>
-              <FormControl>
-                <Select {...field}>
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormDescription>
-                The currency every amount is displayed in.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Currency"
+          description="The currency every amount is displayed in."
+          options={CURRENCY_OPTIONS}
         />
 
         <FormField
