@@ -129,22 +129,26 @@ function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
   )
 }
 
+// Always rendered (never returns null) so the reserved line doesn't come and
+// go with validation state — a field erroring shouldn't push everything below
+// it down the page. `invisible` keeps the space without the text when there's
+// nothing to show.
 function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
   const { error, formMessageId } = useFormField()
   const body = error ? String(error.message ?? "") : props.children
-
-  if (!body) {
-    return null
-  }
 
   return (
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn("text-destructive text-sm", className)}
+      className={cn(
+        "-mt-2 min-h-5 text-sm text-destructive",
+        !body && "invisible",
+        className,
+      )}
       {...props}
     >
-      {body}
+      {body || " "}
     </p>
   )
 }

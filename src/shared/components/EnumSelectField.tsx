@@ -27,6 +27,7 @@ export function EnumSelectField<TFieldValues extends FieldValues>({
   placeholder,
   description,
   options,
+  showValidation = true,
 }: {
   control: Control<TFieldValues>
   name: FieldPath<TFieldValues>
@@ -34,6 +35,12 @@ export function EnumSelectField<TFieldValues extends FieldValues>({
   placeholder?: string
   description?: string
   options: readonly { value: string; label: string }[]
+  /**
+   * Set false for a field that can never actually fail validation (e.g. a
+   * required enum with a real default the user can't clear via the UI), so
+   * it doesn't reserve an error line it will never use.
+   */
+  showValidation?: boolean
 }) {
   return (
     <FormField
@@ -41,7 +48,10 @@ export function EnumSelectField<TFieldValues extends FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <div className="flex items-baseline justify-between gap-2">
+            <FormLabel>{label}</FormLabel>
+            {showValidation && <FormMessage className="mt-0" />}
+          </div>
           <FormControl>
             <SelectMenu
               value={field.value ?? ''}
@@ -60,7 +70,6 @@ export function EnumSelectField<TFieldValues extends FieldValues>({
             </SelectMenu>
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage />
         </FormItem>
       )}
     />

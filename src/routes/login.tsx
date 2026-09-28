@@ -65,11 +65,13 @@ function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <FormLabel>Email</FormLabel>
+                      <FormMessage className="mt-0" />
+                    </div>
                     <FormControl>
                       <Input type="email" autoComplete="email" {...field} />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -78,7 +80,10 @@ function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <FormLabel>Password</FormLabel>
+                      <FormMessage className="mt-0" />
+                    </div>
                     <FormControl>
                       <Input
                         type="password"
@@ -86,7 +91,6 @@ function LoginPage() {
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />

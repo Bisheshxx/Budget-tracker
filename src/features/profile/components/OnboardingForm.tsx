@@ -100,6 +100,7 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
           name="currency"
           label="Currency"
           options={CURRENCY_OPTIONS}
+          showValidation={false}
         />
 
         <FormField
@@ -107,7 +108,10 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
           name="budgetPeriodStartDay"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Period start day</FormLabel>
+              <div className="flex items-baseline justify-between gap-2">
+                <FormLabel>Period start day</FormLabel>
+                <FormMessage className="mt-0" />
+              </div>
               <FormControl>
                 <Input
                   type="number"
@@ -121,7 +125,6 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
                 The day each monthly Period begins (1–28) — match it to your pay
                 or billing rhythm.
               </FormDescription>
-              <FormMessage />
             </FormItem>
           )}
         />
@@ -134,7 +137,10 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
           name="displayName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Display name</FormLabel>
+              <div className="flex items-baseline justify-between gap-2">
+                <FormLabel>Display name</FormLabel>
+                <FormMessage className="mt-0" />
+              </div>
               <FormControl>
                 <Input
                   autoComplete="name"
@@ -146,7 +152,6 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
               <FormDescription>
                 What we&apos;ll call you in the app — you can change this later.
               </FormDescription>
-              <FormMessage />
             </FormItem>
           )}
         />
@@ -179,7 +184,6 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
                   </SelectMenuContent>
                 </SelectMenu>
               </FormControl>
-              <FormMessage />
             </FormItem>
           )}
         />

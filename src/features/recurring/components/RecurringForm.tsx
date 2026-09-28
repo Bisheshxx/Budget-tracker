@@ -157,11 +157,13 @@ export function RecurringForm({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <div className="flex items-baseline justify-between gap-2">
+                <FormLabel>Name</FormLabel>
+                <FormMessage className="mt-0" />
+              </div>
               <FormControl>
                 <Input autoFocus placeholder="e.g. Rent" {...field} />
               </FormControl>
-              <FormMessage />
             </FormItem>
           )}
         />
@@ -178,6 +180,7 @@ export function RecurringForm({
             name="kind"
             label="Type"
             options={KIND_OPTIONS}
+            showValidation={false}
           />
         </div>
 
@@ -190,7 +193,10 @@ export function RecurringForm({
             )
             return (
               <FormItem>
-                <FormLabel>Category</FormLabel>
+                <div className="flex items-baseline justify-between gap-2">
+                  <FormLabel>Category</FormLabel>
+                  <FormMessage className="mt-0" />
+                </div>
                 <FormControl>
                   <SelectMenu value={field.value} onValueChange={field.onChange}>
                     <SelectMenuTrigger>
@@ -223,7 +229,6 @@ export function RecurringForm({
                     </SelectMenuContent>
                   </SelectMenu>
                 </FormControl>
-                <FormMessage />
               </FormItem>
             )
           }}
@@ -234,6 +239,7 @@ export function RecurringForm({
           name="frequency"
           label="Frequency"
           options={FREQUENCY_OPTIONS}
+          showValidation={false}
         />
 
         <MonthlyRuleFields
@@ -286,6 +292,7 @@ function MonthlyRuleFields({
           name="monthlyRuleType"
           label="Repeats on"
           options={MONTHLY_RULE_OPTIONS}
+          showValidation={false}
         />
       )}
 
@@ -313,11 +320,13 @@ function MonthlyRuleFields({
           name="firstDueDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>First Due Date</FormLabel>
+              <div className="flex items-baseline justify-between gap-2">
+                <FormLabel>First Due Date</FormLabel>
+                <FormMessage className="mt-0" />
+              </div>
               <FormControl>
                 <Input type="date" {...field} value={field.value as string} />
               </FormControl>
-              <FormMessage />
             </FormItem>
           )}
         />

@@ -28,7 +28,10 @@ export function MoneyAmountField<T extends FieldValues>({
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <div className="flex items-baseline justify-between gap-2">
+            <FormLabel>{label}</FormLabel>
+            <FormMessage className="mt-0" />
+          </div>
           <FormControl>
             <Input
               type="number"
@@ -39,7 +42,6 @@ export function MoneyAmountField<T extends FieldValues>({
               value={field.value}
             />
           </FormControl>
-          <FormMessage />
         </FormItem>
       )}
     />

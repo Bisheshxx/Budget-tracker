@@ -95,7 +95,10 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
           name="displayName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Display name</FormLabel>
+              <div className="flex items-baseline justify-between gap-2">
+                <FormLabel>Display name</FormLabel>
+                <FormMessage className="mt-0" />
+              </div>
               <FormControl>
                 <Input
                   autoComplete="name"
@@ -107,7 +110,6 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
               <FormDescription>
                 What we&apos;ll call you in the app.
               </FormDescription>
-              <FormMessage />
             </FormItem>
           )}
         />
@@ -118,6 +120,7 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
           label="Currency"
           description="The currency every amount is displayed in."
           options={CURRENCY_OPTIONS}
+          showValidation={false}
         />
 
         <FormField
@@ -125,7 +128,10 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
           name="budgetPeriodStartDay"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Period start day</FormLabel>
+              <div className="flex items-baseline justify-between gap-2">
+                <FormLabel>Period start day</FormLabel>
+                <FormMessage className="mt-0" />
+              </div>
               <FormControl>
                 <Input
                   type="number"
@@ -139,7 +145,6 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
                 The day each monthly Period begins (1–28) — changing it shifts
                 the current Period boundaries.
               </FormDescription>
-              <FormMessage />
             </FormItem>
           )}
         />

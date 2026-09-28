@@ -128,11 +128,13 @@ export function CategoryCreateForm({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <div className="flex items-baseline justify-between gap-2">
+                <FormLabel>Name</FormLabel>
+                <FormMessage className="mt-0" />
+              </div>
               <FormControl>
                 <Input autoFocus placeholder="e.g. Groceries" {...field} />
               </FormControl>
-              <FormMessage />
             </FormItem>
           )}
         />
@@ -229,7 +231,6 @@ function ColorField({
           ))}
         </div>
       </FormControl>
-      <FormMessage />
     </FormItem>
   )
 }
@@ -263,7 +264,6 @@ function IconField({
           ))}
         </div>
       </FormControl>
-      <FormMessage />
     </FormItem>
   )
 }
