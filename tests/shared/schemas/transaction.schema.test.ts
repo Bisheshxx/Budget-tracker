@@ -60,16 +60,16 @@ describe('quickAddSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  it('treats a blank note as omitted', () => {
-    const result = quickAddSchema.safeParse({
-      amount: '5',
-      type: 'income',
-      transactionDate: '2026-06-12',
-      note: '   ',
-    })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.note).toBeUndefined()
+  it('rejects a blank (or whitespace-only) note', () => {
+    for (const note of ['', '   ']) {
+      const result = quickAddSchema.safeParse({
+        amount: '5',
+        type: 'income',
+        transactionDate: '2026-06-12',
+        note,
+      })
+      expect(result.success).toBe(false)
+      expect(issueMessage(result, 'note')).toBe('Note is required')
     }
   })
 
@@ -82,6 +82,7 @@ describe('quickAddSchema', () => {
       amount: '5',
       type: 'income',
       transactionDate: '',
+      note: 'Paycheck',
     })
     expect(result.success).toBe(true)
     if (result.success) {

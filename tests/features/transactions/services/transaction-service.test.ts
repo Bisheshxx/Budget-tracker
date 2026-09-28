@@ -99,20 +99,19 @@ describe('TransactionService', () => {
       )
     })
 
-    it('stores a blank note as null', async () => {
+    it('rejects a blank note and never hits the repo', async () => {
       const repo = makeFakeRepo()
       const service = new TransactionService(repo)
 
-      await service.create('profile-1', {
-        amount: 5,
-        type: 'income',
-        transactionDate: '2026-06-12',
-        note: undefined,
-      })
-
-      expect(repo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ note: null }),
-      )
+      await expect(
+        service.create('profile-1', {
+          amount: 5,
+          type: 'income',
+          transactionDate: '2026-06-12',
+          note: '',
+        }),
+      ).rejects.toThrow('Note is required')
+      expect(repo.create).not.toHaveBeenCalled()
     })
 
     it('rejects a zero or negative amount and never hits the repo', async () => {
@@ -157,21 +156,19 @@ describe('TransactionService', () => {
       })
     })
 
-    it('stores a blank note and blank category as null', async () => {
+    it('stores a blank category as null but rejects a blank note', async () => {
       const repo = makeFakeRepo()
       const service = new TransactionService(repo)
 
-      await service.update('tx-7', {
-        amount: 5,
-        type: 'income',
-        transactionDate: '2026-06-12',
-        note: undefined,
-      })
-
-      expect(repo.update).toHaveBeenCalledWith(
-        'tx-7',
-        expect.objectContaining({ note: null, categoryId: null }),
-      )
+      await expect(
+        service.update('tx-7', {
+          amount: 5,
+          type: 'income',
+          transactionDate: '2026-06-12',
+          note: '',
+        }),
+      ).rejects.toThrow('Note is required')
+      expect(repo.update).not.toHaveBeenCalled()
     })
 
     it('rejects a zero or negative amount and never hits the repo', async () => {
