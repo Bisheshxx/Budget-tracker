@@ -11,9 +11,9 @@ import type {
   OnboardingInput,
 } from '#/features/profile/schema'
 import type { UserProfile } from '#/shared/types/user-profile.type'
+import { EnumSelectField } from '#/shared/components/EnumSelectField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
 import {
   Form,
   FormControl,
@@ -23,6 +23,8 @@ import {
   FormLabel,
   FormMessage,
 } from '#/components/ui/form'
+
+const CURRENCY_OPTIONS = CURRENCIES.map((c) => ({ value: c, label: c }))
 
 // Seed the (string-typed) form inputs from the saved profile. Budget Target is
 // hidden/deprecated, but preserved in form state so saving settings does not wipe
@@ -93,7 +95,10 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
           name="displayName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Display name</FormLabel>
+              <div className="flex items-baseline justify-between gap-2">
+                <FormLabel>Display name</FormLabel>
+                <FormMessage className="mt-0" />
+              </div>
               <FormControl>
                 <Input
                   autoComplete="name"
@@ -105,32 +110,17 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
               <FormDescription>
                 What we&apos;ll call you in the app.
               </FormDescription>
-              <FormMessage />
             </FormItem>
           )}
         />
 
-        <FormField
+        <EnumSelectField
           control={control}
           name="currency"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Currency</FormLabel>
-              <FormControl>
-                <Select {...field}>
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormDescription>
-                The currency every amount is displayed in.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+          label="Currency"
+          description="The currency every amount is displayed in."
+          options={CURRENCY_OPTIONS}
+          showValidation={false}
         />
 
         <FormField
@@ -138,7 +128,10 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
           name="budgetPeriodStartDay"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Period start day</FormLabel>
+              <div className="flex items-baseline justify-between gap-2">
+                <FormLabel>Period start day</FormLabel>
+                <FormMessage className="mt-0" />
+              </div>
               <FormControl>
                 <Input
                   type="number"
@@ -152,7 +145,6 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
                 The day each monthly Period begins (1–28) — changing it shifts
                 the current Period boundaries.
               </FormDescription>
-              <FormMessage />
             </FormItem>
           )}
         />

@@ -17,17 +17,23 @@ import type {
 import type { Transaction } from '#/shared/types/transaction.type'
 import { CategoryPicker } from '#/shared/components/CategoryPicker'
 import { MoneyAmountField } from '#/shared/components/MoneyAmountField'
+import { EnumSelectField } from '#/shared/components/EnumSelectField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
-import { Select } from '#/components/ui/select'
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '#/components/ui/form'
+
+const TYPE_OPTIONS = TRANSACTION_TYPES.map((t) => ({
+  value: t,
+  label: t[0].toUpperCase() + t.slice(1),
+}))
 
 const BLANK: QuickAddFormValues = {
   amount: '',
@@ -110,29 +116,17 @@ export function QuickAddForm({
       <form
         onSubmit={handleSubmit(onSubmit)}
         noValidate
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-2"
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <MoneyAmountField control={control} name="amount" label="Amount" />
 
-          <FormField
+          <EnumSelectField
             control={control}
             name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Type</FormLabel>
-                <FormControl>
-                  <Select {...field}>
-                    {TRANSACTION_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t[0].toUpperCase() + t.slice(1)}
-                      </option>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            label="Type"
+            options={TYPE_OPTIONS}
+            showValidation={false}
           />
         </div>
 
@@ -149,44 +143,41 @@ export function QuickAddForm({
                   onCreateNew={() => onCreateCategory?.(getValues())}
                 />
               </FormControl>
-              <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField
-            control={control}
-            name="transactionDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date</FormLabel>
-                <FormControl>
-                  <Input type="date" {...field} value={field.value as string} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={control}
+          name="transactionDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Date</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} value={field.value as string} />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={control}
-            name="note"
-            render={({ field }) => (
-              <FormItem>
+        <FormField
+          control={control}
+          name="note"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-baseline justify-between gap-2">
                 <FormLabel>Note</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Optional"
-                    {...field}
-                    value={field.value as string}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                <FormMessage className="mt-0" />
+              </div>
+              <FormControl>
+                <Input placeholder="e.g. Coffee with client" {...field} />
+              </FormControl>
+              <FormDescription>
+                This note helps you keep track of your expenses better.
+              </FormDescription>
+            </FormItem>
+          )}
+        />
 
         {formState.errors.root && (
           <p className="text-sm text-destructive">

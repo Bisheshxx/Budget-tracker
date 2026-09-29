@@ -62,7 +62,7 @@ export class TransactionService {
       categoryId: v.categoryId ?? null,
       type: v.type,
       amountCents: toCents(v.amount),
-      note: v.note ?? null,
+      note: v.note,
       transactionDate: v.transactionDate,
     })
   }
@@ -81,7 +81,7 @@ export class TransactionService {
       categoryId: v.categoryId ?? null,
       type: v.type,
       amountCents: toCents(v.amount),
-      note: v.note ?? null,
+      note: v.note,
       transactionDate: v.transactionDate,
     })
   }

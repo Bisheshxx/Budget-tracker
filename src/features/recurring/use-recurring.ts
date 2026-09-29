@@ -140,7 +140,7 @@ function useInvalidateAfterResolve() {
         queryKey: ['recurring', 'recent', userId],
       }),
       queryClient.invalidateQueries({
-        queryKey: ['transactions', 'recent', userId],
+        queryKey: ['transactions', 'infinite', userId],
       }),
       queryClient.invalidateQueries({
         queryKey: ['transactions', 'period-summary', userId],

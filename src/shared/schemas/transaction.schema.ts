@@ -47,10 +47,14 @@ export const quickAddSchema = z.object({
     (v) => (typeof v === 'string' && v.trim() === '' ? today() : v),
     z.iso.date('Enter a valid date'),
   ),
-  note: z.preprocess(
-    blankToUndefined,
-    z.string().trim().max(280, 'Note is too long').optional(),
-  ),
+  // Required — a note is what actually shows on the transaction list (the
+  // category is just a badge), so every transaction needs one to stay
+  // meaningful at a glance. See RecentTransactions.
+  note: z
+    .string()
+    .trim()
+    .min(1, 'Note is required')
+    .max(280, 'Note is too long'),
 })
 
 export type QuickAddInput = z.infer<typeof quickAddSchema>
