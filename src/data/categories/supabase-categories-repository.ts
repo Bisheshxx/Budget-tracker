@@ -7,6 +7,7 @@ import type {
   CategoryPageRequest,
   CategoryUpdate,
 } from '#/shared/types/category.type'
+import { toDataError } from '#/data/supabase-error'
 import type { ICategoryRepository } from './ICategoryRepository'
 
 type CategoryRow = Database['public']['Tables']['categories']['Row']
@@ -36,7 +37,7 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
       .select('*')
       .or(`user_id.is.null,user_id.eq.${safeUserId}`)
       .order('name', { ascending: true })
-    if (error) throw error
+    if (error) throw toDataError(error)
     return data.map(toCategory)
   }
 
@@ -60,7 +61,7 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
     }
 
     const { data, error } = await query
-    if (error) throw error
+    if (error) throw toDataError(error)
     return data.map(toCategory)
   }
 
@@ -77,7 +78,7 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
       .insert(dbInsert)
       .select('*')
       .single()
-    if (error) throw error
+    if (error) throw toDataError(error)
     return toCategory(data)
   }
 
@@ -94,7 +95,7 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
       .eq('id', safeId)
       .select('*')
       .single()
-    if (error) throw error
+    if (error) throw toDataError(error)
     return toCategory(data)
   }
 
@@ -105,6 +106,6 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
       .from('categories')
       .delete()
       .eq('id', safeId)
-    if (error) throw error
+    if (error) throw toDataError(error)
   }
 }

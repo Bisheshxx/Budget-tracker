@@ -1,4 +1,6 @@
 import { supabase } from '#/lib/supabase'
+import { toDataError } from '#/data/supabase-error'
+import { toTransaction } from '#/data/transactions/supabase-transactions-repository'
 import type { Database } from '#/lib/database.types'
 import type {
   MonthlyNth,
@@ -11,10 +13,6 @@ import type {
   RecurringTransactionCreate,
   RecurringTransactionUpdate,
 } from '#/features/recurring/types'
-import type {
-  Transaction,
-  TransactionType,
-} from '#/shared/types/transaction.type'
 import type {
   IRecurringTransactionRepository,
   RecentlyPostedItem,
@@ -130,19 +128,6 @@ function toOccurrence(row: OccurrenceRow): RecurringOccurrence {
   }
 }
 
-function toTransaction(row: TransactionRow): Transaction {
-  return {
-    id: row.id,
-    userId: row.user_id,
-    categoryId: row.category_id,
-    type: row.type as TransactionType,
-    amountCents: row.amount_cents,
-    note: row.note,
-    transactionDate: row.transaction_date,
-    createdAt: row.created_at,
-  }
-}
-
 function monthlyRuleColumns(monthlyRule: MonthlyRule | null): {
   monthly_rule_type: string | null
   monthly_weekday: number | null
@@ -173,7 +158,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       .eq('user_id', userId)
       .eq('active', true)
       .order('created_at', { ascending: true })
-    if (error) throw error
+    if (error) throw toDataError(error)
     return data.map(toRecurringTransaction)
   }
 
@@ -184,7 +169,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       .eq('user_id', userId)
       .order('active', { ascending: false })
       .order('created_at', { ascending: true })
-    if (error) throw error
+    if (error) throw toDataError(error)
     return data.map(toRecurringTransaction)
   }
 
@@ -207,7 +192,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       .insert(dbInsert)
       .select('*')
       .single()
-    if (error) throw error
+    if (error) throw toDataError(error)
     return toRecurringTransaction(data)
   }
 
@@ -231,7 +216,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       .eq('id', id)
       .select('*')
       .single()
-    if (error) throw error
+    if (error) throw toDataError(error)
     return toRecurringTransaction(data)
   }
 
@@ -242,7 +227,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       .eq('id', id)
       .select('*')
       .single()
-    if (error) throw error
+    if (error) throw toDataError(error)
     return toRecurringTransaction(data)
   }
 
@@ -257,13 +242,13 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       .from('transactions')
       .update({ recurring_transaction_id: null })
       .eq('recurring_transaction_id', id)
-    if (severError) throw severError
+    if (severError) throw toDataError(severError)
 
     const { error } = await supabase
       .from('recurring_transactions')
       .delete()
       .eq('id', id)
-    if (error) throw error
+    if (error) throw toDataError(error)
   }
 
   async hasConfirmedHistory(id: string): Promise<boolean> {
@@ -272,7 +257,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       .select('id', { count: 'exact', head: true })
       .eq('recurring_transaction_id', id)
       .eq('status', 'confirmed')
-    if (error) throw error
+    if (error) throw toDataError(error)
     return (count ?? 0) > 0
   }
 
@@ -288,7 +273,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       .in('recurring_transaction_id', recurringTransactionIds)
       .gte('occurrence_date', startInclusive)
       .lt('occurrence_date', endExclusive)
-    if (error) throw error
+    if (error) throw toDataError(error)
     return data.map(toOccurrence)
   }
 
@@ -315,7 +300,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
         ignoreDuplicates: true,
       })
       .select('*')
-    if (insertError) throw insertError
+    if (insertError) throw toDataError(insertError)
     if (inserted.length > 0) return toOccurrence(inserted[0])
 
     const { data: existing, error: selectError } = await supabase
@@ -324,7 +309,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       .eq('recurring_transaction_id', recurringTransactionId)
       .eq('occurrence_date', occurrenceDate)
       .single()
-    if (selectError) throw selectError
+    if (selectError) throw toDataError(selectError)
     return toOccurrence(existing)
   }
 
@@ -347,7 +332,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       })
       .select('*')
       .single()
-    if (error) throw error
+    if (error) throw toDataError(error)
     return toOccurrence(data)
   }
 
@@ -362,7 +347,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
       .eq('recurring_transactions.user_id', userId)
       .gte('occurrence_date', since)
       .order('occurrence_date', { ascending: false })
-    if (error) throw error
+    if (error) throw toDataError(error)
 
     type JoinedRow = OccurrenceRow & {
       recurring_transactions: RecurringTransactionRow

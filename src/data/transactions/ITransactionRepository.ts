@@ -36,7 +36,9 @@ export interface ITransactionRepository {
    * "who won" or clean up an orphan themselves. `input.recurringTransactionId`
    * must be set.
    */
-  createForRecurringOccurrence: (input: TransactionCreate) => Promise<Transaction>
+  createForRecurringOccurrence: (
+    input: TransactionCreate,
+  ) => Promise<Transaction>
   /** Update an existing transaction's editable fields; returns the saved row. */
   update: (id: string, input: TransactionUpdate) => Promise<Transaction>
   /** Delete a transaction by id. RLS scopes the row to the owning user. */

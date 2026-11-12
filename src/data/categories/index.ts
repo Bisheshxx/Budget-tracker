@@ -1,7 +1,5 @@
-import { SupabaseCategoryRepository } from './supabase-categories-repository'
-import type { ICategoryRepository } from './ICategoryRepository'
+import { dataSource } from '#/data'
 
-// THE swap point for category data. Replace this one construction to move to an
-// axios/REST backend later; nothing else references the concrete implementation.
-export const categoryRepository: ICategoryRepository =
-  new SupabaseCategoryRepository()
+// The category repository the app uses, taken from the active data source. The
+// backend is chosen once, in src/data/index.ts — not here. See docs/adr/0011.
+export const categoryRepository = dataSource.categories

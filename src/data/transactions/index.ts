@@ -1,7 +1,5 @@
-import { SupabaseTransactionRepository } from './supabase-transactions-repository'
-import type { ITransactionRepository } from './ITransactionRepository'
+import { dataSource } from '#/data'
 
-// THE swap point for transaction data. Replace this one construction to move to
-// an axios/REST backend later; nothing else references the concrete implementation.
-export const transactionRepository: ITransactionRepository =
-  new SupabaseTransactionRepository()
+// The transaction repository the app uses, taken from the active data source. The
+// backend is chosen once, in src/data/index.ts — not here. See docs/adr/0011.
+export const transactionRepository = dataSource.transactions

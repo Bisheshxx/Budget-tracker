@@ -1,4 +1,7 @@
-import { computeComparison, computeWeeks } from '#/shared/services/report-compute.util'
+import {
+  computeComparison,
+  computeWeeks,
+} from '#/shared/services/report-compute.util'
 import { rollup } from '#/shared/utils/summary.util'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 import type { PeriodRange } from '#/shared/lib/period'

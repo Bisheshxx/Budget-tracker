@@ -1,6 +1,8 @@
 import { supabase } from '#/lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 import type { AuthSession, Credentials } from '#/features/auth/types/auth.type'
+import { DataError } from '#/data/data-error'
+import { toDataError } from '#/data/supabase-error'
 import type { IAuthRepository } from './IAuthRepository'
 
 /**
@@ -22,16 +24,21 @@ function toAuthSession(session: Session | null): AuthSession | null {
 export class SupabaseAuthRepository implements IAuthRepository {
   async signUp(credentials: Credentials): Promise<AuthSession | null> {
     const { data, error } = await supabase.auth.signUp(credentials)
-    if (error) throw error
+    if (error) throw toDataError(error)
     // With email confirmation enabled, session is null until the user confirms.
     return toAuthSession(data.session)
   }
 
   async signIn(credentials: Credentials): Promise<AuthSession> {
     const { data, error } = await supabase.auth.signInWithPassword(credentials)
-    if (error) throw error
+    if (error) throw toDataError(error)
     const session = toAuthSession(data.session)
-    if (!session) throw new Error('Sign in succeeded but no session returned')
+    if (!session) {
+      throw new DataError(
+        'unknown',
+        'Sign in succeeded but no session returned',
+      )
+    }
     return session
   }
 
@@ -40,17 +47,17 @@ export class SupabaseAuthRepository implements IAuthRepository {
       provider,
       options: { redirectTo },
     })
-    if (error) throw error
+    if (error) throw toDataError(error)
   }
 
   async signOut(): Promise<void> {
     const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    if (error) throw toDataError(error)
   }
 
   async getSession(): Promise<AuthSession | null> {
     const { data, error } = await supabase.auth.getSession()
-    if (error) throw error
+    if (error) throw toDataError(error)
     return toAuthSession(data.session)
   }
 

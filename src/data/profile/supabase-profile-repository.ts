@@ -1,6 +1,10 @@
 import { supabase } from '#/lib/supabase'
 import type { Database } from '#/lib/database.types'
-import type { ProfileUpdate, UserProfile } from '#/shared/types/user-profile.type'
+import type {
+  ProfileUpdate,
+  UserProfile,
+} from '#/shared/types/user-profile.type'
+import { toDataError } from '#/data/supabase-error'
 import type { IProfileRepository } from './IProfileRepository'
 
 type ProfileRow = Database['public']['Tables']['user_profiles']['Row']
@@ -29,14 +33,11 @@ export class SupabaseProfileRepository implements IProfileRepository {
       .select('*')
       .eq('auth_user_id', authUserId)
       .maybeSingle()
-    if (error) throw error
+    if (error) throw toDataError(error)
     return data ? toUserProfile(data) : null
   }
 
-  async update(
-    authUserId: string,
-    patch: ProfileUpdate,
-  ): Promise<UserProfile> {
+  async update(authUserId: string, patch: ProfileUpdate): Promise<UserProfile> {
     const dbPatch: Database['public']['Tables']['user_profiles']['Update'] = {
       display_name: patch.displayName,
       currency: patch.currency,
@@ -51,7 +52,7 @@ export class SupabaseProfileRepository implements IProfileRepository {
       .eq('auth_user_id', authUserId)
       .select('*')
       .single()
-    if (error) throw error
+    if (error) throw toDataError(error)
     return toUserProfile(data)
   }
 }
