@@ -64,14 +64,10 @@ describe('ReportService', () => {
     const repo = makeFakeRepo()
     const service = new ReportService(repo)
 
-    await service.getReport(
-      'user-1',
-      '2026-06-13',
-      'custom',
-      1,
-      undefined,
-      { start: '2026-01-03', end: '2026-01-11' },
-    )
+    await service.getReport('user-1', '2026-06-13', 'custom', 1, undefined, {
+      start: '2026-01-03',
+      end: '2026-01-11',
+    })
 
     expect(repo.getPeriodReport).toHaveBeenCalledWith(
       'user-1',
@@ -87,5 +83,46 @@ describe('ReportService', () => {
     expect(() =>
       service.getReport('user-1', '2026-06-13', 'custom', 1),
     ).toThrow('custom view requires a customRange')
+  })
+
+  it('compares the calendar month against the previous calendar month', async () => {
+    const getPeriodReport = vi.fn(async () => EMPTY_REPORT)
+    const service = new ReportService({ getPeriodReport })
+
+    await service.getReport('profile-1', '2026-06-18', 'calendar-month', 25)
+
+    expect(getPeriodReport).toHaveBeenCalledWith(
+      'profile-1',
+      { start: '2026-06-01', end: '2026-07-01' },
+      { start: '2026-05-01', end: '2026-06-01' },
+    )
+  })
+
+  it('compares the calendar week against the week before it', async () => {
+    const getPeriodReport = vi.fn(async () => EMPTY_REPORT)
+    const service = new ReportService({ getPeriodReport })
+
+    // 2026-06-18 is a Thursday; with weeks starting Monday (1) the week is
+    // Mon 15th up to (not including) Mon 22nd.
+    await service.getReport('profile-1', '2026-06-18', 'calendar-week', 25, 1)
+
+    expect(getPeriodReport).toHaveBeenCalledWith(
+      'profile-1',
+      { start: '2026-06-15', end: '2026-06-22' },
+      { start: '2026-06-08', end: '2026-06-15' },
+    )
+  })
+
+  it('routes the period view through getPeriodReport', async () => {
+    const getPeriodReport = vi.fn(async () => EMPTY_REPORT)
+    const service = new ReportService({ getPeriodReport })
+
+    await service.getReport('profile-1', '2026-06-18', 'period', 25)
+
+    expect(getPeriodReport).toHaveBeenCalledWith(
+      'profile-1',
+      { start: '2026-05-25', end: '2026-06-25' },
+      { start: '2026-04-25', end: '2026-05-25' },
+    )
   })
 })
