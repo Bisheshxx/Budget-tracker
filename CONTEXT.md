@@ -63,3 +63,23 @@ _Avoid_: Trend, delta (use "comparison")
 **Onboarding**:
 A one-screen setup gate shown after first signup, before the dashboard is reachable. Required: currency + Period start day. Everything else (display name, grocery day) is optional and editable later in Settings. A user is "onboarded" once `onboarding_completed_at` is stamped (the signup trigger leaves it null; completing Onboarding sets it). Display name is optional and is **not** the completion signal.
 _Avoid_: Setup wizard, registration (that's auth/signup, a separate step)
+
+**Household**:
+The unit that owns ledger data (transactions, categories, recurring templates, reports) — a shared group modelled on a messenger group. Has its own settings (currency, Period start day, time zone) that ignore the user's own preferences. A user can belong to many Households and is given a **Personal household** (a Household of one) at signup; existing single-user data migrates into it and stays separate from any group they later join. UI name: "group". Planned — see docs/adr/0012.
+_Avoid_: Family, team, workspace, account (an "account" is the login)
+
+**Admin**:
+The one member of a Household with full control: rename/delete it, change its settings, remove members, transfer Admin, and change the permission toggles. Exactly one per Household; transferable. If the Admin leaves, the role passes to the longest-standing remaining member.
+_Avoid_: Owner (use "Admin"), moderator
+
+**Contributor**:
+Any non-Admin member of a Household. Can add and edit entries; what else they may do (edit/delete others' entries, manage categories, invite) is set by the Admin's permission toggles.
+_Avoid_: Member (when a role is meant), user
+
+**Dual entry**:
+Adding a transaction to several ledgers at once (e.g. Personal household and a group) in one request. It creates one independent copy per ledger; the copies are not linked or synced afterwards.
+_Avoid_: Sharing a transaction, syncing
+
+**Household time zone**:
+One IANA zone name (e.g. `Pacific/Auckland`) per Household, defaulted from the creator's browser. It is used only to decide what "today" is, so every member and the server-side recurring job agree on the current Period. Dates stay plain `YYYY-MM-DD` strings (no zone); moments (`created_at`, etc.) are stored in UTC.
+_Avoid_: Local time, UTC day (the UTC date is wrong for hours each day away from UTC)
