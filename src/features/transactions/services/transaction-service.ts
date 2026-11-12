@@ -1,3 +1,4 @@
+import { parseOrThrow } from '#/shared/utils/validation.util'
 import { quickAddSchema } from '#/shared/schemas/transaction.schema'
 import { rollup } from '#/shared/utils/summary.util'
 import { toCents } from '#/lib/money'
@@ -51,11 +52,7 @@ export class TransactionService {
   // display-unit amount to integer cents, and persists. An empty categoryId means
   // Uncategorized (stored as null).
   async create(userId: string, input: QuickAddInput): Promise<Transaction> {
-    const result = quickAddSchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+    const v = parseOrThrow(quickAddSchema, input)
 
     return this.repo.create({
       userId,
@@ -71,11 +68,7 @@ export class TransactionService {
   // (so a non-positive amount can never be saved) and converts to integer cents.
   // The id targets the row; userId/createdAt are immutable and not written.
   async update(id: string, input: QuickAddInput): Promise<Transaction> {
-    const result = quickAddSchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+    const v = parseOrThrow(quickAddSchema, input)
 
     return this.repo.update(id, {
       categoryId: v.categoryId ?? null,

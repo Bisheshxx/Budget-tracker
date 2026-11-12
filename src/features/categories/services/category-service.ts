@@ -1,3 +1,4 @@
+import { parseOrThrow } from '#/shared/utils/validation.util'
 import {
   createCategorySchema,
   updateCategorySchema,
@@ -6,7 +7,10 @@ import type {
   CategoryCreateInput,
   CategoryUpdateInput,
 } from '#/shared/schemas/category.schema'
-import type { Category, CategoryPageRequest } from '#/shared/types/category.type'
+import type {
+  Category,
+  CategoryPageRequest,
+} from '#/shared/types/category.type'
 import type { ICategoryRepository } from '#/data/categories/ICategoryRepository'
 
 // Thin service over the category repository. Validates via the shared schema (the
@@ -27,11 +31,7 @@ export class CategoryService {
   }
 
   async create(userId: string, input: CategoryCreateInput): Promise<Category> {
-    const result = createCategorySchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+    const v = parseOrThrow(createCategorySchema, input)
 
     return this.repo.create({
       userId,
@@ -50,11 +50,7 @@ export class CategoryService {
     if (category.isSystem) {
       throw new Error('System categories cannot be edited')
     }
-    const result = updateCategorySchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+    const v = parseOrThrow(updateCategorySchema, input)
 
     return this.repo.update(category.id, {
       name: v.name,

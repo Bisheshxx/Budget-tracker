@@ -1,3 +1,4 @@
+import { parseOrThrow } from '#/shared/utils/validation.util'
 import { onboardingSchema } from './schema'
 import { toCents } from '#/lib/money'
 import type { OnboardingInput } from './schema'
@@ -27,11 +28,7 @@ export class ProfileService {
     authUserId: string,
     input: OnboardingInput,
   ): Promise<UserProfile> {
-    const result = onboardingSchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+    const v = parseOrThrow(onboardingSchema, input)
 
     return this.repo.update(authUserId, {
       displayName: v.displayName?.trim() || null,
@@ -53,11 +50,7 @@ export class ProfileService {
     authUserId: string,
     input: OnboardingInput,
   ): Promise<UserProfile> {
-    const result = onboardingSchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+    const v = parseOrThrow(onboardingSchema, input)
 
     const current = await this.repo.getByAuthUserId(authUserId)
     if (!current) {

@@ -1,3 +1,4 @@
+import { parseOrThrow } from '#/shared/utils/validation.util'
 import { recurringSchema } from './schema'
 import { computeDue } from './due'
 import { toCents } from '#/lib/money'
@@ -187,15 +188,16 @@ export class RecurringService {
     const results: RecurringOccurrence[] = []
 
     for (const item of due) {
-      const transaction = await this.transactionRepo.createForRecurringOccurrence({
-        userId,
-        categoryId: item.recurringTransaction.categoryId,
-        type: item.recurringTransaction.kind,
-        amountCents: item.recurringTransaction.amountCents,
-        note: null,
-        transactionDate: item.occurrenceDate,
-        recurringTransactionId: item.recurringTransaction.id,
-      })
+      const transaction =
+        await this.transactionRepo.createForRecurringOccurrence({
+          userId,
+          categoryId: item.recurringTransaction.categoryId,
+          type: item.recurringTransaction.kind,
+          amountCents: item.recurringTransaction.amountCents,
+          note: null,
+          transactionDate: item.occurrenceDate,
+          recurringTransactionId: item.recurringTransaction.id,
+        })
       const occurrence = await this.repo.recordConfirmed(
         item.recurringTransaction.id,
         item.occurrenceDate,
@@ -239,10 +241,6 @@ export class RecurringService {
   }
 
   private validate(input: RecurringInput) {
-    const result = recurringSchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    return result.data
+    return parseOrThrow(recurringSchema, input)
   }
 }

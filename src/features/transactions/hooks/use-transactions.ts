@@ -1,6 +1,12 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { transactionService } from '#/features/transactions'
 import { TRANSACTION_PAGE_SIZE } from '#/shared/constants/transactions.constant'
+import { invalidateTransactionViews, queryKeys } from '#/shared/lib/query-keys'
 import { useProfile } from '#/shared/hooks/use-profile'
 import { daysIntoPeriod, resolvePeriod, todayYmd } from '#/shared/lib/period'
 import { nextPageCursor } from '#/shared/utils/pagination.util'
@@ -41,7 +47,7 @@ export function useTransactionsInfinite(bounds?: {
   const id = userId ?? ''
 
   const query = useInfiniteQuery({
-    queryKey: ['transactions', 'infinite', id, from, to],
+    queryKey: queryKeys.transactions.infinite(id, { from, to }),
     queryFn: ({ pageParam }) =>
       transactionService.listPage(id, {
         from,
@@ -94,7 +100,7 @@ export function usePeriodSummary(bounds?: PeriodRange): PeriodSummaryResult {
   const id = userId ?? ''
 
   const query = useQuery({
-    queryKey: ['transactions', 'period-summary', id, range.start, range.end],
+    queryKey: queryKeys.transactions.periodSummary(id, range),
     queryFn: () => transactionService.getPeriodSummary(id, range),
     enabled: !!userId,
   })
@@ -108,25 +114,6 @@ export function usePeriodSummary(bounds?: PeriodRange): PeriodSummaryResult {
   }
 }
 
-// Refresh the infinite list and the Period summary so a delete reflects in the
-// list and the Cashflow totals. Each key omits its trailing dimensions (date
-// window / period start) so the prefix match invalidates every cached window.
-// Returns the promise so mutateAsync resolves only after the caches have
-// refreshed.
-function invalidateTransactionCaches(
-  queryClient: ReturnType<typeof useQueryClient>,
-  userId: string,
-) {
-  return Promise.all([
-    queryClient.invalidateQueries({
-      queryKey: ['transactions', 'infinite', userId],
-    }),
-    queryClient.invalidateQueries({
-      queryKey: ['transactions', 'period-summary', userId],
-    }),
-  ])
-}
-
 // Delete mutation. Refreshes the recent list and Period summary so a deleted
 // transaction disappears from both.
 export function useDeleteTransaction() {
@@ -138,7 +125,7 @@ export function useDeleteTransaction() {
     mutationFn: (id: string) => transactionService.delete(id),
     onSuccess: () => {
       if (!userId) return
-      return invalidateTransactionCaches(queryClient, userId)
+      return invalidateTransactionViews(queryClient, userId)
     },
   })
 }

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { reportService } from '#/features/reports'
+import { queryKeys } from '#/shared/lib/query-keys'
 import { useProfile } from '#/shared/hooks/use-profile'
 import {
   defaultLocaleWeekStartDay,
@@ -48,7 +49,7 @@ export function useReports(
           : resolveCalendarWeek(today, weekStartDay).start
 
   const query = useQuery({
-    queryKey: ['reports', id, view, windowKey],
+    queryKey: queryKeys.reports.report(id, view, windowKey),
     queryFn: () =>
       reportService.getReport(
         id,

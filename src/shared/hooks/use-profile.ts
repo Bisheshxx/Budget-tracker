@@ -1,5 +1,6 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { profileService } from '#/features/profile'
+import { queryKeys } from '#/shared/lib/query-keys'
 import { useAuth } from '#/features/auth/contexts/auth-context'
 import type { UserProfile } from '#/shared/types/user-profile.type'
 
@@ -18,7 +19,7 @@ interface ProfileResult {
 // (context.queryClient.ensureQueryData(...)) per ADR 0001's deferred-SSR note.
 const profileQueryOptions = (authUserId: string) =>
   queryOptions({
-    queryKey: ['profile', authUserId] as const,
+    queryKey: queryKeys.profile.byAuthUser(authUserId),
     queryFn: () => profileService.getProfile(authUserId),
   })
 

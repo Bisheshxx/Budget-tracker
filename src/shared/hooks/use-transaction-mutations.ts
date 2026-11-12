@@ -1,26 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { transactionService } from '#/features/transactions'
+import { invalidateTransactionViews } from '#/shared/lib/query-keys'
 import { useProfile } from '#/shared/hooks/use-profile'
 import type { QuickAddInput } from '#/shared/schemas/transaction.schema'
-
-// Refresh the infinite list and the Period summary so every mutation
-// (create/update) reflects in the list and the Cashflow totals. Each key
-// omits its trailing dimensions (date window / period start) so the prefix match
-// invalidates every cached window. Returns the promise so mutateAsync resolves
-// only after the caches have refreshed (the dialog closes on resolve).
-function invalidateTransactionCaches(
-  queryClient: ReturnType<typeof useQueryClient>,
-  userId: string,
-) {
-  return Promise.all([
-    queryClient.invalidateQueries({
-      queryKey: ['transactions', 'infinite', userId],
-    }),
-    queryClient.invalidateQueries({
-      queryKey: ['transactions', 'period-summary', userId],
-    }),
-  ])
-}
 
 // Create mutation that refreshes the recent list and Period summary on success.
 // Lives in shared (not the transactions feature) because recurring's Due-Now
@@ -37,7 +19,7 @@ export function useCreateTransaction() {
     },
     onSuccess: () => {
       if (!userId) return
-      return invalidateTransactionCaches(queryClient, userId)
+      return invalidateTransactionViews(queryClient, userId)
     },
   })
 }
@@ -54,7 +36,7 @@ export function useUpdateTransaction() {
       transactionService.update(id, input),
     onSuccess: () => {
       if (!userId) return
-      return invalidateTransactionCaches(queryClient, userId)
+      return invalidateTransactionViews(queryClient, userId)
     },
   })
 }

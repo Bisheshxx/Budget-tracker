@@ -6,6 +6,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { recurringService } from '#/features/recurring'
+import { invalidateTransactionViews, queryKeys } from '#/shared/lib/query-keys'
 import { useProfile } from '#/shared/hooks/use-profile'
 import { resolvePeriod, todayYmd } from '#/shared/lib/period'
 import type { RecentlyPostedItem } from '#/data/recurring/IRecurringTransactionRepository'
@@ -17,7 +18,7 @@ import type {
 
 const recurringQueryOptions = (userId: string) =>
   queryOptions({
-    queryKey: ['recurring', userId] as const,
+    queryKey: queryKeys.recurring.list(userId),
     queryFn: () => recurringService.listAll(userId),
   })
 
@@ -53,7 +54,9 @@ function useInvalidateRecurring() {
   const queryClient = useQueryClient()
   return () => {
     if (!userId) return
-    return queryClient.invalidateQueries({ queryKey: ['recurring', userId] })
+    return queryClient.invalidateQueries({
+      queryKey: queryKeys.recurring.list(userId),
+    })
   }
 }
 
@@ -103,7 +106,7 @@ export function useDeleteRecurring() {
 // dialog's copy only, not delete's actual (always-safe) behavior.
 export function useHasConfirmedHistory(id: string) {
   return useQuery({
-    queryKey: ['recurring', 'confirmed-history', id] as const,
+    queryKey: queryKeys.recurring.confirmedHistory(id),
     queryFn: () => recurringService.hasConfirmedHistory(id),
   })
 }
@@ -137,15 +140,12 @@ function useInvalidateAfterResolve() {
     if (!userId) return
     return Promise.all([
       queryClient.invalidateQueries({
-        queryKey: ['recurring', 'recent', userId],
+        queryKey: queryKeys.recurring.recent(userId),
       }),
+      invalidateTransactionViews(queryClient, userId),
       queryClient.invalidateQueries({
-        queryKey: ['transactions', 'infinite', userId],
+        queryKey: queryKeys.reports.all(userId),
       }),
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', 'period-summary', userId],
-      }),
-      queryClient.invalidateQueries({ queryKey: ['reports', userId] }),
     ])
   }
 }
@@ -202,7 +202,7 @@ export function useRecentlyPosted(): RecentlyPostedResult {
   const periodKey = resolvePeriod(todayYmd(), startDay).start
 
   const query = useQuery({
-    queryKey: ['recurring', 'recent', id, periodKey] as const,
+    queryKey: queryKeys.recurring.recent(id, periodKey),
     queryFn: () => recurringService.listRecentlyPosted(id, periodKey),
     enabled: !!id,
   })

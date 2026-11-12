@@ -6,6 +6,11 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { categoryService } from '#/features/categories'
+import {
+  invalidateCategoryViews,
+  invalidateTransactionViews,
+  queryKeys,
+} from '#/shared/lib/query-keys'
 import { useProfile } from '#/shared/hooks/use-profile'
 import { CATEGORY_PAGE_SIZE } from '#/shared/constants/categories.constant'
 import { nextPageCursor } from '#/shared/utils/pagination.util'
@@ -13,14 +18,11 @@ import type {
   CategoryCreateInput,
   CategoryUpdateInput,
 } from '#/shared/schemas/category.schema'
-import type {
-  Category,
-  CategoryPageCursor,
-} from '#/shared/types/category.type'
+import type { Category, CategoryPageCursor } from '#/shared/types/category.type'
 
 const categoriesQueryOptions = (userId: string) =>
   queryOptions({
-    queryKey: ['categories', userId] as const,
+    queryKey: queryKeys.categories.list(userId),
     queryFn: () => categoryService.listAvailable(userId),
   })
 
@@ -66,7 +68,7 @@ export function useCategoriesInfinite(): InfiniteCategoriesResult {
   const id = userId ?? ''
 
   const query = useInfiniteQuery({
-    queryKey: ['categories', 'infinite', id] as const,
+    queryKey: queryKeys.categories.infinite(id),
     queryFn: ({ pageParam }) =>
       categoryService.listAvailablePage(id, {
         limit: CATEGORY_PAGE_SIZE,
@@ -108,12 +110,7 @@ export function useCreateCategory() {
     // resolve and must see the new row).
     onSuccess: () => {
       if (!userId) return
-      return Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['categories', userId] }),
-        queryClient.invalidateQueries({
-          queryKey: ['categories', 'infinite', userId],
-        }),
-      ])
+      return invalidateCategoryViews(queryClient, userId)
     },
   })
 }
@@ -137,16 +134,8 @@ export function useUpdateCategory() {
     onSuccess: () => {
       if (!userId) return
       return Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['categories', userId] }),
-        queryClient.invalidateQueries({
-          queryKey: ['categories', 'infinite', userId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ['transactions', 'infinite', userId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ['transactions', 'period-summary', userId],
-        }),
+        invalidateCategoryViews(queryClient, userId),
+        invalidateTransactionViews(queryClient, userId),
       ])
     },
   })
@@ -165,18 +154,10 @@ export function useDeleteCategory() {
     onSuccess: () => {
       if (!userId) return
       return Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['categories', userId] }),
-        queryClient.invalidateQueries({
-          queryKey: ['categories', 'infinite', userId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ['transactions', 'infinite', userId],
-        }),
+        invalidateCategoryViews(queryClient, userId),
         // The deleted category's expenses fall back to Uncategorized, shifting
         // the spend-by-category breakdown.
-        queryClient.invalidateQueries({
-          queryKey: ['transactions', 'period-summary', userId],
-        }),
+        invalidateTransactionViews(queryClient, userId),
       ])
     },
   })
