@@ -5,6 +5,7 @@ import { useAuth } from '#/features/auth/contexts/auth-context'
 import { useProfile } from '#/shared/hooks/use-profile'
 import { profileService } from '#/features/profile'
 import { CURRENCIES, onboardingSchema } from '#/features/profile/schema'
+import { PeriodStartField } from '#/features/profile/components/PeriodStartField'
 import { fromCents } from '#/lib/money'
 import type {
   OnboardingFormValues,
@@ -123,31 +124,9 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
           showValidation={false}
         />
 
-        <FormField
-          control={control}
-          name="budgetPeriodStartDay"
-          render={({ field }) => (
-            <FormItem>
-              <div className="flex items-baseline justify-between gap-2">
-                <FormLabel>Period start day</FormLabel>
-                <FormMessage className="mt-0" />
-              </div>
-              <FormControl>
-                <Input
-                  type="number"
-                  min={1}
-                  max={28}
-                  {...field}
-                  value={field.value as string}
-                />
-              </FormControl>
-              <FormDescription>
-                The day each monthly Period begins (1–28) — changing it shifts
-                the current Period boundaries.
-              </FormDescription>
-            </FormItem>
-          )}
-        />
+        <PeriodStartField control={control}
+          hint="Changing it shifts the current Period boundaries."
+         />
 
         {formState.errors.root && (
           <p className="text-sm text-destructive">

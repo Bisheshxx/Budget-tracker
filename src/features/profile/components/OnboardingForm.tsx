@@ -13,6 +13,7 @@ import type {
   OnboardingFormValues,
   OnboardingInput,
 } from '#/features/profile/schema'
+import { PeriodStartField } from '#/features/profile/components/PeriodStartField'
 import { EnumSelectField } from '#/shared/components/EnumSelectField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
@@ -103,31 +104,7 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
           showValidation={false}
         />
 
-        <FormField
-          control={control}
-          name="budgetPeriodStartDay"
-          render={({ field }) => (
-            <FormItem>
-              <div className="flex items-baseline justify-between gap-2">
-                <FormLabel>Period start day</FormLabel>
-                <FormMessage className="mt-0" />
-              </div>
-              <FormControl>
-                <Input
-                  type="number"
-                  min={1}
-                  max={28}
-                  {...field}
-                  value={field.value as string}
-                />
-              </FormControl>
-              <FormDescription>
-                The day each monthly Period begins (1–28) — match it to your pay
-                or billing rhythm.
-              </FormDescription>
-            </FormItem>
-          )}
-        />
+        <PeriodStartField control={control} />
 
         <div className="h-px bg-border" />
         <p className="text-sm font-medium text-muted-foreground">Optional</p>
