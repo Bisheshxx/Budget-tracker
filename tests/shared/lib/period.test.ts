@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   addDays,
+  dateToYmd,
   daysIntoPeriod,
   defaultLocaleWeekStartDay,
   getPeriodKey,
@@ -11,6 +12,7 @@ import {
   resolveCalendarWeek,
   resolvePeriod,
   todayYmd,
+  ymdToDate,
 } from '#/shared/lib/period.ts'
 
 describe('period', () => {
@@ -184,6 +186,27 @@ describe('period', () => {
           end: '2026-07-05',
         },
       )
+    })
+  })
+
+  describe('ymdToDate / dateToYmd', () => {
+    it('round-trips a calendar day without a timezone shift', () => {
+      for (const ymd of [
+        '2026-01-01',
+        '2026-03-29',
+        '2026-12-31',
+        '2028-02-29',
+      ]) {
+        expect(dateToYmd(ymdToDate(ymd))).toBe(ymd)
+      }
+    })
+
+    it('builds a local-midnight Date', () => {
+      const date = ymdToDate('2026-06-25')
+      expect([date.getFullYear(), date.getMonth(), date.getDate()]).toEqual([
+        2026, 5, 25,
+      ])
+      expect(date.getHours()).toBe(0)
     })
   })
 })

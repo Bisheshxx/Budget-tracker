@@ -122,6 +122,17 @@ export function daysIntoPeriod(today: string, startDay: number): number {
   return dayDiff(start, today) + 1
 }
 
+/** A 'YYYY-MM-DD' string as a local-midnight Date, for date-picker components. */
+export function ymdToDate(ymd: string): Date {
+  const { year, month, day } = parseYmd(ymd)
+  return new Date(year, month - 1, day)
+}
+
+/** A Date's local calendar day as 'YYYY-MM-DD' (the inverse of ymdToDate). */
+export function dateToYmd(date: Date): string {
+  return formatYmd(date.getFullYear(), date.getMonth() + 1, date.getDate())
+}
+
 /** Today as a local 'YYYY-MM-DD' string — the boundary that feeds the pure helpers. */
 export function todayYmd(now: Date = new Date()): string {
   return formatYmd(now.getFullYear(), now.getMonth() + 1, now.getDate())
