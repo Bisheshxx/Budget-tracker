@@ -11,7 +11,10 @@ import { MoneyBadge } from '#/shared/components/MoneyBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
 import { parseYmd, todayYmd } from '#/shared/lib/period'
-import type { CategorySpend, PeriodSummary } from '#/shared/types/transaction.type'
+import type {
+  CategorySpend,
+  PeriodSummary,
+} from '#/shared/types/transaction.type'
 
 const MONTH_NAMES = [
   'January',

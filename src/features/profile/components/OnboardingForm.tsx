@@ -165,7 +165,9 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
               <FormControl>
                 <SelectMenu
                   value={
-                    field.value === '' ? GROCERY_DAY_NONE : (field.value as string)
+                    field.value === ''
+                      ? GROCERY_DAY_NONE
+                      : (field.value as string)
                   }
                   onValueChange={(v) =>
                     field.onChange(v === GROCERY_DAY_NONE ? '' : v)

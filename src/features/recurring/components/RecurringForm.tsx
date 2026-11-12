@@ -198,7 +198,10 @@ export function RecurringForm({
                   <FormMessage className="mt-0" />
                 </div>
                 <FormControl>
-                  <SelectMenu value={field.value} onValueChange={field.onChange}>
+                  <SelectMenu
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
                     <SelectMenuTrigger>
                       {selected ? (
                         <span className="flex items-center gap-2">
@@ -206,7 +209,10 @@ export function RecurringForm({
                             className="size-3 shrink-0 rounded-full"
                             style={{ backgroundColor: selected.colorHex }}
                           />
-                          <CategoryIcon name={selected.icon} className="size-4" />
+                          <CategoryIcon
+                            name={selected.icon}
+                            className="size-4"
+                          />
                           <span>{selected.name}</span>
                         </span>
                       ) : (

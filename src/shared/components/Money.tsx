@@ -34,7 +34,11 @@ export function Money({
       className={cn('tabular-nums', TONE_CLASS[tone], className)}
       data-testid="money"
     >
-      {formatMoney(cents, currency, signed ? { signDisplay: 'always' } : undefined)}
+      {formatMoney(
+        cents,
+        currency,
+        signed ? { signDisplay: 'always' } : undefined,
+      )}
     </span>
   )
 }

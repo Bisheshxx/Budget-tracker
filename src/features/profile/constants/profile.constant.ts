@@ -18,4 +18,3 @@ export const DAYS_OF_WEEK = [
   'Friday',
   'Saturday',
 ] as const
-
