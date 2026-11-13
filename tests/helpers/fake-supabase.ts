@@ -3,6 +3,8 @@
 // chained call (`select`, `eq`, `order`, …) is recorded, and awaiting the chain
 // resolves with the next enqueued `{ data, error }` result. Tests then assert on
 // which table was hit, with which filters/payload — no network, no env vars.
+// `rpc(fn, args)` is recorded the same way, under the table name `rpc:<fn>`
+// with a single `rpc` op carrying the arguments.
 
 type Op = [method: string, args: unknown[]]
 
@@ -39,9 +41,9 @@ class FakeSupabase {
       .map(([, args]) => args)
   }
 
-  readonly client = {
-    from: (table: string) => {
-      const query: RecordedQuery = { table, ops: [] }
+  private record(table: string, ops: Op[] = []): unknown {
+    {
+      const query: RecordedQuery = { table, ops }
       this.queries.push(query)
       const builder: unknown = new Proxy(
         {},
@@ -62,7 +64,13 @@ class FakeSupabase {
         },
       )
       return builder
-    },
+    }
+  }
+
+  readonly client = {
+    from: (table: string) => this.record(table),
+    rpc: (fn: string, args?: unknown) =>
+      this.record(`rpc:${fn}`, [['rpc', [args]]]),
   }
 }
 

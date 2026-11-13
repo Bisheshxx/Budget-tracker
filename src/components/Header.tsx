@@ -12,6 +12,7 @@ import {
 import { useAuth } from '#/features/auth/contexts/auth-context'
 import { useProfile } from '#/shared/hooks/use-profile'
 import { UserAvatar } from '#/shared/components/UserAvatar'
+import { HouseholdSwitcher } from '#/shared/components/HouseholdSwitcher'
 import type { UserProfile } from '#/shared/types/user-profile.type'
 
 const Menu: {
@@ -90,6 +91,8 @@ export default function Header() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
+
+                <HouseholdSwitcher />
 
                 {/* User avatar menu */}
                 <AvatarDropdown profile={profile} signOut={signOut} />

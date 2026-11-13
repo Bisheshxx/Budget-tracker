@@ -14,12 +14,14 @@ import type {
   TransactionCreate,
 } from '#/shared/types/transaction.type.ts'
 
+const scope = { householdId: 'house-1', profileId: 'profile-1' }
+
 function makeFakeRepo(
   overrides: Partial<IRecurringTransactionRepository> = {},
 ) {
   return {
-    listActive: vi.fn(async (_userId: string) => [] as RecurringTransaction[]),
-    listAll: vi.fn(async (_userId: string) => [] as RecurringTransaction[]),
+    listActive: vi.fn(async (_householdId: string) => [] as RecurringTransaction[]),
+    listAll: vi.fn(async (_householdId: string) => [] as RecurringTransaction[]),
     create: vi.fn(
       async (
         input: RecurringTransactionCreate,
@@ -109,6 +111,8 @@ function makeFakeTxRepo(overrides: Partial<ITransactionRepository> = {}) {
         note: input.note,
         transactionDate: input.transactionDate,
         createdAt: '2026-06-22T00:00:00.000Z',
+        createdBy: null,
+        recurringOwnerId: null,
       }),
     ),
     createForRecurringOccurrence: vi.fn(
@@ -121,6 +125,8 @@ function makeFakeTxRepo(overrides: Partial<ITransactionRepository> = {}) {
         note: input.note,
         transactionDate: input.transactionDate,
         createdAt: '2026-06-22T00:00:00.000Z',
+        createdBy: null,
+        recurringOwnerId: null,
       }),
     ),
     update: vi.fn(),
@@ -171,13 +177,14 @@ function validInput(overrides: Partial<RecurringInput> = {}): RecurringInput {
 
 describe('RecurringService', () => {
   describe('create', () => {
-    it('persists a validated template with the owner id and amount in cents', async () => {
+    it('persists a validated template in the Household with the amount in cents', async () => {
       const repo = makeFakeRepo()
       const service = makeService(repo)
 
-      await service.create('profile-1', validInput({ amount: 1200 }))
+      await service.create(scope, validInput({ amount: 1200 }))
 
       expect(repo.create).toHaveBeenCalledWith({
+        householdId: 'house-1',
         userId: 'profile-1',
         categoryId: 'cat-1',
         name: 'Rent',
@@ -194,7 +201,7 @@ describe('RecurringService', () => {
       const service = makeService(repo)
 
       await expect(
-        service.create('profile-1', validInput({ amount: 0 })),
+        service.create(scope, validInput({ amount: 0 })),
       ).rejects.toThrow(/greater than 0/)
       expect(repo.create).not.toHaveBeenCalled()
     })
@@ -205,7 +212,7 @@ describe('RecurringService', () => {
 
       await expect(
         service.create(
-          'profile-1',
+          scope,
           validInput({ categoryId: '', kind: 'income' }),
         ),
       ).rejects.toThrow(/category/i)
@@ -218,7 +225,7 @@ describe('RecurringService', () => {
 
       await expect(
         service.create(
-          'profile-1',
+          scope,
           validInput({ frequency: 'monthly', firstDueDate: '2026-06-29' }),
         ),
       ).rejects.toThrow()
@@ -230,11 +237,11 @@ describe('RecurringService', () => {
       const service = makeService(repo)
 
       await service.create(
-        'profile-1',
+        scope,
         validInput({ frequency: 'weekly', firstDueDate: '2026-06-02' }),
       )
       await service.create(
-        'profile-1',
+        scope,
         validInput({ frequency: 'fortnightly', firstDueDate: '2026-06-03' }),
       )
 
@@ -258,7 +265,7 @@ describe('RecurringService', () => {
 
       // 2nd Tuesday of June 2026 is the 9th; "today" is before it.
       await service.create(
-        'profile-1',
+        scope,
         validInput({
           frequency: 'monthly',
           monthlyRuleType: 'nth-weekday',
@@ -283,7 +290,7 @@ describe('RecurringService', () => {
 
       // 2nd Tuesday of June 2026 (the 9th) has already passed by the 20th.
       await service.create(
-        'profile-1',
+        scope,
         validInput({
           frequency: 'monthly',
           monthlyRuleType: 'nth-weekday',
@@ -360,9 +367,9 @@ describe('RecurringService', () => {
       const repo = makeFakeRepo()
       const service = makeService(repo)
 
-      await service.listAll('profile-1')
+      await service.listAll('house-1')
 
-      expect(repo.listAll).toHaveBeenCalledWith('profile-1')
+      expect(repo.listAll).toHaveBeenCalledWith('house-1')
     })
   })
 
@@ -377,7 +384,7 @@ describe('RecurringService', () => {
       })
       const service = makeService(repo)
 
-      const due = await service.listDue('profile-1', '2026-06-20', 1)
+      const due = await service.listDue('house-1', '2026-06-20', 1)
 
       expect(due.map((d) => d.occurrenceDate)).toEqual(['2026-06-05'])
       expect(repo.listOccurrencesInRange).toHaveBeenCalledWith(
@@ -400,12 +407,14 @@ describe('RecurringService', () => {
             status: 'confirmed' as const,
             transactionId: 'tx-1',
             createdAt: '2026-06-05T00:00:00.000Z',
+            createdBy: null,
+            recurringOwnerId: null,
           },
         ]),
       })
       const service = makeService(repo)
 
-      const due = await service.listDue('profile-1', '2026-06-20', 1)
+      const due = await service.listDue('house-1', '2026-06-20', 1)
 
       expect(due).toEqual([])
     })
@@ -414,7 +423,7 @@ describe('RecurringService', () => {
       const repo = makeFakeRepo({ listActive: vi.fn(async () => []) })
       const service = makeService(repo)
 
-      const due = await service.listDue('profile-1', '2026-06-20', 1)
+      const due = await service.listDue('house-1', '2026-06-20', 1)
 
       expect(due).toEqual([])
       expect(repo.listOccurrencesInRange).not.toHaveBeenCalled()
@@ -430,7 +439,7 @@ describe('RecurringService', () => {
       })
       const service = makeService(repo)
 
-      const due = await service.listDue('profile-1', '2026-06-20', 1)
+      const due = await service.listDue('house-1', '2026-06-20', 1)
 
       expect(due).toEqual([])
       expect(repo.listOccurrencesInRange).not.toHaveBeenCalled()
@@ -447,9 +456,10 @@ describe('RecurringService', () => {
       const txRepo = makeFakeTxRepo()
       const service = makeService(repo, txRepo)
 
-      const results = await service.reconcileDue('profile-1', '2026-06-20', 1)
+      const results = await service.reconcileDue(scope, '2026-06-20', 1)
 
       expect(txRepo.createForRecurringOccurrence).toHaveBeenCalledWith({
+        householdId: 'house-1',
         userId: 'profile-1',
         categoryId: 'cat-9',
         type: 'income',
@@ -481,6 +491,8 @@ describe('RecurringService', () => {
             status: 'confirmed' as const,
             transactionId: 'tx-winner',
             createdAt: '2026-06-05T00:00:00.000Z',
+            createdBy: null,
+            recurringOwnerId: null,
           }),
         ),
       })
@@ -495,12 +507,14 @@ describe('RecurringService', () => {
             note: null,
             transactionDate: '2026-06-05',
             createdAt: '2026-06-05T00:00:00.000Z',
+            createdBy: null,
+            recurringOwnerId: null,
           }),
         ),
       })
       const service = makeService(repo, txRepo)
 
-      const results = await service.reconcileDue('profile-1', '2026-06-20', 1)
+      const results = await service.reconcileDue(scope, '2026-06-20', 1)
 
       expect(txRepo.createForRecurringOccurrence).toHaveBeenCalledTimes(1)
       expect(txRepo.delete).not.toHaveBeenCalled()
@@ -513,10 +527,10 @@ describe('RecurringService', () => {
       const repo = makeFakeRepo()
       const service = makeService(repo)
 
-      await service.listRecentlyPosted('profile-1', '2026-06-01')
+      await service.listRecentlyPosted('house-1', '2026-06-01')
 
       expect(repo.listRecentlyConfirmed).toHaveBeenCalledWith(
-        'profile-1',
+        'house-1',
         '2026-06-01',
       )
     })

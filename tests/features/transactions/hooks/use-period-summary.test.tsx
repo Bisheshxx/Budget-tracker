@@ -5,13 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement } from 'react'
 import type { ReactNode } from 'react'
 import type { PeriodSummary } from '#/shared/types/transaction.type.ts'
+import { ledgerLoaded, ledgerPending } from '../../../helpers/ledger.ts'
 
-// Mock the profile hook and the service singleton so the hook is exercised
+// Mock the ledger hook and the service singleton so the hook is exercised
 // without Supabase. vi.hoisted keeps the spies reachable in the factories.
-const { useProfile } = vi.hoisted(() => ({ useProfile: vi.fn() }))
+const { useLedger } = vi.hoisted(() => ({ useLedger: vi.fn() }))
 const { getPeriodSummary } = vi.hoisted(() => ({ getPeriodSummary: vi.fn() }))
 
-vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
+vi.mock('#/shared/hooks/use-ledger', () => ({ useLedger }))
 vi.mock('#/features/transactions', () => ({
   transactionService: { getPeriodSummary },
 }))
@@ -39,8 +40,8 @@ afterEach(() => {
 })
 
 describe('usePeriodSummary', () => {
-  it('stays loading and never queries until the profile resolves', () => {
-    useProfile.mockReturnValue({ profile: null, loading: true })
+  it('stays loading and never queries until the Household resolves', () => {
+    useLedger.mockReturnValue(ledgerPending())
 
     const { result } = renderHook(() => usePeriodSummary(), { wrapper })
 
@@ -49,20 +50,17 @@ describe('usePeriodSummary', () => {
     expect(getPeriodSummary).not.toHaveBeenCalled()
   })
 
-  it('queries the summary for the profile and exposes a 1-based day count', async () => {
-    useProfile.mockReturnValue({
-      profile: { id: 'profile-1', budgetPeriodStartDay: 25 },
-      loading: false,
-    })
+  it('queries the summary for the Household and exposes a 1-based day count', async () => {
+    useLedger.mockReturnValue(ledgerLoaded({ periodStartDay: 25 }))
     getPeriodSummary.mockResolvedValue(summary)
 
     const { result } = renderHook(() => usePeriodSummary(), { wrapper })
 
     await waitFor(() => expect(result.current.summary).toEqual(summary))
 
-    // Called with the profile id and a resolved Period range (start before end).
+    // Called with the Household id and a resolved Period range (start before end).
     expect(getPeriodSummary).toHaveBeenCalledWith(
-      'profile-1',
+      'house-1',
       expect.objectContaining({
         start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
         end: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
@@ -72,16 +70,13 @@ describe('usePeriodSummary', () => {
   })
 
   it('queries with explicit Range bounds when given, instead of the Period', () => {
-    useProfile.mockReturnValue({
-      profile: { id: 'profile-1', budgetPeriodStartDay: 25 },
-      loading: false,
-    })
+    useLedger.mockReturnValue(ledgerLoaded({ periodStartDay: 25 }))
     getPeriodSummary.mockResolvedValue(summary)
 
     const bounds = { start: '2026-01-03', end: '2026-03-19' }
     renderHook(() => usePeriodSummary(bounds), { wrapper })
 
     // The Range bounds are threaded straight through — not the resolved Period.
-    expect(getPeriodSummary).toHaveBeenCalledWith('profile-1', bounds)
+    expect(getPeriodSummary).toHaveBeenCalledWith('house-1', bounds)
   })
 })

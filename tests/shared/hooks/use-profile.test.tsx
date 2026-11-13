@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { createQueryHarness } from '../../helpers/query-client.ts'
+import { queryKeys } from '#/shared/lib/query-keys.ts'
 
 const { useAuth, getProfile } = vi.hoisted(() => ({
   useAuth: vi.fn(),
@@ -84,5 +85,25 @@ describe('useProfile', () => {
 
     getProfile.mockRejectedValue(new Error('offline'))
     await expect(result.current.refresh()).rejects.toThrow('offline')
+  })
+
+  it('refresh also refreshes the Household list, whose settings mirror the profile', async () => {
+    useAuth.mockReturnValue({
+      session: { user: { id: 'auth-1' } },
+      loading: false,
+    })
+    getProfile.mockResolvedValue(profile)
+    const harness = createQueryHarness()
+    const householdsKey = queryKeys.households.list('profile-1')
+    harness.seed(householdsKey)
+
+    const { result } = renderHook(() => useProfile(), {
+      wrapper: harness.wrapper,
+    })
+    await waitFor(() => expect(result.current.profile).toEqual(profile))
+
+    await result.current.refresh()
+
+    expect(harness.isStale(householdsKey)).toBe(true)
   })
 })

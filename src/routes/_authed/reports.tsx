@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useReports } from '#/features/reports/use-reports'
-import { useProfile } from '#/shared/hooks/use-profile'
+import { useLedger } from '#/shared/hooks/use-ledger'
 import { PeriodComparisonCard } from '#/features/reports/components/PeriodComparisonCard'
 import { WeeklyCashflowChart } from '#/features/reports/components/WeeklyCashflowChart'
 import { CategorySpendChart } from '#/features/reports/components/CategorySpendChart'
@@ -32,8 +32,8 @@ function ReportsPage() {
   const view: ReportView = customRange ? 'custom' : presetView
 
   const { report, loading, isError } = useReports(view, customRange)
-  const { profile } = useProfile()
-  const currency = profile?.currency ?? 'USD'
+  const { ledger } = useLedger()
+  const currency = ledger?.currency ?? 'USD'
 
   return (
     <main className="mx-auto w-full max-w-[98.5rem] px-4 py-6 lg:py-8">

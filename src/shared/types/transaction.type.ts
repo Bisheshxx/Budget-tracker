@@ -18,6 +18,17 @@ export interface Transaction {
   /** SQL date as 'YYYY-MM-DD'. */
   transactionDate: string
   createdAt: string
+  /**
+   * Profile id of whoever added it (decided by the backend, never sent by the
+   * client). Null for an entry auto-posted by a Recurring Transaction.
+   */
+  createdBy: string | null
+  /**
+   * For an auto-posted entry, the profile id of whoever owns the Recurring
+   * Transaction that posted it. Null for ordinary entries, when that template
+   * has since been deleted, or where the read does not look it up.
+   */
+  recurringOwnerId: string | null
 }
 
 // Expense spend for one category within a Period (the spend-by-category
@@ -59,6 +70,8 @@ export interface TransactionPageParams {
 
 // The fields a create writes. Money is in cents; id/createdAt are DB-assigned.
 export interface TransactionCreate {
+  /** The Household (ledger) the transaction is filed in. */
+  householdId: string
   userId: string
   categoryId: string | null
   type: TransactionType

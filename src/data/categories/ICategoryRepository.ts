@@ -6,11 +6,11 @@ import type {
 } from '#/shared/types/category.type'
 
 export interface ICategoryRepository {
-  /** System categories (user_id null) + the user's own, name-ordered. */
-  listAvailable: (userId: string) => Promise<Category[]>
-  /** System categories (user_id null) + the user's own, newest-created first. */
+  /** System categories + the Household's own, name-ordered. */
+  listAvailable: (householdId: string) => Promise<Category[]>
+  /** System categories + the Household's own, newest-created first. */
   listAvailablePage: (
-    userId: string,
+    householdId: string,
     request: CategoryPageRequest,
   ) => Promise<Category[]>
   create: (input: CategoryCreate) => Promise<Category>

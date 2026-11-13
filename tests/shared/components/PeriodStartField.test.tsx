@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { useForm } from 'react-hook-form'
 import { Form } from '#/components/ui/form.tsx'
-import { PeriodStartField } from '#/features/profile/components/PeriodStartField.tsx'
+import { PeriodStartField } from '#/shared/components/PeriodStartField.tsx'
 import type {
   OnboardingFormValues,
   OnboardingInput,
@@ -34,7 +34,11 @@ function Host({ initial, hint }: { initial: string; hint?: string }) {
   })
   return (
     <Form {...form}>
-      <PeriodStartField control={form.control} hint={hint} />
+      <PeriodStartField
+        control={form.control}
+        name="budgetPeriodStartDay"
+        hint={hint}
+      />
       <output data-testid="day">
         {String(form.watch('budgetPeriodStartDay'))}
       </output>

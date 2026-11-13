@@ -14,16 +14,16 @@ export interface ITransactionRepository {
    * infinite-scroll list.
    */
   listPage: (
-    userId: string,
+    householdId: string,
     params: TransactionPageParams,
   ) => Promise<Transaction[]>
   /**
-   * All of the user's transactions whose `transactionDate` falls in the
+   * All of the Household's transactions whose `transactionDate` falls in the
    * half-open range [startInclusive, endExclusive) — the Period query that
    * feeds the Cashflow summary.
    */
   listInRange: (
-    userId: string,
+    householdId: string,
     startInclusive: string,
     endExclusive: string,
   ) => Promise<Transaction[]>
@@ -41,6 +41,6 @@ export interface ITransactionRepository {
   ) => Promise<Transaction>
   /** Update an existing transaction's editable fields; returns the saved row. */
   update: (id: string, input: TransactionUpdate) => Promise<Transaction>
-  /** Delete a transaction by id. RLS scopes the row to the owning user. */
+  /** Delete a transaction by id. The backend checks the caller may delete it. */
   delete: (id: string) => Promise<void>
 }

@@ -20,7 +20,6 @@ function toUserProfile(row: ProfileRow): UserProfile {
     avatarUrl: row.avatar_url,
     currency: row.currency,
     budgetPeriodStartDay: row.budget_period_start_day,
-    groceryDayOfWeek: row.grocery_day_of_week,
     monthlyBudgetTargetCents: row.monthly_budget_target,
     onboardingCompletedAt: row.onboarding_completed_at,
   }
@@ -42,7 +41,6 @@ export class SupabaseProfileRepository implements IProfileRepository {
       display_name: patch.displayName,
       currency: patch.currency,
       budget_period_start_day: patch.budgetPeriodStartDay,
-      grocery_day_of_week: patch.groceryDayOfWeek,
       monthly_budget_target: patch.monthlyBudgetTargetCents,
       onboarding_completed_at: patch.onboardingCompletedAt,
     }

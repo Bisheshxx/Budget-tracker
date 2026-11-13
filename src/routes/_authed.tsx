@@ -8,6 +8,7 @@ import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useAuth } from '#/features/auth/contexts/auth-context'
 import { useProfile } from '#/shared/hooks/use-profile'
+import { readPendingInvite } from '#/features/households/utils/invite.util'
 import { DashboardSkeleton } from '#/shared/components/skeleton-loaders/DashboardSkeleton'
 import { RecurringSkeleton } from '#/shared/components/skeleton-loaders/RecurringSkeleton'
 import { ReportsSkeleton } from '#/shared/components/skeleton-loaders/ReportsSkeleton'
@@ -42,6 +43,13 @@ function AuthedLayout() {
       navigate({ to: '/login', replace: true })
     } else if (!isOnboarded) {
       navigate({ to: '/onboarding', replace: true })
+    } else {
+      // Arrived via an invite link while signed out: finish that first. The
+      // join page clears the parked token, so this redirects only once.
+      const token = readPendingInvite()
+      if (token) {
+        navigate({ to: '/join/$token', params: { token }, replace: true })
+      }
     }
   }, [loading, session, isOnboarded, navigate])
 

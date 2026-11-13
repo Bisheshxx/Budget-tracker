@@ -10,7 +10,7 @@ import type { PeriodReport } from '#/features/reports/types'
 // moves. The V1 Supabase implementation computes it client-side.
 export interface IReportRepository {
   getPeriodReport: (
-    userId: string,
+    householdId: string,
     current: PeriodRange,
     previous: PeriodRange,
   ) => Promise<PeriodReport>

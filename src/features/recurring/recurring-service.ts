@@ -21,6 +21,7 @@ import type {
   IRecurringTransactionRepository,
   RecentlyPostedItem,
 } from '#/data/recurring/IRecurringTransactionRepository'
+import type { LedgerScope } from '#/shared/types/household.type'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 
 const YMD_RE = /^\d{4}-\d{2}-\d{2}$/
@@ -76,20 +77,21 @@ export class RecurringService {
     private readonly transactionRepo: ITransactionRepository,
   ) {}
 
-  // Every template the user owns, active or not — the management screen.
-  listAll(userId: string): Promise<RecurringTransaction[]> {
-    return this.repo.listAll(userId)
+  // Every template in the Household, active or not — the management screen.
+  listAll(householdId: string): Promise<RecurringTransaction[]> {
+    return this.repo.listAll(householdId)
   }
 
   async create(
-    userId: string,
+    scope: LedgerScope,
     input: RecurringInput,
     today: string = todayYmd(),
   ): Promise<RecurringTransaction> {
     const v = this.validate(input)
     const { monthlyRule, firstDueDate } = resolveMonthlyRule(v, today)
     return this.repo.create({
-      userId,
+      householdId: scope.householdId,
+      userId: scope.profileId,
       categoryId: v.categoryId,
       name: v.name,
       amountCents: toCents(v.amount),
@@ -146,12 +148,12 @@ export class RecurringService {
   // already resolved. Nothing is pre-materialized — "Due" is derived (see
   // due.ts / ADR 0010).
   async listDue(
-    userId: string,
+    householdId: string,
     today: string,
     _periodStartDay: number,
   ): Promise<DueOccurrence[]> {
-    const templates = (await this.repo.listActive(userId)).filter((template) =>
-      YMD_RE.test(template.firstDueDate),
+    const templates = (await this.repo.listActive(householdId)).filter(
+      (template) => YMD_RE.test(template.firstDueDate),
     )
     if (templates.length === 0) return []
 
@@ -180,17 +182,18 @@ export class RecurringService {
   // transaction/occurrence a concurrent call already created — no orphan to
   // clean up.
   async reconcileDue(
-    userId: string,
+    scope: LedgerScope,
     today: string,
     periodStartDay: number,
   ): Promise<RecurringOccurrence[]> {
-    const due = await this.listDue(userId, today, periodStartDay)
+    const due = await this.listDue(scope.householdId, today, periodStartDay)
     const results: RecurringOccurrence[] = []
 
     for (const item of due) {
       const transaction =
         await this.transactionRepo.createForRecurringOccurrence({
-          userId,
+          householdId: scope.householdId,
+          userId: scope.profileId,
           categoryId: item.recurringTransaction.categoryId,
           type: item.recurringTransaction.kind,
           amountCents: item.recurringTransaction.amountCents,
@@ -212,10 +215,10 @@ export class RecurringService {
   // Confirmed occurrences (auto-posted transactions) on/after `since`, for the
   // Dashboard's "Recently posted" list.
   listRecentlyPosted(
-    userId: string,
+    householdId: string,
     since: string,
   ): Promise<RecentlyPostedItem[]> {
-    return this.repo.listRecentlyConfirmed(userId, since)
+    return this.repo.listRecentlyConfirmed(householdId, since)
   }
 
   // Skip an occurrence that hasn't posted yet (e.g. "don't post rent this

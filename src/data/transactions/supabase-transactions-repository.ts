@@ -17,7 +17,10 @@ type TransactionRow = Database['public']['Tables']['transactions']['Row']
 // `is_recurring` is intentionally not mapped — it is dropped in issue 09 and the
 // domain type does not model it. Exported so the recurring repository maps its
 // joined transaction rows through the same function.
-export function toTransaction(row: TransactionRow): Transaction {
+export function toTransaction(
+  row: TransactionRow,
+  recurringOwnerId: string | null = null,
+): Transaction {
   return {
     id: row.id,
     userId: row.user_id,
@@ -27,18 +30,32 @@ export function toTransaction(row: TransactionRow): Transaction {
     note: row.note,
     transactionDate: row.transaction_date,
     createdAt: row.created_at,
+    createdBy: row.created_by,
+    recurringOwnerId,
   }
+}
+
+// List reads also fetch who owns the Recurring Transaction behind an
+// auto-posted row, so a shared ledger can say whose it is.
+const LIST_SELECT = '*, recurring_transactions(user_id)'
+
+function toListedTransaction(
+  row: TransactionRow & {
+    recurring_transactions: { user_id: string } | null
+  },
+): Transaction {
+  return toTransaction(row, row.recurring_transactions?.user_id ?? null)
 }
 
 export class SupabaseTransactionRepository implements ITransactionRepository {
   async listPage(
-    userId: string,
+    householdId: string,
     { from, to, limit, cursor }: TransactionPageParams,
   ): Promise<Transaction[]> {
     let query = supabase
       .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
+      .select(LIST_SELECT)
+      .eq('household_id', householdId)
       .order('transaction_date', { ascending: false })
       .order('id', { ascending: false })
       .limit(limit)
@@ -58,28 +75,29 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
 
     const { data, error } = await query
     if (error) throw toDataError(error)
-    return data.map(toTransaction)
+    return data.map(toListedTransaction)
   }
 
   async listInRange(
-    userId: string,
+    householdId: string,
     startInclusive: string,
     endExclusive: string,
   ): Promise<Transaction[]> {
     const { data, error } = await supabase
       .from('transactions')
-      .select('*')
-      .eq('user_id', userId)
+      .select(LIST_SELECT)
+      .eq('household_id', householdId)
       .gte('transaction_date', startInclusive)
       .lt('transaction_date', endExclusive)
       .order('transaction_date', { ascending: true })
       .order('id', { ascending: true })
     if (error) throw toDataError(error)
-    return data.map(toTransaction)
+    return data.map(toListedTransaction)
   }
 
   async create(input: TransactionCreate): Promise<Transaction> {
     const dbInsert: Database['public']['Tables']['transactions']['Insert'] = {
+      household_id: input.householdId,
       user_id: input.userId,
       category_id: input.categoryId,
       type: input.type,
@@ -101,6 +119,7 @@ export class SupabaseTransactionRepository implements ITransactionRepository {
     input: TransactionCreate,
   ): Promise<Transaction> {
     const dbInsert: Database['public']['Tables']['transactions']['Insert'] = {
+      household_id: input.householdId,
       user_id: input.userId,
       category_id: input.categoryId,
       type: input.type,

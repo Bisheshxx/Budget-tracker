@@ -1,5 +1,6 @@
 import { SupabaseAuthRepository } from './auth/supabase-auth-repository'
 import { SupabaseCategoryRepository } from './categories/supabase-categories-repository'
+import { SupabaseHouseholdRepository } from './households/supabase-households-repository'
 import { SupabaseProfileRepository } from './profile/supabase-profile-repository'
 import { SupabaseRecurringTransactionRepository } from './recurring/supabase-recurring-transaction-repository'
 import { SupabaseReportRepository } from './reports/supabase-reports-repository'
@@ -14,6 +15,7 @@ export function createSupabaseDataSource(): IDataSource {
   return {
     auth: new SupabaseAuthRepository(),
     categories: new SupabaseCategoryRepository(),
+    households: new SupabaseHouseholdRepository(),
     profile: new SupabaseProfileRepository(),
     recurring: new SupabaseRecurringTransactionRepository(),
     reports: new SupabaseReportRepository(transactions),

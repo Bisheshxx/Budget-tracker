@@ -5,7 +5,7 @@ import {
   useSkipDue,
 } from '#/features/recurring/use-recurring'
 import { QuickAddForm } from '#/shared/components/QuickAddForm'
-import { useProfile } from '#/shared/hooks/use-profile'
+import { useLedger } from '#/shared/hooks/use-ledger'
 import { useDialog } from '#/shared/hooks/use-dialog'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { Dialog as StoreDialog } from '#/shared/components/Dialog'
@@ -30,7 +30,7 @@ import type { Transaction } from '#/shared/types/transaction.type'
 export function RecentlyPosted() {
   useAutoReconcile()
   const { items, loading } = useRecentlyPosted()
-  const { profile } = useProfile()
+  const { ledger } = useLedger()
   const editDialog = useDialog(DIALOG.editRecentlyPosted)
   const undoDialog = useDialog(DIALOG.confirmUndoRecurring)
   const [editing, setEditing] = useState<Transaction | null>(null)
@@ -41,7 +41,7 @@ export function RecentlyPosted() {
   // Quietly absent until there's something to show — no empty card.
   if (loading || items.length === 0) return null
 
-  const currency = profile?.currency ?? 'USD'
+  const currency = ledger?.currency ?? 'USD'
 
   return (
     <Card>

@@ -10,6 +10,8 @@ const { SupabaseAuthRepository } =
   await import('#/data/auth/supabase-auth-repository.ts')
 const { SupabaseCategoryRepository } =
   await import('#/data/categories/supabase-categories-repository.ts')
+const { SupabaseHouseholdRepository } =
+  await import('#/data/households/supabase-households-repository.ts')
 const { SupabaseProfileRepository } =
   await import('#/data/profile/supabase-profile-repository.ts')
 const { SupabaseRecurringTransactionRepository } =
@@ -25,6 +27,7 @@ describe('createSupabaseDataSource', () => {
 
     expect(source.auth).toBeInstanceOf(SupabaseAuthRepository)
     expect(source.categories).toBeInstanceOf(SupabaseCategoryRepository)
+    expect(source.households).toBeInstanceOf(SupabaseHouseholdRepository)
     expect(source.profile).toBeInstanceOf(SupabaseProfileRepository)
     expect(source.recurring).toBeInstanceOf(
       SupabaseRecurringTransactionRepository,
@@ -53,6 +56,7 @@ describe('#/data/<feature> swap points', () => {
   it('each hands out the repository from the single active data source', async () => {
     const { authRepository } = await import('#/data/auth/index.ts')
     const { categoryRepository } = await import('#/data/categories/index.ts')
+    const { householdRepository } = await import('#/data/households/index.ts')
     const { profileRepository } = await import('#/data/profile/index.ts')
     const { recurringTransactionRepository } =
       await import('#/data/recurring/index.ts')
@@ -62,6 +66,7 @@ describe('#/data/<feature> swap points', () => {
 
     expect(authRepository).toBe(dataSource.auth)
     expect(categoryRepository).toBe(dataSource.categories)
+    expect(householdRepository).toBe(dataSource.households)
     expect(profileRepository).toBe(dataSource.profile)
     expect(recurringTransactionRepository).toBe(dataSource.recurring)
     expect(reportRepository).toBe(dataSource.reports)

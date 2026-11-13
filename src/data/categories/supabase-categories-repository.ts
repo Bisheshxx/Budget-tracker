@@ -28,28 +28,28 @@ function toCategory(row: CategoryRow): Category {
 }
 
 export class SupabaseCategoryRepository implements ICategoryRepository {
-  async listAvailable(userId: string): Promise<Category[]> {
+  async listAvailable(householdId: string): Promise<Category[]> {
     // Validate before interpolating into the PostgREST `.or` filter string so a
     // malformed id can't inject filter syntax (comma/paren) into the query.
-    const safeUserId = z.string().uuid().parse(userId)
+    const safeHouseholdId = z.string().uuid().parse(householdId)
     const { data, error } = await supabase
       .from('categories')
       .select('*')
-      .or(`user_id.is.null,user_id.eq.${safeUserId}`)
+      .or(`household_id.is.null,household_id.eq.${safeHouseholdId}`)
       .order('name', { ascending: true })
     if (error) throw toDataError(error)
     return data.map(toCategory)
   }
 
   async listAvailablePage(
-    userId: string,
+    householdId: string,
     request: CategoryPageRequest,
   ): Promise<Category[]> {
-    const safeUserId = z.string().uuid().parse(userId)
+    const safeHouseholdId = z.string().uuid().parse(householdId)
     let query = supabase
       .from('categories')
       .select('*')
-      .or(`user_id.is.null,user_id.eq.${safeUserId}`)
+      .or(`household_id.is.null,household_id.eq.${safeHouseholdId}`)
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
       .limit(request.limit)
@@ -67,6 +67,7 @@ export class SupabaseCategoryRepository implements ICategoryRepository {
 
   async create(input: CategoryCreate): Promise<Category> {
     const dbInsert: Database['public']['Tables']['categories']['Insert'] = {
+      household_id: input.householdId,
       user_id: input.userId,
       name: input.name,
       color_hex: input.colorHex,

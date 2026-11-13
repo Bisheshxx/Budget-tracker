@@ -21,11 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from '#/components/ui/form'
-import type { Control } from 'react-hook-form'
-import type {
-  OnboardingFormValues,
-  OnboardingInput,
-} from '#/features/profile/schema'
+import type { Control, FieldPath, FieldValues } from 'react-hook-form'
 
 const SHORT_DATE: Intl.DateTimeFormatOptions = {
   day: 'numeric',
@@ -45,18 +41,22 @@ function formatYmdShort(ymd: string): string {
 // of the *current* Period for the stored day, and a summary line spells out what
 // that means. Days 29–31 can't anchor a monthly Period (they don't exist in
 // every month), so the picker disables them and "Now" clamps to the 28th.
-export function PeriodStartField({
+// Shared: profile Onboarding/Settings and the create-group form both bind it.
+export function PeriodStartField<TFieldValues extends FieldValues>({
   control,
+  name,
   hint,
 }: {
-  control: Control<OnboardingFormValues, unknown, OnboardingInput>
+  control: Control<TFieldValues>
+  /** The form field holding the day-of-month (1–28), as a string or number. */
+  name: FieldPath<TFieldValues>
   /** Extra sentence appended to the summary (e.g. a note for Settings). */
   hint?: string
 }) {
   return (
     <FormField
       control={control}
-      name="budgetPeriodStartDay"
+      name={name}
       render={({ field }) => {
         const day = Number(field.value)
         const valid =

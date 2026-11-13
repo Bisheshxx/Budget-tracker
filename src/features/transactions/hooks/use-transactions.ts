@@ -7,8 +7,8 @@ import {
 import { transactionService } from '#/features/transactions'
 import { TRANSACTION_PAGE_SIZE } from '#/shared/constants/transactions.constant'
 import { invalidateTransactionViews, queryKeys } from '#/shared/lib/query-keys'
-import { useProfile } from '#/shared/hooks/use-profile'
-import { daysIntoPeriod, resolvePeriod, todayYmd } from '#/shared/lib/period'
+import { useLedger } from '#/shared/hooks/use-ledger'
+import { daysIntoPeriod, resolvePeriod } from '#/shared/lib/period'
 import { nextPageCursor } from '#/shared/utils/pagination.util'
 import type { PeriodRange } from '#/shared/lib/period'
 import type {
@@ -28,23 +28,23 @@ interface InfiniteTransactionsResult {
 }
 
 // The Dashboard transaction list as an infinite, keyset-paginated query, scoped
-// to the user's profile id (transactions.user_id — NOT the auth user id). The
+// to the active Household. The
 // optional `bounds` is a half-open [from, to) date window; when omitted the list
 // defaults to the current Period (so it matches the "This Period" card). PRD B
-// passes an explicit Range here to re-scope both. Disabled until the profile
+// passes an explicit Range here to re-scope both. Disabled until the Household
 // resolves; the date window is part of the cache key so each Range caches apart.
 export function useTransactionsInfinite(bounds?: {
   from?: string
   to?: string
 }): InfiniteTransactionsResult {
-  const { profile, loading: profileLoading } = useProfile()
-  const userId = profile?.id ?? null
-  const startDay = profile?.budgetPeriodStartDay ?? 1
+  const { ledger, today, loading: ledgerLoading } = useLedger()
+  const householdId = ledger?.householdId ?? null
+  const startDay = ledger?.periodStartDay ?? 1
 
-  const period = resolvePeriod(todayYmd(), startDay)
+  const period = resolvePeriod(today, startDay)
   const from = bounds?.from ?? period.start
   const to = bounds?.to ?? period.end
-  const id = userId ?? ''
+  const id = householdId ?? ''
 
   const query = useInfiniteQuery({
     queryKey: queryKeys.transactions.infinite(id, { from, to }),
@@ -62,12 +62,12 @@ export function useTransactionsInfinite(bounds?: {
         transactionDate: last.transactionDate,
         id: last.id,
       })),
-    enabled: !!userId,
+    enabled: !!householdId,
   })
 
   return {
     transactions: query.data?.pages.flat() ?? [],
-    loading: profileLoading || query.isLoading,
+    loading: ledgerLoading || query.isLoading,
     isError: query.isError,
     error: query.error,
     hasNextPage: query.hasNextPage,
@@ -85,30 +85,29 @@ interface PeriodSummaryResult {
   error: unknown
 }
 
-// The Cashflow summary scoped to the user's profile. Defaults to the current
-// Period (resolved from the profile's start day against today, via the pure
+// The Cashflow summary scoped to the active Household. Defaults to the current
+// Period (resolved from the Household's start day against its today, via the pure
 // helpers in #/shared/lib/period); pass `bounds` to scope it to an arbitrary Range
 // instead (PRD B). Both ends of the resolved range feed the cache key, so the
-// current Period and each Range cache apart. Disabled until the profile resolves.
+// current Period and each Range cache apart. Disabled until the Household resolves.
 export function usePeriodSummary(bounds?: PeriodRange): PeriodSummaryResult {
-  const { profile, loading: profileLoading } = useProfile()
-  const userId = profile?.id ?? null
-  const startDay = profile?.budgetPeriodStartDay ?? 1
+  const { ledger, today, loading: ledgerLoading } = useLedger()
+  const householdId = ledger?.householdId ?? null
+  const startDay = ledger?.periodStartDay ?? 1
 
-  const today = todayYmd()
   const range = bounds ?? resolvePeriod(today, startDay)
-  const id = userId ?? ''
+  const id = householdId ?? ''
 
   const query = useQuery({
     queryKey: queryKeys.transactions.periodSummary(id, range),
     queryFn: () => transactionService.getPeriodSummary(id, range),
-    enabled: !!userId,
+    enabled: !!householdId,
   })
 
   return {
     summary: query.data ?? null,
     daysIntoPeriod: daysIntoPeriod(today, startDay),
-    loading: profileLoading || query.isLoading,
+    loading: ledgerLoading || query.isLoading,
     isError: query.isError,
     error: query.error,
   }
@@ -117,15 +116,15 @@ export function usePeriodSummary(bounds?: PeriodRange): PeriodSummaryResult {
 // Delete mutation. Refreshes the recent list and Period summary so a deleted
 // transaction disappears from both.
 export function useDeleteTransaction() {
-  const { profile } = useProfile()
-  const userId = profile?.id ?? null
+  const { ledger } = useLedger()
+  const householdId = ledger?.householdId ?? null
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (id: string) => transactionService.delete(id),
     onSuccess: () => {
-      if (!userId) return
-      return invalidateTransactionViews(queryClient, userId)
+      if (!householdId) return
+      return invalidateTransactionViews(queryClient, householdId)
     },
   })
 }

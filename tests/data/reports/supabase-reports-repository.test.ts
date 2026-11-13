@@ -13,6 +13,8 @@ function tx(overrides: Partial<Transaction>): Transaction {
     note: 'n',
     transactionDate: '2026-06-10',
     createdAt: '2026-06-10T00:00:00.000Z',
+    createdBy: null,
+    recurringOwnerId: null,
     ...overrides,
   }
 }
@@ -22,7 +24,7 @@ const previous = { start: '2026-05-01', end: '2026-06-01' }
 
 describe('SupabaseReportRepository', () => {
   it('derives the report from the two Periods of transactions', async () => {
-    const listInRange = vi.fn(async (_userId: string, start: string) =>
+    const listInRange = vi.fn(async (_householdId: string, start: string) =>
       start === current.start
         ? [
             tx({ id: 'a', amountCents: 3000 }),
@@ -34,15 +36,15 @@ describe('SupabaseReportRepository', () => {
       listInRange,
     } as unknown as ITransactionRepository)
 
-    const report = await repo.getPeriodReport('profile-1', current, previous)
+    const report = await repo.getPeriodReport('house-1', current, previous)
 
     expect(listInRange).toHaveBeenCalledWith(
-      'profile-1',
+      'house-1',
       current.start,
       current.end,
     )
     expect(listInRange).toHaveBeenCalledWith(
-      'profile-1',
+      'house-1',
       previous.start,
       previous.end,
     )
@@ -68,7 +70,7 @@ describe('SupabaseReportRepository', () => {
     } as unknown as ITransactionRepository)
 
     await expect(
-      repo.getPeriodReport('profile-1', current, previous),
+      repo.getPeriodReport('house-1', current, previous),
     ).rejects.toThrow('down')
   })
 })

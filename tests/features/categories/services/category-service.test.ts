@@ -7,10 +7,12 @@ import type {
 } from '#/shared/types/category.type.ts'
 import type { ICategoryRepository } from '#/data/categories/ICategoryRepository.ts'
 
+const scope = { householdId: 'house-1', profileId: 'profile-1' }
+
 function makeFakeRepo(overrides: Partial<ICategoryRepository> = {}) {
   return {
-    listAvailable: vi.fn(async (_userId: string) => [] as Category[]),
-    listAvailablePage: vi.fn(async (_userId: string) => [] as Category[]),
+    listAvailable: vi.fn(async (_householdId: string) => [] as Category[]),
+    listAvailablePage: vi.fn(async (_householdId: string) => [] as Category[]),
     create: vi.fn(
       async (input: CategoryCreate): Promise<Category> => ({
         id: 'cat-1',
@@ -55,35 +57,36 @@ describe('CategoryService', () => {
       const repo = makeFakeRepo()
       const service = new CategoryService(repo)
 
-      await service.listAvailable('profile-1')
+      await service.listAvailable('house-1')
 
-      expect(repo.listAvailable).toHaveBeenCalledWith('profile-1')
+      expect(repo.listAvailable).toHaveBeenCalledWith('house-1')
     })
 
     it('delegates page requests to the repository', async () => {
       const repo = makeFakeRepo()
       const service = new CategoryService(repo)
 
-      await service.listAvailablePage('profile-1', { limit: 20 })
+      await service.listAvailablePage('house-1', { limit: 20 })
 
-      expect(repo.listAvailablePage).toHaveBeenCalledWith('profile-1', {
+      expect(repo.listAvailablePage).toHaveBeenCalledWith('house-1', {
         limit: 20,
       })
     })
   })
 
   describe('create', () => {
-    it('persists a validated category with the owner id', async () => {
+    it('persists a validated category in the Household', async () => {
       const repo = makeFakeRepo()
       const service = new CategoryService(repo)
 
-      await service.create('profile-1', {
+      await service.create(scope, {
         name: 'Groceries',
         colorHex: '#639922',
         icon: 'utensils',
       })
 
       expect(repo.create).toHaveBeenCalledWith({
+        householdId: 'house-1',
         userId: 'profile-1',
         name: 'Groceries',
         colorHex: '#639922',
@@ -95,7 +98,7 @@ describe('CategoryService', () => {
       const repo = makeFakeRepo()
       const service = new CategoryService(repo)
 
-      await service.create('profile-1', {
+      await service.create(scope, {
         name: 'Misc',
         colorHex: '#888780',
       })
@@ -110,7 +113,7 @@ describe('CategoryService', () => {
       const service = new CategoryService(repo)
 
       await expect(
-        service.create('profile-1', { name: '   ', colorHex: '#888780' }),
+        service.create(scope, { name: '   ', colorHex: '#888780' }),
       ).rejects.toThrow('Enter a name')
       expect(repo.create).not.toHaveBeenCalled()
     })

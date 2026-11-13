@@ -9,6 +9,7 @@ import type {
   TransactionPageParams,
 } from '#/shared/types/transaction.type'
 import type { PeriodRange } from '#/shared/lib/period'
+import type { LedgerScope } from '#/shared/types/household.type'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 
 // Thin service over the transaction repository. Holds the app-level rules for
@@ -22,10 +23,10 @@ export class TransactionService {
   // passthrough — the date-window/cursor logic lives in the repository; the hook
   // assembles pages and resolves the next cursor (see useTransactionsInfinite).
   listPage(
-    userId: string,
+    householdId: string,
     params: TransactionPageParams,
   ): Promise<Transaction[]> {
-    return this.repo.listPage(userId, params)
+    return this.repo.listPage(householdId, params)
   }
 
   // Cashflow summary for a resolved Period range: total income, total expenses,
@@ -34,11 +35,11 @@ export class TransactionService {
   // keeping the date math out of here makes both sides independently testable.
   // All arithmetic is on integer cents.
   async getPeriodSummary(
-    userId: string,
+    householdId: string,
     range: PeriodRange,
   ): Promise<PeriodSummary> {
     const transactions = await this.repo.listInRange(
-      userId,
+      householdId,
       range.start,
       range.end,
     )
@@ -51,11 +52,12 @@ export class TransactionService {
   // Validates via the shared schema (the backstop, not just the UI), converts the
   // display-unit amount to integer cents, and persists. An empty categoryId means
   // Uncategorized (stored as null).
-  async create(userId: string, input: QuickAddInput): Promise<Transaction> {
+  async create(scope: LedgerScope, input: QuickAddInput): Promise<Transaction> {
     const v = parseOrThrow(quickAddSchema, input)
 
     return this.repo.create({
-      userId,
+      householdId: scope.householdId,
+      userId: scope.profileId,
       categoryId: v.categoryId ?? null,
       type: v.type,
       amountCents: toCents(v.amount),
@@ -66,7 +68,7 @@ export class TransactionService {
 
   // Edit an existing transaction. Re-validates through the same schema as create
   // (so a non-positive amount can never be saved) and converts to integer cents.
-  // The id targets the row; userId/createdAt are immutable and not written.
+  // The id targets the row; its Household, author and createdAt are immutable.
   async update(id: string, input: QuickAddInput): Promise<Transaction> {
     const v = parseOrThrow(quickAddSchema, input)
 
@@ -79,7 +81,7 @@ export class TransactionService {
     })
   }
 
-  // Delete a transaction by id. RLS scopes the row to the owning user.
+  // Delete a transaction by id. The backend checks the caller may delete it.
   delete(id: string): Promise<void> {
     return this.repo.delete(id)
   }

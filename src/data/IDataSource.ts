@@ -1,5 +1,6 @@
 import type { IAuthRepository } from './auth/IAuthRepository'
 import type { ICategoryRepository } from './categories/ICategoryRepository'
+import type { IHouseholdRepository } from './households/IHouseholdRepository'
 import type { IProfileRepository } from './profile/IProfileRepository'
 import type { IRecurringTransactionRepository } from './recurring/IRecurringTransactionRepository'
 import type { IReportRepository } from './reports/IReportRepository'
@@ -12,6 +13,7 @@ import type { ITransactionRepository } from './transactions/ITransactionReposito
 export interface IDataSource {
   auth: IAuthRepository
   categories: ICategoryRepository
+  households: IHouseholdRepository
   profile: IProfileRepository
   recurring: IRecurringTransactionRepository
   reports: IReportRepository

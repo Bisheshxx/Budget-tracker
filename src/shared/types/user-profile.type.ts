@@ -15,7 +15,6 @@ export interface UserProfile {
   currency: string
   /** Anchors the monthly Period (1–28). */
   budgetPeriodStartDay: number
-  groceryDayOfWeek: number | null
   /** Hidden/deprecated Budget Target, stored as integer cents for future reuse. */
   monthlyBudgetTargetCents: number
   /** Null until Onboarding is completed — the canonical "onboarded" marker. */
@@ -27,7 +26,6 @@ export interface ProfileUpdate {
   displayName: string | null
   currency: string
   budgetPeriodStartDay: number
-  groceryDayOfWeek: number | null
   monthlyBudgetTargetCents: number
   onboardingCompletedAt: string | null
 }

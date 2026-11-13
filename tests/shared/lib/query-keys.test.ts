@@ -12,6 +12,19 @@ describe('queryKeys', () => {
       'profile',
       'auth-1',
     ])
+    expect(queryKeys.households.list('u1')).toEqual(['households', 'u1'])
+    expect(queryKeys.households.people('h1')).toEqual([
+      'household-people',
+      'h1',
+    ])
+    expect(queryKeys.households.invites('h1')).toEqual([
+      'household-invites',
+      'h1',
+    ])
+    expect(queryKeys.households.invitePreview('tok')).toEqual([
+      'household-invite-preview',
+      'tok',
+    ])
     expect(queryKeys.categories.list('u1')).toEqual(['categories', 'u1'])
     expect(queryKeys.categories.infinite('u1')).toEqual([
       'categories',

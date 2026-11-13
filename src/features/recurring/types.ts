@@ -26,7 +26,10 @@ export type MonthlyRule =
 // templates, never stored here.
 export interface RecurringTransaction {
   id: string
-  /** References user_profiles.id (NOT the auth user id). */
+  /**
+   * Who set it up: references user_profiles.id (NOT the auth user id). In a
+   * group this is the template's owner shown on the Recurring screen.
+   */
   userId: string
   /** Required — a recurring transaction always belongs to a category. */
   categoryId: string
@@ -48,6 +51,8 @@ export interface RecurringTransaction {
 // The fields a create writes. Money is in cents; id/createdAt/active are
 // DB-assigned (active defaults true).
 export interface RecurringTransactionCreate {
+  /** The Household (ledger) the template posts into. */
+  householdId: string
   userId: string
   categoryId: string
   name: string

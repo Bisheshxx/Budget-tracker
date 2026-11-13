@@ -8,22 +8,14 @@ import {
   onboardingSchema,
   resolveDisplayName,
 } from '#/features/profile/schema'
-import { DAYS_OF_WEEK } from '#/features/profile/constants/profile.constant'
 import type {
   OnboardingFormValues,
   OnboardingInput,
 } from '#/features/profile/schema'
-import { PeriodStartField } from '#/features/profile/components/PeriodStartField'
+import { PeriodStartField } from '#/shared/components/PeriodStartField'
 import { EnumSelectField } from '#/shared/components/EnumSelectField'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
-import {
-  SelectMenu,
-  SelectMenuContent,
-  SelectMenuItem,
-  SelectMenuTrigger,
-  SelectMenuValue,
-} from '#/components/ui/select-menu'
 import {
   Form,
   FormControl,
@@ -35,11 +27,6 @@ import {
 } from '#/components/ui/form'
 
 const CURRENCY_OPTIONS = CURRENCIES.map((c) => ({ value: c, label: c }))
-
-// Radix Select disallows an empty-string item value (mirrors CategoryPicker's
-// Uncategorized sentinel), so "no preference" gets a sentinel that maps back
-// to '' on change.
-const GROCERY_DAY_NONE = '__none__'
 
 // The Onboarding form. Owns its own form state; on success it persists the
 // profile, refreshes the profile context (flipping isOnboarded), then routes on
@@ -59,7 +46,6 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
       currency: 'USD',
       budgetPeriodStartDay: '1',
       displayName: '',
-      groceryDayOfWeek: '',
       monthlyBudgetTarget: '',
     },
   })
@@ -104,7 +90,7 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
           showValidation={false}
         />
 
-        <PeriodStartField control={control} />
+        <PeriodStartField control={control} name="budgetPeriodStartDay" />
 
         <div className="h-px bg-border" />
         <p className="text-sm font-medium text-muted-foreground">Optional</p>
@@ -129,40 +115,6 @@ export function OnboardingForm({ onComplete }: { onComplete: () => void }) {
               <FormDescription>
                 What we&apos;ll call you in the app — you can change this later.
               </FormDescription>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name="groceryDayOfWeek"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Grocery day</FormLabel>
-              <FormControl>
-                <SelectMenu
-                  value={
-                    field.value === ''
-                      ? GROCERY_DAY_NONE
-                      : (field.value as string)
-                  }
-                  onValueChange={(v) =>
-                    field.onChange(v === GROCERY_DAY_NONE ? '' : v)
-                  }
-                >
-                  <SelectMenuTrigger>
-                    <SelectMenuValue />
-                  </SelectMenuTrigger>
-                  <SelectMenuContent>
-                    <SelectMenuItem value={GROCERY_DAY_NONE}>—</SelectMenuItem>
-                    {DAYS_OF_WEEK.map((day, idx) => (
-                      <SelectMenuItem key={day} value={String(idx)}>
-                        {day}
-                      </SelectMenuItem>
-                    ))}
-                  </SelectMenuContent>
-                </SelectMenu>
-              </FormControl>
             </FormItem>
           )}
         />

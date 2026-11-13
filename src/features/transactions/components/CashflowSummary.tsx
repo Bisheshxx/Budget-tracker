@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { usePeriodSummary } from '#/features/transactions/hooks/use-transactions'
-import { useProfile } from '#/shared/hooks/use-profile'
+import { useLedger } from '#/shared/hooks/use-ledger'
 import { useCategoryLookup } from '#/shared/hooks/use-category-lookup'
 import { CategoryChip } from '#/shared/components/CategoryChip'
 import { RangeFilter } from '#/shared/components/RangeFilter'
@@ -10,7 +10,7 @@ import { Money } from '#/shared/components/Money'
 import { MoneyBadge } from '#/shared/components/MoneyBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import { Skeleton } from '#/components/ui/skeleton'
-import { parseYmd, todayYmd } from '#/shared/lib/period'
+import { parseYmd } from '#/shared/lib/period'
 import type {
   CategorySpend,
   PeriodSummary,
@@ -31,9 +31,8 @@ const MONTH_NAMES = [
   'December',
 ] as const
 
-function currentMonthName(): string {
-  const { month } = parseYmd(todayYmd())
-  return MONTH_NAMES[month - 1]
+function monthNameOf(today: string): string {
+  return MONTH_NAMES[parseYmd(today).month - 1]
 }
 
 // The Dashboard's primary surface: Cashflow at a glance — income in, expenses
@@ -48,8 +47,8 @@ export function CashflowSummary({ range }: { range?: Range | null }) {
   const { summary, daysIntoPeriod, loading } = usePeriodSummary(
     activeRange ? rangeToBounds(activeRange) : undefined,
   )
-  const { profile } = useProfile()
-  const monthName = currentMonthName()
+  const { ledger, today } = useLedger()
+  const monthName = monthNameOf(today)
 
   return (
     <Card>
@@ -81,7 +80,7 @@ export function CashflowSummary({ range }: { range?: Range | null }) {
         ) : (
           <PeriodSummaryView
             summary={summary}
-            currency={profile?.currency ?? 'USD'}
+            currency={ledger?.currency ?? 'USD'}
             // Empty-breakdown copy stays Period-accurate by default; a Range
             // never calls itself a "Period" (see CONTEXT.md).
             emptyBreakdownLabel={

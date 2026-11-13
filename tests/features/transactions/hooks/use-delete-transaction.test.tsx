@@ -3,13 +3,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import { queryKeys } from '#/shared/lib/query-keys.ts'
 import { createQueryHarness } from '../../../helpers/query-client.ts'
+import { ledgerLoaded } from '../../../helpers/ledger.ts'
 
-const { useProfile, remove } = vi.hoisted(() => ({
-  useProfile: vi.fn(),
+const { useLedger, remove } = vi.hoisted(() => ({
+  useLedger: vi.fn(),
   remove: vi.fn(),
 }))
 
-vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
+vi.mock('#/shared/hooks/use-ledger', () => ({ useLedger }))
 vi.mock('#/features/transactions', () => ({
   transactionService: { delete: remove },
 }))
@@ -21,13 +22,13 @@ afterEach(() => vi.clearAllMocks())
 
 describe('useDeleteTransaction', () => {
   it('deletes by id and refreshes the list and summary', async () => {
-    useProfile.mockReturnValue({ profile: { id: 'profile-1' } })
+    useLedger.mockReturnValue(ledgerLoaded())
     remove.mockResolvedValue(undefined)
-    const listKey = queryKeys.transactions.infinite('profile-1', {
+    const listKey = queryKeys.transactions.infinite('house-1', {
       from: '2026-06-01',
       to: '2026-07-01',
     })
-    const summaryKey = queryKeys.transactions.periodSummary('profile-1', {
+    const summaryKey = queryKeys.transactions.periodSummary('house-1', {
       start: '2026-06-01',
       end: '2026-07-01',
     })

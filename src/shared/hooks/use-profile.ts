@@ -1,4 +1,4 @@
-import { queryOptions, useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { profileService } from '#/features/profile'
 import { queryKeys } from '#/shared/lib/query-keys'
 import { useAuth } from '#/features/auth/contexts/auth-context'
@@ -32,6 +32,8 @@ export function useProfile(): ProfileResult {
   const { session, loading: authLoading } = useAuth()
   const authUserId = session?.user.id ?? null
 
+  const queryClient = useQueryClient()
+
   const query = useQuery({
     ...profileQueryOptions(authUserId ?? ''),
     enabled: !authLoading && !!authUserId,
@@ -51,6 +53,12 @@ export function useProfile(): ProfileResult {
       // fast rather than route on as if the refresh succeeded.
       const result = await query.refetch()
       if (result.error) throw result.error
+      // Until Household settings have their own screen, the profile's currency
+      // and Period start day are mirrored onto the Personal household
+      // (docs/adr/0012), so a profile save can change what useLedger reads.
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.households.all(),
+      })
     },
   }
 }

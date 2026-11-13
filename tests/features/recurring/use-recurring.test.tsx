@@ -6,9 +6,10 @@ import { resolvePeriod, todayYmd } from '#/shared/lib/period.ts'
 import { createQueryHarness } from '../../helpers/query-client.ts'
 import type { RecurringInput } from '#/features/recurring/schema.ts'
 import type { RecurringOccurrence } from '#/features/recurring/types.ts'
+import { ledger, ledgerLoaded, ledgerPending } from '../../helpers/ledger.ts'
 
-const { useProfile, service } = vi.hoisted(() => ({
-  useProfile: vi.fn(),
+const { useLedger, service } = vi.hoisted(() => ({
+  useLedger: vi.fn(),
   service: {
     listAll: vi.fn(),
     create: vi.fn(),
@@ -23,7 +24,7 @@ const { useProfile, service } = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
+vi.mock('#/shared/hooks/use-ledger', () => ({ useLedger }))
 vi.mock('#/features/recurring', () => ({ recurringService: service }))
 
 const {
@@ -39,25 +40,22 @@ const {
   useSkipDue,
 } = await import('#/features/recurring/use-recurring.ts')
 
-const signedIn = {
-  profile: { id: 'profile-1', budgetPeriodStartDay: 1 },
-  loading: false,
-}
+const signedIn = ledgerLoaded()
 const input = { name: 'Rent' } as unknown as RecurringInput
 const periodKey = resolvePeriod(todayYmd(), 1).start
 
 const keys = {
-  list: queryKeys.recurring.list('profile-1'),
-  recent: queryKeys.recurring.recent('profile-1', periodKey),
-  txList: queryKeys.transactions.infinite('profile-1', {
+  list: queryKeys.recurring.list('house-1'),
+  recent: queryKeys.recurring.recent('house-1', periodKey),
+  txList: queryKeys.transactions.infinite('house-1', {
     from: '2026-06-01',
     to: '2026-07-01',
   }),
-  txSummary: queryKeys.transactions.periodSummary('profile-1', {
+  txSummary: queryKeys.transactions.periodSummary('house-1', {
     start: '2026-06-01',
     end: '2026-07-01',
   }),
-  report: queryKeys.reports.report('profile-1', 'period', '2026-06'),
+  report: queryKeys.reports.report('house-1', 'period', '2026-06'),
 }
 
 // The table-driven cases below run several differently-typed mutation hooks
@@ -69,8 +67,8 @@ type AnyMutationHook = () => {
 afterEach(() => vi.clearAllMocks())
 
 describe('useRecurringTransactions', () => {
-  it('stays loading and never queries until the profile resolves', () => {
-    useProfile.mockReturnValue({ profile: null, loading: true })
+  it('stays loading and never queries until the Household resolves', () => {
+    useLedger.mockReturnValue(ledgerPending())
 
     const { result } = renderHook(() => useRecurringTransactions(), {
       wrapper: createQueryHarness().wrapper,
@@ -80,8 +78,8 @@ describe('useRecurringTransactions', () => {
     expect(service.listAll).not.toHaveBeenCalled()
   })
 
-  it('lists every template of the profile', async () => {
-    useProfile.mockReturnValue(signedIn)
+  it('lists every template of the Household', async () => {
+    useLedger.mockReturnValue(signedIn)
     service.listAll.mockResolvedValue([{ id: 're-1' }])
 
     const { result } = renderHook(() => useRecurringTransactions(), {
@@ -91,11 +89,11 @@ describe('useRecurringTransactions', () => {
     await waitFor(() =>
       expect(result.current.recurringTransactions).toEqual([{ id: 're-1' }]),
     )
-    expect(service.listAll).toHaveBeenCalledWith('profile-1')
+    expect(service.listAll).toHaveBeenCalledWith('house-1')
   })
 
   it('surfaces a query error', async () => {
-    useProfile.mockReturnValue(signedIn)
+    useLedger.mockReturnValue(signedIn)
     service.listAll.mockRejectedValue(new Error('down'))
 
     const { result } = renderHook(() => useRecurringTransactions(), {
@@ -107,26 +105,26 @@ describe('useRecurringTransactions', () => {
 })
 
 describe('template mutations', () => {
-  it('create rejects without calling the service when no profile is loaded', async () => {
-    useProfile.mockReturnValue({ profile: null, loading: false })
+  it('create rejects without calling the service when no Household is loaded', async () => {
+    useLedger.mockReturnValue(ledgerPending(false))
 
     const { result } = renderHook(() => useCreateRecurring(), {
       wrapper: createQueryHarness().wrapper,
     })
 
     await expect(result.current.mutateAsync(input)).rejects.toThrow(
-      'No profile loaded',
+      'No group loaded',
     )
     expect(service.create).not.toHaveBeenCalled()
   })
 
   it.each([
-    ['create', () => useCreateRecurring(), input, ['profile-1', input]],
+    ['create', () => useCreateRecurring(), input, [ledger, input, todayYmd()]],
     [
       'update',
       () => useUpdateRecurring(),
       { id: 're-1', input },
-      ['re-1', input],
+      ['re-1', input, todayYmd()],
     ],
     ['deactivate', () => useDeactivateRecurring(), 're-1', ['re-1']],
     ['delete', () => useDeleteRecurring(), 're-1', ['re-1']],
@@ -139,7 +137,7 @@ describe('template mutations', () => {
   ] as const)(
     '%s calls the service and refreshes the template list',
     async (name, useHook, variables, expectedArgs) => {
-      useProfile.mockReturnValue(signedIn)
+      useLedger.mockReturnValue(signedIn)
       service[name].mockResolvedValue(undefined)
       const harness = createQueryHarness()
       harness.seed(keys.list, keys.txList)
@@ -171,7 +169,7 @@ describe('useHasConfirmedHistory', () => {
 
 describe('useRecentlyPosted', () => {
   it('lists occurrences posted since the start of the current Period', async () => {
-    useProfile.mockReturnValue(signedIn)
+    useLedger.mockReturnValue(signedIn)
     service.listRecentlyPosted.mockResolvedValue([{ occurrence: { id: 'o' } }])
 
     const { result } = renderHook(() => useRecentlyPosted(), {
@@ -180,13 +178,13 @@ describe('useRecentlyPosted', () => {
 
     await waitFor(() => expect(result.current.items).toHaveLength(1))
     expect(service.listRecentlyPosted).toHaveBeenCalledWith(
-      'profile-1',
+      'house-1',
       periodKey,
     )
   })
 
   it('does not query before the profile resolves', () => {
-    useProfile.mockReturnValue({ profile: null, loading: true })
+    useLedger.mockReturnValue(ledgerPending())
 
     renderHook(() => useRecentlyPosted(), {
       wrapper: createQueryHarness().wrapper,
@@ -197,8 +195,8 @@ describe('useRecentlyPosted', () => {
 })
 
 describe('useAutoReconcile', () => {
-  it('reconciles once per profile + Period, then refreshes everything it touched', async () => {
-    useProfile.mockReturnValue(signedIn)
+  it('reconciles once per Household + Period, then refreshes everything it touched', async () => {
+    useLedger.mockReturnValue(signedIn)
     service.reconcileDue.mockResolvedValue([])
     const harness = createQueryHarness()
     harness.seed(...Object.values(keys))
@@ -208,11 +206,7 @@ describe('useAutoReconcile', () => {
     })
 
     await waitFor(() => expect(harness.isStale(keys.report)).toBe(true))
-    expect(service.reconcileDue).toHaveBeenCalledWith(
-      'profile-1',
-      todayYmd(),
-      1,
-    )
+    expect(service.reconcileDue).toHaveBeenCalledWith(ledger, todayYmd(), 1)
     expect(harness.isStale(keys.recent)).toBe(true)
     expect(harness.isStale(keys.txList)).toBe(true)
     expect(harness.isStale(keys.txSummary)).toBe(true)
@@ -224,8 +218,8 @@ describe('useAutoReconcile', () => {
     expect(service.reconcileDue).toHaveBeenCalledTimes(1)
   })
 
-  it('does nothing until the profile resolves', () => {
-    useProfile.mockReturnValue({ profile: null, loading: true })
+  it('does nothing until the Household resolves', () => {
+    useLedger.mockReturnValue(ledgerPending())
 
     renderHook(() => useAutoReconcile(), {
       wrapper: createQueryHarness().wrapper,
@@ -237,7 +231,7 @@ describe('useAutoReconcile', () => {
 
 describe('useSkipDue', () => {
   it('undoes the post and refreshes the recent list, totals and reports', async () => {
-    useProfile.mockReturnValue(signedIn)
+    useLedger.mockReturnValue(signedIn)
     service.skip.mockResolvedValue(undefined)
     const harness = createQueryHarness()
     harness.seed(...Object.values(keys))

@@ -5,9 +5,10 @@ import { CATEGORY_PAGE_SIZE } from '#/shared/constants/categories.constant.ts'
 import { queryKeys } from '#/shared/lib/query-keys.ts'
 import { createQueryHarness } from '../../helpers/query-client.ts'
 import type { Category } from '#/shared/types/category.type.ts'
+import { ledger, ledgerLoaded, ledgerPending } from '../../helpers/ledger.ts'
 
-const { useProfile, service } = vi.hoisted(() => ({
-  useProfile: vi.fn(),
+const { useLedger, service } = vi.hoisted(() => ({
+  useLedger: vi.fn(),
   service: {
     listAvailable: vi.fn(),
     listAvailablePage: vi.fn(),
@@ -17,7 +18,7 @@ const { useProfile, service } = vi.hoisted(() => ({
   },
 }))
 
-vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
+vi.mock('#/shared/hooks/use-ledger', () => ({ useLedger }))
 vi.mock('#/features/categories', () => ({ categoryService: service }))
 
 const {
@@ -42,19 +43,19 @@ function category(id: string): Category {
 }
 
 const keys = {
-  list: queryKeys.categories.list('profile-1'),
-  infinite: queryKeys.categories.infinite('profile-1'),
-  txList: queryKeys.transactions.infinite('profile-1', {
+  list: queryKeys.categories.list('house-1'),
+  infinite: queryKeys.categories.infinite('house-1'),
+  txList: queryKeys.transactions.infinite('house-1', {
     from: '2026-06-01',
     to: '2026-07-01',
   }),
-  txSummary: queryKeys.transactions.periodSummary('profile-1', {
+  txSummary: queryKeys.transactions.periodSummary('house-1', {
     start: '2026-06-01',
     end: '2026-07-01',
   }),
 }
 
-const signedIn = { profile: { id: 'profile-1' }, loading: false }
+const signedIn = ledgerLoaded()
 
 // The table-driven cases below run several differently-typed mutation hooks
 // through one body, so they are widened to this common shape.
@@ -65,8 +66,8 @@ type AnyMutationHook = () => {
 afterEach(() => vi.clearAllMocks())
 
 describe('useCategories', () => {
-  it('stays loading and never queries until the profile resolves', () => {
-    useProfile.mockReturnValue({ profile: null, loading: true })
+  it('stays loading and never queries until the Household resolves', () => {
+    useLedger.mockReturnValue(ledgerPending())
 
     const { result } = renderHook(() => useCategories(), {
       wrapper: createQueryHarness().wrapper,
@@ -77,8 +78,8 @@ describe('useCategories', () => {
     expect(service.listAvailable).not.toHaveBeenCalled()
   })
 
-  it('lists the categories available to the profile', async () => {
-    useProfile.mockReturnValue(signedIn)
+  it('lists the categories available to the Household', async () => {
+    useLedger.mockReturnValue(signedIn)
     service.listAvailable.mockResolvedValue([category('1')])
 
     const { result } = renderHook(() => useCategories(), {
@@ -86,11 +87,11 @@ describe('useCategories', () => {
     })
 
     await waitFor(() => expect(result.current.categories).toHaveLength(1))
-    expect(service.listAvailable).toHaveBeenCalledWith('profile-1')
+    expect(service.listAvailable).toHaveBeenCalledWith('house-1')
   })
 
   it('surfaces a query error', async () => {
-    useProfile.mockReturnValue(signedIn)
+    useLedger.mockReturnValue(signedIn)
     service.listAvailable.mockRejectedValue(new Error('down'))
 
     const { result } = renderHook(() => useCategories(), {
@@ -104,7 +105,7 @@ describe('useCategories', () => {
 
 describe('useCategoriesInfinite', () => {
   it('fetches the next page from the last row of a full page', async () => {
-    useProfile.mockReturnValue(signedIn)
+    useLedger.mockReturnValue(signedIn)
     const fullPage = Array.from({ length: CATEGORY_PAGE_SIZE }, (_, i) =>
       category(String(i + 1)),
     )
@@ -118,7 +119,7 @@ describe('useCategoriesInfinite', () => {
     })
 
     await waitFor(() => expect(result.current.hasNextPage).toBe(true))
-    expect(service.listAvailablePage).toHaveBeenCalledWith('profile-1', {
+    expect(service.listAvailablePage).toHaveBeenCalledWith('house-1', {
       limit: CATEGORY_PAGE_SIZE,
       cursor: undefined,
     })
@@ -128,7 +129,7 @@ describe('useCategoriesInfinite', () => {
     await waitFor(() =>
       expect(result.current.categories).toHaveLength(CATEGORY_PAGE_SIZE + 1),
     )
-    expect(service.listAvailablePage).toHaveBeenLastCalledWith('profile-1', {
+    expect(service.listAvailablePage).toHaveBeenLastCalledWith('house-1', {
       limit: CATEGORY_PAGE_SIZE,
       cursor: { createdAt: last.createdAt, id: last.id },
     })
@@ -139,7 +140,7 @@ describe('useCategoriesInfinite', () => {
 
 describe('category mutations', () => {
   it('create refreshes the category caches but not the transaction views', async () => {
-    useProfile.mockReturnValue(signedIn)
+    useLedger.mockReturnValue(signedIn)
     service.create.mockResolvedValue(category('1'))
     const harness = createQueryHarness()
     harness.seed(keys.list, keys.infinite, keys.txList)
@@ -150,21 +151,21 @@ describe('category mutations', () => {
     })
     await result.current.mutateAsync(input as never)
 
-    expect(service.create).toHaveBeenCalledWith('profile-1', input)
+    expect(service.create).toHaveBeenCalledWith(ledger, input)
     expect(harness.isStale(keys.list)).toBe(true)
     expect(harness.isStale(keys.infinite)).toBe(true)
     expect(harness.isStale(keys.txList)).toBe(false)
   })
 
-  it('create rejects without calling the service when no profile is loaded', async () => {
-    useProfile.mockReturnValue({ profile: null, loading: false })
+  it('create rejects without calling the service when no Household is loaded', async () => {
+    useLedger.mockReturnValue(ledgerPending(false))
 
     const { result } = renderHook(() => useCreateCategory(), {
       wrapper: createQueryHarness().wrapper,
     })
 
     await expect(result.current.mutateAsync({} as never)).rejects.toThrow(
-      'No profile loaded',
+      'No group loaded',
     )
     expect(service.create).not.toHaveBeenCalled()
   })
@@ -179,7 +180,7 @@ describe('category mutations', () => {
   ] as const)(
     '%s refreshes the categories and every view that renders them',
     async (name, useHook, variables) => {
-      useProfile.mockReturnValue(signedIn)
+      useLedger.mockReturnValue(signedIn)
       service[name].mockResolvedValue(undefined)
       const harness = createQueryHarness()
       harness.seed(keys.list, keys.infinite, keys.txList, keys.txSummary)

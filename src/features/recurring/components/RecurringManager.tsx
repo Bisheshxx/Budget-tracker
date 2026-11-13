@@ -12,9 +12,9 @@ import { nextOccurrenceOnOrAfter } from '#/features/recurring/due'
 import { RecurringForm } from '#/features/recurring/components/RecurringForm'
 import { useCategoryLookup } from '#/shared/hooks/use-category-lookup'
 import { CategoryIcon } from '#/shared/components/CategoryIcon'
-import { useProfile } from '#/shared/hooks/use-profile'
+import { useLedger } from '#/shared/hooks/use-ledger'
+import { useEntryAuthors } from '#/shared/hooks/use-entry-authors'
 import { Money } from '#/shared/components/Money'
-import { todayYmd } from '#/shared/lib/period'
 import { RecurringRowsSkeleton } from '#/shared/components/skeleton-loaders/RecurringSkeleton'
 import { Button } from '#/components/ui/button'
 import {
@@ -124,8 +124,11 @@ function RecurringRow({
   recurringTransaction: RecurringTransaction
   onEdit?: () => void
 }) {
-  const { profile } = useProfile()
+  const { ledger, today } = useLedger()
   const { categoryFor } = useCategoryLookup()
+  // Who set the template up — shown in a group, null in a Personal household.
+  const { authorOf } = useEntryAuthors()
+  const owner = authorOf({ createdBy: rt.userId })
   const deactivate = useDeactivateRecurring()
   const del = useDeleteRecurring()
   const skipUpcoming = useSkipUpcoming()
@@ -134,11 +137,9 @@ function RecurringRow({
   const { data: hasConfirmedHistory = false } = useHasConfirmedHistory(rt.id)
 
   const category = categoryFor(rt.categoryId)
-  const currency = profile?.currency ?? 'USD'
+  const currency = ledger?.currency ?? 'USD'
   const pending = deactivate.isPending || del.isPending
-  const nextOccurrence = rt.active
-    ? nextOccurrenceOnOrAfter(rt, todayYmd())
-    : null
+  const nextOccurrence = rt.active ? nextOccurrenceOnOrAfter(rt, today) : null
 
   function ask(action: ConfirmAction) {
     setError(null)
@@ -167,6 +168,11 @@ function RecurringRow({
           {nextOccurrence && (
             <p className="truncate text-xs text-muted-foreground">
               Next: {nextOccurrence}
+            </p>
+          )}
+          {owner && (
+            <p className="truncate text-xs text-muted-foreground">
+              Added by {owner}
             </p>
           )}
         </div>

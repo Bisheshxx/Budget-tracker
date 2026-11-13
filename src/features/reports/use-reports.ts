@@ -1,13 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { reportService } from '#/features/reports'
 import { queryKeys } from '#/shared/lib/query-keys'
-import { useProfile } from '#/shared/hooks/use-profile'
+import { useLedger } from '#/shared/hooks/use-ledger'
 import {
   defaultLocaleWeekStartDay,
   getPeriodKey,
   resolveCalendarMonth,
   resolveCalendarWeek,
-  todayYmd,
 } from '#/shared/lib/period'
 import { rangeToBounds } from '#/shared/utils/range.util'
 import type { Range } from '#/shared/utils/range.util'
@@ -21,22 +20,21 @@ interface ReportsResult {
 }
 
 // The current Period's Reports payload (comparison + weekly + category spend),
-// scoped to the user's profile. The Period is resolved from the profile's start
-// day against today (pure helpers in #/shared/lib/period); the Period key doubles as
-// the cache key so crossing into a new Period refetches. Disabled until the
-// profile resolves. Mirrors usePeriodSummary in the transactions feature.
+// scoped to the active Household. The Period is resolved from the Household's
+// start day against its today (pure helpers in #/shared/lib/period); the Period
+// key doubles as the cache key so crossing into a new Period refetches. Disabled
+// until the Household resolves. Mirrors usePeriodSummary in the transactions feature.
 // `customRange` is required (and drives the query) when `view === 'custom'`.
 export function useReports(
   view: ReportView = 'period',
   customRange?: Range | null,
 ): ReportsResult {
-  const { profile, loading: profileLoading } = useProfile()
-  const userId = profile?.id ?? null
-  const startDay = profile?.budgetPeriodStartDay ?? 1
+  const { ledger, today, loading: ledgerLoading } = useLedger()
+  const householdId = ledger?.householdId ?? null
+  const startDay = ledger?.periodStartDay ?? 1
   const weekStartDay = defaultLocaleWeekStartDay()
 
-  const today = todayYmd()
-  const id = userId ?? ''
+  const id = householdId ?? ''
   const customBounds =
     view === 'custom' && customRange ? rangeToBounds(customRange) : undefined
   const windowKey =
@@ -59,12 +57,12 @@ export function useReports(
         weekStartDay,
         customBounds,
       ),
-    enabled: !!userId && (view !== 'custom' || !!customBounds),
+    enabled: !!householdId && (view !== 'custom' || !!customBounds),
   })
 
   return {
     report: query.data ?? null,
-    loading: profileLoading || query.isLoading,
+    loading: ledgerLoading || query.isLoading,
     isError: query.isError,
     error: query.error,
   }

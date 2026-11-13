@@ -18,6 +18,8 @@ export interface Category {
 
 // The fields a create writes. System categories are seeded, never created here.
 export interface CategoryCreate {
+  /** The Household that owns the custom category. */
+  householdId: string
   userId: string
   name: string
   colorHex: string

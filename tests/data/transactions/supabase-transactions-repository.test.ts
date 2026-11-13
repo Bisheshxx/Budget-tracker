@@ -18,7 +18,9 @@ const row = {
   note: 'Lunch',
   transaction_date: '2026-06-10',
   created_at: '2026-06-10T01:00:00.000Z',
+  created_by: 'profile-1',
   recurring_transaction_id: null,
+  recurring_transactions: null,
 }
 
 const transaction = {
@@ -30,9 +32,12 @@ const transaction = {
   note: 'Lunch',
   transactionDate: '2026-06-10',
   createdAt: '2026-06-10T01:00:00.000Z',
+  createdBy: 'profile-1',
+  recurringOwnerId: null,
 }
 
 const createInput = {
+  householdId: 'house-1',
   userId: 'profile-1',
   categoryId: 'cat-1',
   type: 'expense' as const,
@@ -45,17 +50,44 @@ beforeEach(() => fakeSupabase.reset())
 
 describe('SupabaseTransactionRepository', () => {
   describe('listPage', () => {
-    it('scopes to the user, orders newest-first and applies the window', async () => {
+    it('reads who owns the recurring item behind an auto-posted row', async () => {
+      fakeSupabase.enqueue({
+        data: [
+          {
+            ...row,
+            created_by: null,
+            recurring_transaction_id: 're-1',
+            recurring_transactions: { user_id: 'profile-2' },
+          },
+        ],
+      })
+
+      const result = await new SupabaseTransactionRepository().listPage(
+        'house-1',
+        { limit: 25 },
+      )
+
+      expect(result).toEqual([
+        { ...transaction, createdBy: null, recurringOwnerId: 'profile-2' },
+      ])
+      expect(fakeSupabase.argsOf(0, 'select')).toEqual([
+        ['*, recurring_transactions(user_id)'],
+      ])
+    })
+
+    it('scopes to the Household, orders newest-first and applies the window', async () => {
       fakeSupabase.enqueue({ data: [row] })
 
       const result = await new SupabaseTransactionRepository().listPage(
-        'profile-1',
+        'house-1',
         { from: '2026-06-01', to: '2026-07-01', limit: 25 },
       )
 
       expect(result).toEqual([transaction])
       expect(fakeSupabase.queries[0].table).toBe('transactions')
-      expect(fakeSupabase.argsOf(0, 'eq')).toEqual([['user_id', 'profile-1']])
+      expect(fakeSupabase.argsOf(0, 'eq')).toEqual([
+        ['household_id', 'house-1'],
+      ])
       expect(fakeSupabase.argsOf(0, 'order')).toEqual([
         ['transaction_date', { ascending: false }],
         ['id', { ascending: false }],
@@ -71,7 +103,7 @@ describe('SupabaseTransactionRepository', () => {
     })
 
     it('resumes strictly after the cursor row', async () => {
-      await new SupabaseTransactionRepository().listPage('profile-1', {
+      await new SupabaseTransactionRepository().listPage('house-1', {
         limit: 25,
         cursor: { transactionDate: '2026-06-10', id: 'tx-1' },
       })
@@ -87,17 +119,17 @@ describe('SupabaseTransactionRepository', () => {
     })
   })
 
-  it('lists a half-open date range for the user, oldest first', async () => {
+  it('lists a half-open date range for the Household, oldest first', async () => {
     fakeSupabase.enqueue({ data: [row] })
 
     const result = await new SupabaseTransactionRepository().listInRange(
-      'profile-1',
+      'house-1',
       '2026-06-01',
       '2026-07-01',
     )
 
     expect(result).toEqual([transaction])
-    expect(fakeSupabase.argsOf(0, 'eq')).toEqual([['user_id', 'profile-1']])
+    expect(fakeSupabase.argsOf(0, 'eq')).toEqual([['household_id', 'house-1']])
     expect(fakeSupabase.argsOf(0, 'gte')).toEqual([
       ['transaction_date', '2026-06-01'],
     ])
@@ -115,6 +147,7 @@ describe('SupabaseTransactionRepository', () => {
     expect(fakeSupabase.argsOf(0, 'insert')).toEqual([
       [
         {
+          household_id: 'house-1',
           user_id: 'profile-1',
           category_id: 'cat-1',
           type: 'expense',

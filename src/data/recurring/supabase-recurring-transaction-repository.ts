@@ -151,22 +151,22 @@ function monthlyRuleColumns(monthlyRule: MonthlyRule | null): {
 }
 
 export class SupabaseRecurringTransactionRepository implements IRecurringTransactionRepository {
-  async listActive(userId: string): Promise<RecurringTransaction[]> {
+  async listActive(householdId: string): Promise<RecurringTransaction[]> {
     const { data, error } = await supabase
       .from('recurring_transactions')
       .select('*')
-      .eq('user_id', userId)
+      .eq('household_id', householdId)
       .eq('active', true)
       .order('created_at', { ascending: true })
     if (error) throw toDataError(error)
     return data.map(toRecurringTransaction)
   }
 
-  async listAll(userId: string): Promise<RecurringTransaction[]> {
+  async listAll(householdId: string): Promise<RecurringTransaction[]> {
     const { data, error } = await supabase
       .from('recurring_transactions')
       .select('*')
-      .eq('user_id', userId)
+      .eq('household_id', householdId)
       .order('active', { ascending: false })
       .order('created_at', { ascending: true })
     if (error) throw toDataError(error)
@@ -178,6 +178,7 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
   ): Promise<RecurringTransaction> {
     const dbInsert: Database['public']['Tables']['recurring_transactions']['Insert'] =
       {
+        household_id: input.householdId,
         user_id: input.userId,
         category_id: input.categoryId,
         name: input.name,
@@ -337,14 +338,14 @@ export class SupabaseRecurringTransactionRepository implements IRecurringTransac
   }
 
   async listRecentlyConfirmed(
-    userId: string,
+    householdId: string,
     since: string,
   ): Promise<RecentlyPostedItem[]> {
     const { data, error } = await supabase
       .from('recurring_transaction_occurrences')
       .select('*, recurring_transactions!inner(*), transactions!inner(*)')
       .eq('status', 'confirmed')
-      .eq('recurring_transactions.user_id', userId)
+      .eq('recurring_transactions.household_id', householdId)
       .gte('occurrence_date', since)
       .order('occurrence_date', { ascending: false })
     if (error) throw toDataError(error)

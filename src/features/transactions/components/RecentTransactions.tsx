@@ -10,8 +10,9 @@ import {
 } from '#/features/transactions/utils/group-by-day.util'
 import { rangeToHookBounds } from '#/shared/utils/range.util'
 import type { Range } from '#/shared/utils/range.util'
-import { useProfile } from '#/shared/hooks/use-profile'
+import { useLedger } from '#/shared/hooks/use-ledger'
 import { useCategoryLookup } from '#/shared/hooks/use-category-lookup'
+import { useEntryAuthors } from '#/shared/hooks/use-entry-authors'
 import { CategoryChip } from '#/shared/components/CategoryChip'
 import { Money } from '#/shared/components/Money'
 import { Dialog } from '#/shared/components/Dialog'
@@ -21,14 +22,14 @@ import { DIALOG } from '#/shared/stores/ui-store'
 import { Button } from '#/components/ui/button'
 import { Badge } from '#/components/ui/badge'
 import { SimpleTooltip } from '#/components/ui/tooltip'
-import { todayYmd } from '#/shared/lib/period'
 import { TransactionsListSkeleton } from '#/shared/components/skeleton-loaders/DashboardSkeleton'
 import type { Transaction } from '#/shared/types/transaction.type'
 import type { Category } from '#/shared/types/category.type'
 
 // The Dashboard transaction list: keyset-paginated infinite scroll, segmented
 // into per-day groups with a divider per calendar day (date label + that day's
-// net). Each row shows the transaction's category, note, and amount; edit
+// net). Each row shows the transaction's category, note, and amount (and, in a
+// group, who added it); edit
 // (pencil) and delete (trash) buttons reveal on row hover/focus — edit opens the
 // edit dialog, delete goes through a confirm modal. Defaults to the current
 // Period; when a `range` is active (PRD B) it re-scopes to that arbitrary span
@@ -48,9 +49,10 @@ export function RecentTransactions({
     fetchNextPage,
   } = useTransactionsInfinite(rangeToHookBounds(range))
   const { categoryFor, loading: categoriesLoading } = useCategoryLookup()
-  const { profile } = useProfile()
+  const { ledger, today } = useLedger()
+  const { authorOf } = useEntryAuthors()
   const confirmDelete = useDialog(DIALOG.confirmDeleteTransaction)
-  const currency = profile?.currency ?? 'USD'
+  const currency = ledger?.currency ?? 'USD'
   // The transaction queued for the confirm modal.
   const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null)
   // Fetch the next page when the bottom sentinel scrolls into view.
@@ -72,7 +74,6 @@ export function RecentTransactions({
     )
   }
 
-  const today = todayYmd()
   const days = groupByDay(transactions)
 
   return (
@@ -99,6 +100,7 @@ export function RecentTransactions({
                   tx={tx}
                   category={categoryFor(tx.categoryId)}
                   currency={currency}
+                  author={authorOf(tx)}
                   onEdit={onEdit}
                   onRequestDelete={() => {
                     setPendingDelete(tx)
@@ -185,12 +187,15 @@ function TransactionRow({
   tx,
   category,
   currency,
+  author,
   onEdit,
   onRequestDelete,
 }: {
   tx: Transaction
   category: Category | null
   currency: string
+  /** Who added it, shown in a group; null in a Personal household. */
+  author: string | null
   onEdit?: (tx: Transaction) => void
   onRequestDelete: () => void
 }) {
@@ -201,11 +206,18 @@ function TransactionRow({
       <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="truncate font-medium">{tx.note || categoryLabel}</p>
-          <SimpleTooltip content={categoryLabel}>
-            <Badge variant="secondary" className="mt-1 font-normal">
-              <CategoryChip category={category} className="gap-1.5" />
-            </Badge>
-          </SimpleTooltip>
+          <div className="mt-1 flex items-center gap-2">
+            <SimpleTooltip content={categoryLabel}>
+              <Badge variant="secondary" className="font-normal">
+                <CategoryChip category={category} className="gap-1.5" />
+              </Badge>
+            </SimpleTooltip>
+            {author && (
+              <span className="truncate text-xs text-muted-foreground">
+                Added by {author}
+              </span>
+            )}
+          </div>
         </div>
         <Money
           cents={tx.type === 'expense' ? -tx.amountCents : tx.amountCents}

@@ -11,6 +11,7 @@ import {
   resolveCalendarMonth,
   resolveCalendarWeek,
   resolvePeriod,
+  todayInZone,
   todayYmd,
   ymdToDate,
 } from '#/shared/lib/period.ts'
@@ -126,6 +127,77 @@ describe('period', () => {
   describe('todayYmd', () => {
     it('formats a Date as a zero-padded local YYYY-MM-DD', () => {
       expect(todayYmd(new Date(2026, 0, 5))).toBe('2026-01-05')
+    })
+  })
+
+  describe('todayInZone', () => {
+    // One moment, read in zones on both sides of the date line.
+    const moment = new Date('2026-03-10T10:30:00Z')
+
+    it('returns the UTC date in UTC', () => {
+      expect(todayInZone('UTC', moment)).toBe('2026-03-10')
+    })
+
+    it('is already tomorrow at UTC+14', () => {
+      expect(todayInZone('Pacific/Kiritimati', moment)).toBe('2026-03-11')
+    })
+
+    it('is still yesterday at UTC-11', () => {
+      expect(todayInZone('Pacific/Pago_Pago', moment)).toBe('2026-03-09')
+    })
+
+    it('handles a 45-minute offset (Nepal, UTC+5:45)', () => {
+      // 18:14Z is 23:59 in Kathmandu; one minute later it is the next day.
+      expect(
+        todayInZone('Asia/Kathmandu', new Date('2026-03-10T18:14:00Z')),
+      ).toBe('2026-03-10')
+      expect(
+        todayInZone('Asia/Kathmandu', new Date('2026-03-10T18:15:00Z')),
+      ).toBe('2026-03-11')
+    })
+
+    it('rolls the day at local midnight across the year boundary', () => {
+      // Auckland is UTC+13 in January (daylight time).
+      expect(
+        todayInZone('Pacific/Auckland', new Date('2025-12-31T10:59:59Z')),
+      ).toBe('2025-12-31')
+      expect(
+        todayInZone('Pacific/Auckland', new Date('2025-12-31T11:00:00Z')),
+      ).toBe('2026-01-01')
+    })
+
+    it('uses the offset in force on a DST-change day', () => {
+      // New Zealand daylight time ends 2026-04-05 (UTC+13 -> UTC+12): local
+      // midnight is 11:00Z going into that day and 12:00Z coming out of it.
+      expect(
+        todayInZone('Pacific/Auckland', new Date('2026-04-04T10:59:59Z')),
+      ).toBe('2026-04-04')
+      expect(
+        todayInZone('Pacific/Auckland', new Date('2026-04-04T11:00:00Z')),
+      ).toBe('2026-04-05')
+      expect(
+        todayInZone('Pacific/Auckland', new Date('2026-04-05T11:59:59Z')),
+      ).toBe('2026-04-05')
+      expect(
+        todayInZone('Pacific/Auckland', new Date('2026-04-05T12:00:00Z')),
+      ).toBe('2026-04-06')
+    })
+
+    it('uses the offset in force when clocks go forward', () => {
+      // US daylight time starts 2026-03-08 (UTC-5 -> UTC-4) in New York.
+      expect(
+        todayInZone('America/New_York', new Date('2026-03-08T04:59:59Z')),
+      ).toBe('2026-03-07')
+      expect(
+        todayInZone('America/New_York', new Date('2026-03-09T03:59:59Z')),
+      ).toBe('2026-03-08')
+      expect(
+        todayInZone('America/New_York', new Date('2026-03-09T04:00:00Z')),
+      ).toBe('2026-03-09')
+    })
+
+    it('throws on an unknown zone instead of guessing', () => {
+      expect(() => todayInZone('Mars/Olympus', moment)).toThrow(RangeError)
     })
   })
 

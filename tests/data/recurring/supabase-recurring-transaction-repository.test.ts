@@ -68,6 +68,7 @@ const transactionRow = {
   note: null,
   transaction_date: '2026-06-05',
   created_at: '2026-06-05T00:00:00.000Z',
+  created_by: null,
   recurring_transaction_id: 're-1',
 }
 
@@ -80,7 +81,7 @@ describe('SupabaseRecurringTransactionRepository', () => {
     it('maps a day-of-month monthly template', async () => {
       fakeSupabase.enqueue({ data: [templateRow] })
 
-      await expect(repo().listAll('profile-1')).resolves.toEqual([template])
+      await expect(repo().listAll('house-1')).resolves.toEqual([template])
     })
 
     it('rebuilds an nth-weekday rule from its flat columns', async () => {
@@ -95,7 +96,7 @@ describe('SupabaseRecurringTransactionRepository', () => {
         ],
       })
 
-      const [result] = await repo().listAll('profile-1')
+      const [result] = await repo().listAll('house-1')
 
       expect(result.monthlyRule).toEqual({
         type: 'nth-weekday',
@@ -111,7 +112,7 @@ describe('SupabaseRecurringTransactionRepository', () => {
         ],
       })
 
-      const [result] = await repo().listAll('profile-1')
+      const [result] = await repo().listAll('house-1')
 
       expect(result.monthlyRule).toBeNull()
     })
@@ -129,7 +130,7 @@ describe('SupabaseRecurringTransactionRepository', () => {
         ],
       })
 
-      const [result] = await repo().listAll('profile-1')
+      const [result] = await repo().listAll('house-1')
 
       expect(result.firstDueDate).toBe('2026-06-03')
     })
@@ -146,7 +147,7 @@ describe('SupabaseRecurringTransactionRepository', () => {
         ],
       })
 
-      const [result] = await repo().listAll('profile-1')
+      const [result] = await repo().listAll('house-1')
 
       expect(result.firstDueDate).toBe('2026-07-05')
       expect(result.monthlyRule).toEqual({ type: 'day-of-month', day: 5 })
@@ -157,28 +158,28 @@ describe('SupabaseRecurringTransactionRepository', () => {
         data: [{ ...templateRow, frequency: 'weekly', first_due_date: '' }],
       })
 
-      const [result] = await repo().listAll('profile-1')
+      const [result] = await repo().listAll('house-1')
 
       expect(result.firstDueDate).toBe('2026-06-01')
     })
   })
 
-  it('lists only the active templates of the user', async () => {
+  it('lists only the active templates of the Household', async () => {
     fakeSupabase.enqueue({ data: [templateRow] })
 
-    await repo().listActive('profile-1')
+    await repo().listActive('house-1')
 
     expect(fakeSupabase.queries[0].table).toBe('recurring_transactions')
     expect(fakeSupabase.argsOf(0, 'eq')).toEqual([
-      ['user_id', 'profile-1'],
+      ['household_id', 'house-1'],
       ['active', true],
     ])
   })
 
-  it('lists every template of the user, active first', async () => {
-    await repo().listAll('profile-1')
+  it('lists every template of the Household, active first', async () => {
+    await repo().listAll('house-1')
 
-    expect(fakeSupabase.argsOf(0, 'eq')).toEqual([['user_id', 'profile-1']])
+    expect(fakeSupabase.argsOf(0, 'eq')).toEqual([['household_id', 'house-1']])
     expect(fakeSupabase.argsOf(0, 'order')[0]).toEqual([
       'active',
       { ascending: false },
@@ -189,6 +190,7 @@ describe('SupabaseRecurringTransactionRepository', () => {
     fakeSupabase.enqueue({ data: templateRow })
 
     const result = await repo().create({
+      householdId: 'house-1',
       userId: 'profile-1',
       categoryId: 'cat-1',
       name: 'Rent',
@@ -203,6 +205,7 @@ describe('SupabaseRecurringTransactionRepository', () => {
     expect(fakeSupabase.argsOf(0, 'insert')).toEqual([
       [
         {
+          household_id: 'house-1',
           user_id: 'profile-1',
           category_id: 'cat-1',
           name: 'Rent',
@@ -409,7 +412,7 @@ describe('SupabaseRecurringTransactionRepository', () => {
       ],
     })
 
-    const result = await repo().listRecentlyConfirmed('profile-1', '2026-06-01')
+    const result = await repo().listRecentlyConfirmed('house-1', '2026-06-01')
 
     expect(result).toEqual([
       {
@@ -424,12 +427,14 @@ describe('SupabaseRecurringTransactionRepository', () => {
           note: null,
           transactionDate: '2026-06-05',
           createdAt: '2026-06-05T00:00:00.000Z',
+          createdBy: null,
+          recurringOwnerId: null,
         },
       },
     ])
     expect(fakeSupabase.argsOf(0, 'eq')).toEqual([
       ['status', 'confirmed'],
-      ['recurring_transactions.user_id', 'profile-1'],
+      ['recurring_transactions.household_id', 'house-1'],
     ])
     expect(fakeSupabase.argsOf(0, 'gte')).toEqual([
       ['occurrence_date', '2026-06-01'],
@@ -439,7 +444,7 @@ describe('SupabaseRecurringTransactionRepository', () => {
   it('translates a Supabase failure into a DataError', async () => {
     fakeSupabase.enqueue({ error: postgrestError('23503', 'no such category') })
 
-    await expect(repo().listActive('profile-1')).rejects.toMatchObject({
+    await expect(repo().listActive('house-1')).rejects.toMatchObject({
       name: 'DataError',
       code: 'conflict',
       message: 'no such category',

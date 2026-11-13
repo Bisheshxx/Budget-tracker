@@ -11,7 +11,7 @@ import {
   invalidateTransactionViews,
   queryKeys,
 } from '#/shared/lib/query-keys'
-import { useProfile } from '#/shared/hooks/use-profile'
+import { useLedger } from '#/shared/hooks/use-ledger'
 import { CATEGORY_PAGE_SIZE } from '#/shared/constants/categories.constant'
 import { nextPageCursor } from '#/shared/utils/pagination.util'
 import type {
@@ -20,10 +20,10 @@ import type {
 } from '#/shared/schemas/category.schema'
 import type { Category, CategoryPageCursor } from '#/shared/types/category.type'
 
-const categoriesQueryOptions = (userId: string) =>
+const categoriesQueryOptions = (householdId: string) =>
   queryOptions({
-    queryKey: queryKeys.categories.list(userId),
-    queryFn: () => categoryService.listAvailable(userId),
+    queryKey: queryKeys.categories.list(householdId),
+    queryFn: () => categoryService.listAvailable(householdId),
   })
 
 interface CategoriesResult {
@@ -39,21 +39,21 @@ interface InfiniteCategoriesResult extends CategoriesResult {
   fetchNextPage: () => void
 }
 
-// System + own categories for the current user's profile. Disabled until the
-// profile resolves. Lives in shared (not the categories feature) because
+// System categories + the active Household's own. Disabled until the
+// Household resolves. Lives in shared (not the categories feature) because
 // transactions, recurring, and reports all consume it. See docs/adr/0009.
 export function useCategories(): CategoriesResult {
-  const { profile, loading: profileLoading } = useProfile()
-  const userId = profile?.id ?? null
+  const { ledger, loading: ledgerLoading } = useLedger()
+  const householdId = ledger?.householdId ?? null
 
   const query = useQuery({
-    ...categoriesQueryOptions(userId ?? ''),
-    enabled: !!userId,
+    ...categoriesQueryOptions(householdId ?? ''),
+    enabled: !!householdId,
   })
 
   return {
     categories: query.data ?? [],
-    loading: profileLoading || query.isLoading,
+    loading: ledgerLoading || query.isLoading,
     isError: query.isError,
     error: query.error,
   }
@@ -63,9 +63,9 @@ export function useCategories(): CategoriesResult {
 // Other category consumers keep using useCategories() because they need the
 // complete lookup for selectors and transaction category labels.
 export function useCategoriesInfinite(): InfiniteCategoriesResult {
-  const { profile, loading: profileLoading } = useProfile()
-  const userId = profile?.id ?? null
-  const id = userId ?? ''
+  const { ledger, loading: ledgerLoading } = useLedger()
+  const householdId = ledger?.householdId ?? null
+  const id = householdId ?? ''
 
   const query = useInfiniteQuery({
     queryKey: queryKeys.categories.infinite(id),
@@ -80,12 +80,12 @@ export function useCategoriesInfinite(): InfiniteCategoriesResult {
         createdAt: last.createdAt,
         id: last.id,
       })),
-    enabled: !!userId,
+    enabled: !!householdId,
   })
 
   return {
     categories: query.data?.pages.flat() ?? [],
-    loading: profileLoading || query.isLoading,
+    loading: ledgerLoading || query.isLoading,
     isError: query.isError,
     error: query.error,
     hasNextPage: query.hasNextPage,
@@ -96,21 +96,21 @@ export function useCategoriesInfinite(): InfiniteCategoriesResult {
 
 // Create mutation that invalidates the categories list on success.
 export function useCreateCategory() {
-  const { profile } = useProfile()
-  const userId = profile?.id ?? null
+  const { ledger } = useLedger()
+  const householdId = ledger?.householdId ?? null
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (input: CategoryCreateInput) => {
-      if (!userId) throw new Error('No profile loaded')
-      return categoryService.create(userId, input)
+      if (!ledger) throw new Error('No group loaded')
+      return categoryService.create(ledger, input)
     },
     // Return the invalidation promise so mutateAsync resolves only after the
     // categories cache has refreshed (CategoryCreateForm reopens the picker on
     // resolve and must see the new row).
     onSuccess: () => {
-      if (!userId) return
-      return invalidateCategoryViews(queryClient, userId)
+      if (!householdId) return
+      return invalidateCategoryViews(queryClient, householdId)
     },
   })
 }
@@ -119,8 +119,8 @@ export function useCreateCategory() {
 // transaction summaries and rows, so invalidate categories plus transaction
 // views that render category labels and spend breakdowns.
 export function useUpdateCategory() {
-  const { profile } = useProfile()
-  const userId = profile?.id ?? null
+  const { ledger } = useLedger()
+  const householdId = ledger?.householdId ?? null
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -132,10 +132,10 @@ export function useUpdateCategory() {
       input: CategoryUpdateInput
     }) => categoryService.update(category, input),
     onSuccess: () => {
-      if (!userId) return
+      if (!householdId) return
       return Promise.all([
-        invalidateCategoryViews(queryClient, userId),
-        invalidateTransactionViews(queryClient, userId),
+        invalidateCategoryViews(queryClient, householdId),
+        invalidateTransactionViews(queryClient, householdId),
       ])
     },
   })
@@ -145,19 +145,19 @@ export function useUpdateCategory() {
 // list, since deleting a category in use nulls those transactions' category
 // (they re-render as Uncategorized).
 export function useDeleteCategory() {
-  const { profile } = useProfile()
-  const userId = profile?.id ?? null
+  const { ledger } = useLedger()
+  const householdId = ledger?.householdId ?? null
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (category: Category) => categoryService.delete(category),
     onSuccess: () => {
-      if (!userId) return
+      if (!householdId) return
       return Promise.all([
-        invalidateCategoryViews(queryClient, userId),
+        invalidateCategoryViews(queryClient, householdId),
         // The deleted category's expenses fall back to Uncategorized, shifting
         // the spend-by-category breakdown.
-        invalidateTransactionViews(queryClient, userId),
+        invalidateTransactionViews(queryClient, householdId),
       ])
     },
   })

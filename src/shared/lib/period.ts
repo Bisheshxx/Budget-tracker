@@ -133,9 +133,38 @@ export function dateToYmd(date: Date): string {
   return formatYmd(date.getFullYear(), date.getMonth() + 1, date.getDate())
 }
 
-/** Today as a local 'YYYY-MM-DD' string — the boundary that feeds the pure helpers. */
+/**
+ * The calendar day ('YYYY-MM-DD') it is at the moment `now` in an IANA time
+ * zone (e.g. 'Pacific/Auckland'). This is the one place a moment becomes a
+ * date: a Household's zone decides what "today" is, so every member and the
+ * server-side recurring job resolve the same Period (docs/adr/0012). Throws a
+ * RangeError for an unknown zone name.
+ */
+export function todayInZone(timeZone: string, now: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    calendar: 'gregory',
+    numberingSystem: 'latn',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(now)
+  const part = (type: 'year' | 'month' | 'day') =>
+    Number(parts.find((p) => p.type === type)?.value)
+  return formatYmd(part('year'), part('month'), part('day'))
+}
+
+/** The IANA zone of the device, the default for a new Household's time zone. */
+export function deviceTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}
+
+/**
+ * Today in the device's zone. Interim boundary until call sites pass the active
+ * Household's zone to `todayInZone` (docs/adr/0012).
+ */
 export function todayYmd(now: Date = new Date()): string {
-  return formatYmd(now.getFullYear(), now.getMonth() + 1, now.getDate())
+  return todayInZone(deviceTimeZone(), now)
 }
 
 /**

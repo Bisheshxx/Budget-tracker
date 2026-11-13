@@ -5,13 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement } from 'react'
 import type { ReactNode } from 'react'
 import type { PeriodReport } from '#/features/reports/types.ts'
+import { ledgerLoaded, ledgerPending } from '../../helpers/ledger.ts'
 
-// Mock the profile hook and the service singleton so the hook is exercised
+// Mock the ledger hook and the service singleton so the hook is exercised
 // without Supabase. vi.hoisted keeps the spies reachable in the factories.
-const { useProfile } = vi.hoisted(() => ({ useProfile: vi.fn() }))
+const { useLedger } = vi.hoisted(() => ({ useLedger: vi.fn() }))
 const { getReport } = vi.hoisted(() => ({ getReport: vi.fn() }))
 
-vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
+vi.mock('#/shared/hooks/use-ledger', () => ({ useLedger }))
 vi.mock('#/features/reports', () => ({
   reportService: { getReport },
 }))
@@ -56,8 +57,8 @@ afterEach(() => {
 })
 
 describe('useReports', () => {
-  it('stays loading and never queries until the profile resolves', () => {
-    useProfile.mockReturnValue({ profile: null, loading: true })
+  it('stays loading and never queries until the Household resolves', () => {
+    useLedger.mockReturnValue(ledgerPending())
 
     const { result } = renderHook(() => useReports(), { wrapper })
 
@@ -66,11 +67,8 @@ describe('useReports', () => {
     expect(getReport).not.toHaveBeenCalled()
   })
 
-  it('queries the report for the profile id, today, and start day', async () => {
-    useProfile.mockReturnValue({
-      profile: { id: 'profile-1', budgetPeriodStartDay: 25 },
-      loading: false,
-    })
+  it('queries the report for the Household, its today, and start day', async () => {
+    useLedger.mockReturnValue(ledgerLoaded({ periodStartDay: 25 }))
     getReport.mockResolvedValue(report)
 
     const { result } = renderHook(() => useReports(), { wrapper })
@@ -78,7 +76,7 @@ describe('useReports', () => {
     await waitFor(() => expect(result.current.report).toEqual(report))
 
     expect(getReport).toHaveBeenCalledWith(
-      'profile-1',
+      'house-1',
       expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       'period',
       25,
@@ -87,23 +85,19 @@ describe('useReports', () => {
     )
   })
 
-  it('queries a custom range as half-open bounds and skips the profile window key', async () => {
-    useProfile.mockReturnValue({
-      profile: { id: 'profile-1', budgetPeriodStartDay: 25 },
-      loading: false,
-    })
+  it('queries a custom range as half-open bounds and skips the Period window key', async () => {
+    useLedger.mockReturnValue(ledgerLoaded({ periodStartDay: 25 }))
     getReport.mockResolvedValue(report)
 
     const { result } = renderHook(
-      () =>
-        useReports('custom', { from: '2026-01-03', to: '2026-01-10' }),
+      () => useReports('custom', { from: '2026-01-03', to: '2026-01-10' }),
       { wrapper },
     )
 
     await waitFor(() => expect(result.current.report).toEqual(report))
 
     expect(getReport).toHaveBeenCalledWith(
-      'profile-1',
+      'house-1',
       expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       'custom',
       25,
@@ -113,10 +107,7 @@ describe('useReports', () => {
   })
 
   it('stays disabled for the custom view until a range is given', () => {
-    useProfile.mockReturnValue({
-      profile: { id: 'profile-1', budgetPeriodStartDay: 25 },
-      loading: false,
-    })
+    useLedger.mockReturnValue(ledgerLoaded({ periodStartDay: 25 }))
 
     const { result } = renderHook(() => useReports('custom', null), {
       wrapper,
@@ -127,10 +118,7 @@ describe('useReports', () => {
   })
 
   it('surfaces a query error', async () => {
-    useProfile.mockReturnValue({
-      profile: { id: 'profile-1', budgetPeriodStartDay: 1 },
-      loading: false,
-    })
+    useLedger.mockReturnValue(ledgerLoaded())
     getReport.mockRejectedValue(new Error('boom'))
 
     const { result } = renderHook(() => useReports(), { wrapper })

@@ -34,7 +34,6 @@ export class ProfileService {
       displayName: v.displayName?.trim() || null,
       currency: v.currency,
       budgetPeriodStartDay: v.budgetPeriodStartDay,
-      groceryDayOfWeek: v.groceryDayOfWeek ?? null,
       monthlyBudgetTargetCents:
         v.monthlyBudgetTarget != null ? toCents(v.monthlyBudgetTarget) : 0,
       onboardingCompletedAt: new Date().toISOString(),
@@ -61,7 +60,6 @@ export class ProfileService {
       displayName: v.displayName?.trim() || null,
       currency: v.currency,
       budgetPeriodStartDay: v.budgetPeriodStartDay,
-      groceryDayOfWeek: v.groceryDayOfWeek ?? null,
       monthlyBudgetTargetCents:
         v.monthlyBudgetTarget != null ? toCents(v.monthlyBudgetTarget) : 0,
       // Preserve the marker — Settings never un-onboards or re-stamps.

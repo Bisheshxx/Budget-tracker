@@ -5,7 +5,7 @@ import { useAuth } from '#/features/auth/contexts/auth-context'
 import { useProfile } from '#/shared/hooks/use-profile'
 import { profileService } from '#/features/profile'
 import { CURRENCIES, onboardingSchema } from '#/features/profile/schema'
-import { PeriodStartField } from '#/features/profile/components/PeriodStartField'
+import { PeriodStartField } from '#/shared/components/PeriodStartField'
 import { fromCents } from '#/lib/money'
 import type {
   OnboardingFormValues,
@@ -37,8 +37,6 @@ function toFormValues(profile: UserProfile): OnboardingFormValues {
     currency: profile.currency as (typeof CURRENCIES)[number],
     budgetPeriodStartDay: String(profile.budgetPeriodStartDay),
     displayName: profile.displayName ?? '',
-    groceryDayOfWeek:
-      profile.groceryDayOfWeek == null ? '' : String(profile.groceryDayOfWeek),
     monthlyBudgetTarget:
       profile.monthlyBudgetTargetCents > 0
         ? String(fromCents(profile.monthlyBudgetTargetCents))
@@ -124,9 +122,11 @@ export function SettingsForm({ profile }: { profile: UserProfile }) {
           showValidation={false}
         />
 
-        <PeriodStartField control={control}
+        <PeriodStartField
+          control={control}
+          name="budgetPeriodStartDay"
           hint="Changing it shifts the current Period boundaries."
-         />
+        />
 
         {formState.errors.root && (
           <p className="text-sm text-destructive">
