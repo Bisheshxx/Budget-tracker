@@ -464,7 +464,7 @@ describe('RecurringService', () => {
         categoryId: 'cat-9',
         type: 'income',
         amountCents: 120000,
-        note: null,
+        note: 'Rent',
         transactionDate: '2026-06-05',
         recurringTransactionId: 're-9',
       })

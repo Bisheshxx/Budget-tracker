@@ -197,7 +197,7 @@ export class RecurringService {
           categoryId: item.recurringTransaction.categoryId,
           type: item.recurringTransaction.kind,
           amountCents: item.recurringTransaction.amountCents,
-          note: null,
+          note: item.recurringTransaction.name,
           transactionDate: item.occurrenceDate,
           recurringTransactionId: item.recurringTransaction.id,
         })
