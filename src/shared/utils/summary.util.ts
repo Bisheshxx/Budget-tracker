@@ -5,7 +5,10 @@
 // all build on it, so the three never drift in how a Period is totalled. All
 // arithmetic is on integer cents.
 
-import type { PeriodSummary, Transaction } from '#/shared/types/transaction.type'
+import type {
+  PeriodSummary,
+  Transaction,
+} from '#/shared/types/transaction.type'
 
 export function rollup(transactions: Transaction[]): PeriodSummary {
   let incomeCents = 0

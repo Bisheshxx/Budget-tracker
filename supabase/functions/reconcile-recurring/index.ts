@@ -194,7 +194,7 @@ async function postDueItem(
         category_id: item.recurringTransaction.category_id,
         type: item.recurringTransaction.kind,
         amount_cents: item.recurringTransaction.amount_cents,
-        note: null,
+        note: item.recurringTransaction.name,
         transaction_date: item.occurrenceDate,
         recurring_transaction_id: item.recurringTransaction.id,
       },

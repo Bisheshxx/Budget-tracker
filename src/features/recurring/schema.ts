@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { fromCents } from '#/lib/money'
+import { ordinal } from '#/shared/utils/ordinal.util'
 import {
   MONTHLY_NTH_VALUES,
   MONTHLY_RULE_TYPES,
@@ -155,14 +156,6 @@ export function describeSchedule(rt: RecurringTransaction): string {
   }
   const label = rt.frequency === 'weekly' ? 'Weekly' : 'Fortnightly'
   return `${kindLabel} · ${label} from ${rt.firstDueDate}`
-}
-
-function ordinal(n: number): string {
-  const suffix =
-    n % 100 >= 11 && n % 100 <= 13
-      ? 'th'
-      : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th')
-  return `${n}${suffix}`
 }
 
 const WEEKDAY_NAMES = [

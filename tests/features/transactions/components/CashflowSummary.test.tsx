@@ -3,19 +3,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import type { PeriodSummary } from '#/shared/types/transaction.type.ts'
 import type { Category } from '#/shared/types/category.type.ts'
+import { ledgerLoaded, ledgerPending } from '../../../helpers/ledger.ts'
 
 // Mock the three hooks the component reads so it renders in isolation — no
 // QueryClient, no Supabase. vi.hoisted keeps the spies reachable in the
 // factories.
 const { usePeriodSummary } = vi.hoisted(() => ({ usePeriodSummary: vi.fn() }))
-const { useProfile } = vi.hoisted(() => ({ useProfile: vi.fn() }))
+const { useLedger } = vi.hoisted(() => ({ useLedger: vi.fn() }))
 const { useCategories } = vi.hoisted(() => ({ useCategories: vi.fn() }))
 const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }))
 
 vi.mock('#/features/transactions/hooks/use-transactions', () => ({
   usePeriodSummary,
 }))
-vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
+vi.mock('#/shared/hooks/use-ledger', () => ({ useLedger }))
 vi.mock('#/shared/hooks/use-categories', () => ({ useCategories }))
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }))
 
@@ -74,7 +75,7 @@ describe('CashflowSummary', () => {
       isError: false,
       error: null,
     })
-    useProfile.mockReturnValue({ profile: null })
+    useLedger.mockReturnValue(ledgerPending(false))
     useCategories.mockReturnValue({ categories: [] })
 
     render(<CashflowSummary />)
@@ -91,9 +92,7 @@ describe('CashflowSummary', () => {
       isError: false,
       error: null,
     })
-    useProfile.mockReturnValue({
-      profile: { currency: 'USD', monthlyBudgetTargetCents: 200000 },
-    })
+    useLedger.mockReturnValue(ledgerLoaded())
     useCategories.mockReturnValue({ categories: [food, uncategorized] })
 
     render(<CashflowSummary />)
@@ -129,9 +128,7 @@ describe('CashflowSummary', () => {
       isError: false,
       error: null,
     })
-    useProfile.mockReturnValue({
-      profile: { currency: 'USD', monthlyBudgetTargetCents: 0 },
-    })
+    useLedger.mockReturnValue(ledgerLoaded())
     useCategories.mockReturnValue({ categories: [] })
 
     render(<CashflowSummary />)
@@ -148,9 +145,7 @@ describe('CashflowSummary', () => {
       isError: false,
       error: null,
     })
-    useProfile.mockReturnValue({
-      profile: { currency: 'USD', monthlyBudgetTargetCents: 200000 },
-    })
+    useLedger.mockReturnValue(ledgerLoaded())
     useCategories.mockReturnValue({ categories: [food, uncategorized] })
 
     const range = { from: '2026-01-03', to: '2026-03-18' }

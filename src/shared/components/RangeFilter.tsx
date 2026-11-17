@@ -3,7 +3,7 @@ import { CalendarIcon } from 'lucide-react'
 import { rangeSchema } from '#/shared/schemas/transaction.schema'
 import { formatRangeLabel } from '#/shared/utils/range.util'
 import type { Range } from '#/shared/utils/range.util'
-import { formatYmd, parseYmd } from '#/shared/lib/period'
+import { dateToYmd, ymdToDate } from '#/shared/lib/period'
 import { Button } from '#/components/ui/button'
 import { Calendar } from '#/components/ui/calendar'
 import {
@@ -21,15 +21,6 @@ import type { DateRange } from 'react-day-picker'
 // caller currently considers active, and also drives the trigger's active
 // (`default` vs `outline`) styling — so a caller whose "custom" view is only
 // ever reachable via an applied Range gets the "active button" look for free.
-
-function ymdToDate(ymd: string): Date {
-  const { year, month, day } = parseYmd(ymd)
-  return new Date(year, month - 1, day)
-}
-
-function dateToYmd(date: Date): string {
-  return formatYmd(date.getFullYear(), date.getMonth() + 1, date.getDate())
-}
 
 function rangeToSelection(range: Range | null): DateRange | undefined {
   if (!range) return undefined

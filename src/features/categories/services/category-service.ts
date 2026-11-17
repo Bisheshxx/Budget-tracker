@@ -1,3 +1,4 @@
+import { parseOrThrow } from '#/shared/utils/validation.util'
 import {
   createCategorySchema,
   updateCategorySchema,
@@ -6,7 +7,11 @@ import type {
   CategoryCreateInput,
   CategoryUpdateInput,
 } from '#/shared/schemas/category.schema'
-import type { Category, CategoryPageRequest } from '#/shared/types/category.type'
+import type {
+  Category,
+  CategoryPageRequest,
+} from '#/shared/types/category.type'
+import type { LedgerScope } from '#/shared/types/household.type'
 import type { ICategoryRepository } from '#/data/categories/ICategoryRepository'
 
 // Thin service over the category repository. Validates via the shared schema (the
@@ -15,33 +20,33 @@ import type { ICategoryRepository } from '#/data/categories/ICategoryRepository'
 export class CategoryService {
   constructor(private readonly repo: ICategoryRepository) {}
 
-  listAvailable(userId: string): Promise<Category[]> {
-    return this.repo.listAvailable(userId)
+  listAvailable(householdId: string): Promise<Category[]> {
+    return this.repo.listAvailable(householdId)
   }
 
   listAvailablePage(
-    userId: string,
+    householdId: string,
     request: CategoryPageRequest,
   ): Promise<Category[]> {
-    return this.repo.listAvailablePage(userId, request)
+    return this.repo.listAvailablePage(householdId, request)
   }
 
-  async create(userId: string, input: CategoryCreateInput): Promise<Category> {
-    const result = createCategorySchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+  async create(
+    scope: LedgerScope,
+    input: CategoryCreateInput,
+  ): Promise<Category> {
+    const v = parseOrThrow(createCategorySchema, input)
 
     return this.repo.create({
-      userId,
+      householdId: scope.householdId,
+      userId: scope.profileId,
       name: v.name,
       colorHex: v.colorHex,
       icon: v.icon ?? null,
     })
   }
 
-  // Edit one of the user's own categories. System categories are read-only; keep
+  // Edit one of the Household's own categories. System categories are read-only; keep
   // that rule in the service so tests and non-UI callers get the same guard.
   async update(
     category: Category,
@@ -50,11 +55,7 @@ export class CategoryService {
     if (category.isSystem) {
       throw new Error('System categories cannot be edited')
     }
-    const result = updateCategorySchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+    const v = parseOrThrow(updateCategorySchema, input)
 
     return this.repo.update(category.id, {
       name: v.name,
@@ -63,7 +64,7 @@ export class CategoryService {
     })
   }
 
-  // Delete one of the user's own categories. System categories are refused here
+  // Delete one of the Household's own categories. System categories are refused here
   // (the backstop, mirrored by RLS), so the guard holds even if the UI lets one
   // through. Any transactions in the deleted category fall back to Uncategorized
   // via the DB FK (`on delete set null`) — nothing to reassign in app code.

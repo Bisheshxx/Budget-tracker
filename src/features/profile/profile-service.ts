@@ -1,3 +1,4 @@
+import { parseOrThrow } from '#/shared/utils/validation.util'
 import { onboardingSchema } from './schema'
 import { toCents } from '#/lib/money'
 import type { OnboardingInput } from './schema'
@@ -27,17 +28,12 @@ export class ProfileService {
     authUserId: string,
     input: OnboardingInput,
   ): Promise<UserProfile> {
-    const result = onboardingSchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+    const v = parseOrThrow(onboardingSchema, input)
 
     return this.repo.update(authUserId, {
       displayName: v.displayName?.trim() || null,
       currency: v.currency,
       budgetPeriodStartDay: v.budgetPeriodStartDay,
-      groceryDayOfWeek: v.groceryDayOfWeek ?? null,
       monthlyBudgetTargetCents:
         v.monthlyBudgetTarget != null ? toCents(v.monthlyBudgetTarget) : 0,
       onboardingCompletedAt: new Date().toISOString(),
@@ -53,11 +49,7 @@ export class ProfileService {
     authUserId: string,
     input: OnboardingInput,
   ): Promise<UserProfile> {
-    const result = onboardingSchema.safeParse(input)
-    if (!result.success) {
-      throw new Error(result.error.issues[0].message)
-    }
-    const v = result.data
+    const v = parseOrThrow(onboardingSchema, input)
 
     const current = await this.repo.getByAuthUserId(authUserId)
     if (!current) {
@@ -68,7 +60,6 @@ export class ProfileService {
       displayName: v.displayName?.trim() || null,
       currency: v.currency,
       budgetPeriodStartDay: v.budgetPeriodStartDay,
-      groceryDayOfWeek: v.groceryDayOfWeek ?? null,
       monthlyBudgetTargetCents:
         v.monthlyBudgetTarget != null ? toCents(v.monthlyBudgetTarget) : 0,
       // Preserve the marker — Settings never un-onboards or re-stamps.

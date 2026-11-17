@@ -10,9 +10,9 @@ if (!supabaseUrl || !supabaseKey) {
   )
 }
 
-// Typed browser client. The data layer (repositories) sits behind this; see
-// docs/adr/0001-client-side-swappable-repositories.md. Swap this single module
-// when moving the data source off Supabase.
+// Typed browser client. Only the Supabase repositories in src/data/** import
+// this; the backend the app actually uses is chosen in src/data/index.ts. See
+// docs/adr/0001 and docs/adr/0011.
 export const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,

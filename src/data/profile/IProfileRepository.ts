@@ -1,4 +1,7 @@
-import type { ProfileUpdate, UserProfile } from '#/shared/types/user-profile.type'
+import type {
+  ProfileUpdate,
+  UserProfile,
+} from '#/shared/types/user-profile.type'
 
 // The profile persistence port. Backed by Supabase today
 // (supabase-profile-repository.ts); swappable for an axios/REST backend later —

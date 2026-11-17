@@ -6,13 +6,14 @@ import { createElement } from 'react'
 import { resolvePeriod, todayYmd } from '#/shared/lib/period.ts'
 import type { ReactNode } from 'react'
 import type { Transaction } from '#/shared/types/transaction.type.ts'
+import { ledgerLoaded, ledgerPending } from '../../../helpers/ledger.ts'
 
-// Mock the profile hook and the service singleton so the hook is exercised
+// Mock the ledger hook and the service singleton so the hook is exercised
 // without Supabase; the cursor logic (nextPageCursor) runs for real.
-const { useProfile } = vi.hoisted(() => ({ useProfile: vi.fn() }))
+const { useLedger } = vi.hoisted(() => ({ useLedger: vi.fn() }))
 const { listPage } = vi.hoisted(() => ({ listPage: vi.fn() }))
 
-vi.mock('#/shared/hooks/use-profile', () => ({ useProfile }))
+vi.mock('#/shared/hooks/use-ledger', () => ({ useLedger }))
 vi.mock('#/features/transactions', () => ({
   transactionService: { listPage },
 }))
@@ -33,6 +34,8 @@ function tx(id: string, transactionDate: string): Transaction {
     note: null,
     transactionDate,
     createdAt: `${transactionDate}T00:00:00Z`,
+    createdBy: null,
+    recurringOwnerId: null,
   }
 }
 
@@ -45,10 +48,7 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 function mockProfile() {
-  useProfile.mockReturnValue({
-    profile: { id: 'profile-1', budgetPeriodStartDay: 25 },
-    loading: false,
-  })
+  useLedger.mockReturnValue(ledgerLoaded({ periodStartDay: 25 }))
 }
 
 afterEach(() => {
@@ -56,8 +56,8 @@ afterEach(() => {
 })
 
 describe('useTransactionsInfinite', () => {
-  it('stays loading and never queries until the profile resolves', () => {
-    useProfile.mockReturnValue({ profile: null, loading: true })
+  it('stays loading and never queries until the Household resolves', () => {
+    useLedger.mockReturnValue(ledgerPending())
 
     const { result } = renderHook(() => useTransactionsInfinite(), { wrapper })
 
@@ -77,7 +77,7 @@ describe('useTransactionsInfinite', () => {
     // The window is the Period resolved from the profile's start day — the same
     // range the "This Period" card shows.
     const period = resolvePeriod(todayYmd(), 25)
-    expect(listPage).toHaveBeenCalledWith('profile-1', {
+    expect(listPage).toHaveBeenCalledWith('house-1', {
       from: period.start,
       to: period.end,
       limit: PAGE_SIZE,
@@ -95,7 +95,7 @@ describe('useTransactionsInfinite', () => {
     )
 
     await waitFor(() => expect(listPage).toHaveBeenCalled())
-    expect(listPage).toHaveBeenCalledWith('profile-1', {
+    expect(listPage).toHaveBeenCalledWith('house-1', {
       from: '2026-01-03',
       to: '2026-03-19',
       limit: PAGE_SIZE,
@@ -129,7 +129,7 @@ describe('useTransactionsInfinite', () => {
       expect(result.current.transactions).toHaveLength(PAGE_SIZE + 1),
     )
     // The second request resumes from the first page's last row.
-    expect(listPage).toHaveBeenLastCalledWith('profile-1', {
+    expect(listPage).toHaveBeenLastCalledWith('house-1', {
       from: '2026-06-01',
       to: '2026-07-01',
       limit: PAGE_SIZE,

@@ -31,10 +31,18 @@ export function Money({
 }) {
   return (
     <span
-      className={cn('tabular-nums', TONE_CLASS[tone], className)}
+      className={cn(
+        'whitespace-nowrap tabular-nums',
+        TONE_CLASS[tone],
+        className,
+      )}
       data-testid="money"
     >
-      {formatMoney(cents, currency, signed ? { signDisplay: 'always' } : undefined)}
+      {formatMoney(
+        cents,
+        currency,
+        signed ? { signDisplay: 'always' } : undefined,
+      )}
     </span>
   )
 }

@@ -1,8 +1,5 @@
-import { SupabaseRecurringTransactionRepository } from './supabase-recurring-transaction-repository'
-import type { IRecurringTransactionRepository } from './IRecurringTransactionRepository'
+import { dataSource } from '#/data'
 
-// THE swap point for recurring-transaction data. Replace this one construction
-// to move to an axios/REST backend later; nothing else references the concrete
-// implementation.
-export const recurringTransactionRepository: IRecurringTransactionRepository =
-  new SupabaseRecurringTransactionRepository()
+// The recurring-transaction repository the app uses, taken from the active data source. The
+// backend is chosen once, in src/data/index.ts — not here. See docs/adr/0011.
+export const recurringTransactionRepository = dataSource.recurring

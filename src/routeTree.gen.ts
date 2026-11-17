@@ -19,6 +19,7 @@ import { Route as AuthedRecurringRouteImport } from './routes/_authed/recurring'
 import { Route as AuthedReportsRouteImport } from './routes/_authed/reports'
 import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as JoinTokenRouteImport } from './routes/join.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -69,6 +70,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinTokenRoute = JoinTokenRouteImport.update({
+  id: '/join/$token',
+  path: '/join/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthedReportsRoute
   '/settings': typeof AuthedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/join/$token': typeof JoinTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthedReportsRoute
   '/settings': typeof AuthedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/join/$token': typeof JoinTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/_authed/reports': typeof AuthedReportsRoute
   '/_authed/settings': typeof AuthedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/join/$token': typeof JoinTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/auth/callback'
+    | '/join/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/settings'
     | '/auth/callback'
+    | '/join/$token'
   id:
     | '__root__'
     | '/'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/_authed/reports'
     | '/_authed/settings'
     | '/auth/callback'
+    | '/join/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -149,6 +161,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   SignupRoute: typeof SignupRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  JoinTokenRoute: typeof JoinTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -223,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join/$token': {
+      id: '/join/$token'
+      path: '/join/$token'
+      fullPath: '/join/$token'
+      preLoaderRoute: typeof JoinTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -250,6 +270,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   SignupRoute: SignupRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  JoinTokenRoute: JoinTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

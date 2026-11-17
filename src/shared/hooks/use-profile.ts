@@ -1,5 +1,6 @@
-import { queryOptions, useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
 import { profileService } from '#/features/profile'
+import { queryKeys } from '#/shared/lib/query-keys'
 import { useAuth } from '#/features/auth/contexts/auth-context'
 import type { UserProfile } from '#/shared/types/user-profile.type'
 
@@ -18,7 +19,7 @@ interface ProfileResult {
 // (context.queryClient.ensureQueryData(...)) per ADR 0001's deferred-SSR note.
 const profileQueryOptions = (authUserId: string) =>
   queryOptions({
-    queryKey: ['profile', authUserId] as const,
+    queryKey: queryKeys.profile.byAuthUser(authUserId),
     queryFn: () => profileService.getProfile(authUserId),
   })
 
@@ -30,6 +31,8 @@ const profileQueryOptions = (authUserId: string) =>
 export function useProfile(): ProfileResult {
   const { session, loading: authLoading } = useAuth()
   const authUserId = session?.user.id ?? null
+
+  const queryClient = useQueryClient()
 
   const query = useQuery({
     ...profileQueryOptions(authUserId ?? ''),
@@ -50,6 +53,12 @@ export function useProfile(): ProfileResult {
       // fast rather than route on as if the refresh succeeded.
       const result = await query.refetch()
       if (result.error) throw result.error
+      // Until Household settings have their own screen, the profile's currency
+      // and Period start day are mirrored onto the Personal household
+      // (docs/adr/0012), so a profile save can change what useLedger reads.
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.households.all(),
+      })
     },
   }
 }

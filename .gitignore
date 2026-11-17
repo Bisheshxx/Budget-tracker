@@ -15,3 +15,7 @@ todos.json
 
 # Coverage reports
 coverage/
+
+# Local agent tooling (Playwright MCP server config and its logs/snapshots)
+.mcp.json
+.playwright-mcp/

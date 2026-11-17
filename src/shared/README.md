@@ -25,7 +25,7 @@ carries **domain meaning** — so it doesn't belong in `src/lib/` (pure infra) o
   open) — never per-user data, which would leak across requests during SSR (see ADR 0007).
 - Shared constants live in `constants/<area>.constant.ts`, e.g.
   `constants/period.constant.ts`. Feature-owned constants use the same pattern
-  inside the feature, e.g. `src/features/profile/constants/profile.constant.ts`.
+  inside the feature, e.g. `src/features/recurring/constants/recurring.constant.ts`.
 - Files inside `utils/` use `<area>.util.ts` naming, e.g.
   `string.util.ts` or `array.util.ts`. Use `lib/` instead for larger named
   modules such as `period.ts` or `money.ts`.

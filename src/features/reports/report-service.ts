@@ -20,17 +20,17 @@ export class ReportService {
   constructor(private readonly repo: IReportRepository) {}
 
   getPeriodReport(
-    userId: string,
+    householdId: string,
     today: string,
     startDay: number,
   ): Promise<PeriodReport> {
     const current = resolvePeriod(today, startDay)
     const previous = previousPeriod(today, startDay)
-    return this.repo.getPeriodReport(userId, current, previous)
+    return this.repo.getPeriodReport(householdId, current, previous)
   }
 
   getReport(
-    userId: string,
+    householdId: string,
     today: string,
     view: ReportView,
     startDay: number,
@@ -38,12 +38,12 @@ export class ReportService {
     customRange?: PeriodRange,
   ): Promise<PeriodReport> {
     if (view === 'period') {
-      return this.getPeriodReport(userId, today, startDay)
+      return this.getPeriodReport(householdId, today, startDay)
     }
 
     if (view === 'calendar-month') {
       return this.repo.getPeriodReport(
-        userId,
+        householdId,
         resolveCalendarMonth(today),
         previousCalendarMonth(today),
       )
@@ -54,13 +54,17 @@ export class ReportService {
         throw new Error('custom view requires a customRange')
       }
       return this.repo.getPeriodReport(
-        userId,
+        householdId,
         customRange,
         previousRange(customRange),
       )
     }
 
     const current = resolveCalendarWeek(today, weekStartDay)
-    return this.repo.getPeriodReport(userId, current, previousRange(current))
+    return this.repo.getPeriodReport(
+      householdId,
+      current,
+      previousRange(current),
+    )
   }
 }

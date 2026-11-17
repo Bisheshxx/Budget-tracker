@@ -1,4 +1,7 @@
-import { computeComparison, computeWeeks } from '#/shared/services/report-compute.util'
+import {
+  computeComparison,
+  computeWeeks,
+} from '#/shared/services/report-compute.util'
 import { rollup } from '#/shared/utils/summary.util'
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository'
 import type { PeriodRange } from '#/shared/lib/period'
@@ -18,13 +21,13 @@ export class SupabaseReportRepository implements IReportRepository {
   constructor(private readonly transactions: ITransactionRepository) {}
 
   async getPeriodReport(
-    userId: string,
+    householdId: string,
     current: PeriodRange,
     previous: PeriodRange,
   ): Promise<PeriodReport> {
     const [currentTx, previousTx] = await Promise.all([
-      this.transactions.listInRange(userId, current.start, current.end),
-      this.transactions.listInRange(userId, previous.start, previous.end),
+      this.transactions.listInRange(householdId, current.start, current.end),
+      this.transactions.listInRange(householdId, previous.start, previous.end),
     ])
 
     return {

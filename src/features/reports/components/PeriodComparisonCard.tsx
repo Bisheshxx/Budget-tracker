@@ -24,7 +24,7 @@ export function PeriodComparisonCard({
         </p>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-3">
           <OverallRow
             label="Income"
             currency={currency}

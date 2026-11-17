@@ -6,8 +6,9 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { recurringService } from '#/features/recurring'
-import { useProfile } from '#/shared/hooks/use-profile'
-import { resolvePeriod, todayYmd } from '#/shared/lib/period'
+import { invalidateTransactionViews, queryKeys } from '#/shared/lib/query-keys'
+import { useLedger } from '#/shared/hooks/use-ledger'
+import { resolvePeriod } from '#/shared/lib/period'
 import type { RecentlyPostedItem } from '#/data/recurring/IRecurringTransactionRepository'
 import type { RecurringInput } from './schema'
 import type {
@@ -15,10 +16,10 @@ import type {
   RecurringTransaction,
 } from '#/features/recurring/types'
 
-const recurringQueryOptions = (userId: string) =>
+const recurringQueryOptions = (householdId: string) =>
   queryOptions({
-    queryKey: ['recurring', userId] as const,
-    queryFn: () => recurringService.listAll(userId),
+    queryKey: queryKeys.recurring.list(householdId),
+    queryFn: () => recurringService.listAll(householdId),
   })
 
 interface RecurringResult {
@@ -28,55 +29,57 @@ interface RecurringResult {
   error: unknown
 }
 
-// All of the current user's recurring templates (active + deactivated), for the
-// management screen. Disabled until the profile resolves.
+// All of the active Household's recurring templates (active + deactivated), for
+// the management screen. Disabled until the Household resolves.
 export function useRecurringTransactions(): RecurringResult {
-  const { profile, loading: profileLoading } = useProfile()
-  const userId = profile?.id ?? null
+  const { ledger, loading: ledgerLoading } = useLedger()
+  const householdId = ledger?.householdId ?? null
 
   const query = useQuery({
-    ...recurringQueryOptions(userId ?? ''),
-    enabled: !!userId,
+    ...recurringQueryOptions(householdId ?? ''),
+    enabled: !!householdId,
   })
 
   return {
     recurringTransactions: query.data ?? [],
-    loading: profileLoading || query.isLoading,
+    loading: ledgerLoading || query.isLoading,
     isError: query.isError,
     error: query.error,
   }
 }
 
 function useInvalidateRecurring() {
-  const { profile } = useProfile()
-  const userId = profile?.id ?? null
+  const { ledger } = useLedger()
+  const householdId = ledger?.householdId ?? null
   const queryClient = useQueryClient()
   return () => {
-    if (!userId) return
-    return queryClient.invalidateQueries({ queryKey: ['recurring', userId] })
+    if (!householdId) return
+    return queryClient.invalidateQueries({
+      queryKey: queryKeys.recurring.list(householdId),
+    })
   }
 }
 
 export function useCreateRecurring() {
-  const { profile } = useProfile()
-  const userId = profile?.id ?? null
+  const { ledger, today } = useLedger()
   const invalidate = useInvalidateRecurring()
 
   return useMutation({
     mutationFn: (input: RecurringInput) => {
-      if (!userId) throw new Error('No profile loaded')
-      return recurringService.create(userId, input)
+      if (!ledger) throw new Error('No group loaded')
+      return recurringService.create(ledger, input, today)
     },
     onSuccess: invalidate,
   })
 }
 
 export function useUpdateRecurring() {
+  const { today } = useLedger()
   const invalidate = useInvalidateRecurring()
 
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: RecurringInput }) =>
-      recurringService.update(id, input),
+      recurringService.update(id, input, today),
     onSuccess: invalidate,
   })
 }
@@ -103,7 +106,7 @@ export function useDeleteRecurring() {
 // dialog's copy only, not delete's actual (always-safe) behavior.
 export function useHasConfirmedHistory(id: string) {
   return useQuery({
-    queryKey: ['recurring', 'confirmed-history', id] as const,
+    queryKey: queryKeys.recurring.confirmedHistory(id),
     queryFn: () => recurringService.hasConfirmedHistory(id),
   })
 }
@@ -129,37 +132,32 @@ export function useSkipUpcoming() {
 // Invalidate everything a reconcile/skip touches: the recently-posted list plus
 // the Cashflow totals the affected transaction feeds.
 function useInvalidateAfterResolve() {
-  const { profile } = useProfile()
-  const userId = profile?.id ?? null
+  const { ledger } = useLedger()
+  const householdId = ledger?.householdId ?? null
   const queryClient = useQueryClient()
 
   return () => {
-    if (!userId) return
+    if (!householdId) return
     return Promise.all([
       queryClient.invalidateQueries({
-        queryKey: ['recurring', 'recent', userId],
+        queryKey: queryKeys.recurring.recent(householdId),
       }),
+      invalidateTransactionViews(queryClient, householdId),
       queryClient.invalidateQueries({
-        queryKey: ['transactions', 'infinite', userId],
+        queryKey: queryKeys.reports.all(householdId),
       }),
-      queryClient.invalidateQueries({
-        queryKey: ['transactions', 'period-summary', userId],
-      }),
-      queryClient.invalidateQueries({ queryKey: ['reports', userId] }),
     ])
   }
 }
 
 function useReconcileDue() {
-  const { profile } = useProfile()
-  const userId = profile?.id ?? null
-  const startDay = profile?.budgetPeriodStartDay ?? 1
+  const { ledger, today } = useLedger()
   const invalidate = useInvalidateAfterResolve()
 
   return useMutation({
     mutationFn: () => {
-      if (!userId) throw new Error('No profile loaded')
-      return recurringService.reconcileDue(userId, todayYmd(), startDay)
+      if (!ledger) throw new Error('No group loaded')
+      return recurringService.reconcileDue(ledger, today, ledger.periodStartDay)
     },
     onSuccess: invalidate,
   })
@@ -170,19 +168,20 @@ function useReconcileDue() {
 // component that also renders the recently-posted list, so importing that
 // component is the only wiring a route needs.
 export function useAutoReconcile() {
-  const { profile } = useProfile()
-  const startDay = profile?.budgetPeriodStartDay ?? 1
-  const periodKey = resolvePeriod(todayYmd(), startDay).start
+  const { ledger, today } = useLedger()
+  const householdId = ledger?.householdId ?? null
+  const periodKey = resolvePeriod(today, ledger?.periodStartDay ?? 1).start
   const reconcile = useReconcileDue()
   const mutateRef = useRef(reconcile.mutate)
   mutateRef.current = reconcile.mutate
 
   useEffect(() => {
-    if (!profile) return
+    if (!householdId) return
     mutateRef.current()
-    // Deliberately keyed on [profile?.id, periodKey], not `profile` itself or
-    // `mutate` — this should re-fire only when the user or the Period changes.
-  }, [profile?.id, periodKey])
+    // Deliberately keyed on [householdId, periodKey], not `ledger` itself or
+    // `mutate` — this should re-fire only when the Household or the Period
+    // changes.
+  }, [householdId, periodKey])
 }
 
 interface RecentlyPostedResult {
@@ -196,20 +195,19 @@ interface RecentlyPostedResult {
 // template and the transaction they created — the Dashboard's "Recently
 // posted" list.
 export function useRecentlyPosted(): RecentlyPostedResult {
-  const { profile, loading: profileLoading } = useProfile()
-  const id = profile?.id ?? ''
-  const startDay = profile?.budgetPeriodStartDay ?? 1
-  const periodKey = resolvePeriod(todayYmd(), startDay).start
+  const { ledger, today, loading: ledgerLoading } = useLedger()
+  const id = ledger?.householdId ?? ''
+  const periodKey = resolvePeriod(today, ledger?.periodStartDay ?? 1).start
 
   const query = useQuery({
-    queryKey: ['recurring', 'recent', id, periodKey] as const,
+    queryKey: queryKeys.recurring.recent(id, periodKey),
     queryFn: () => recurringService.listRecentlyPosted(id, periodKey),
     enabled: !!id,
   })
 
   return {
     items: query.data ?? [],
-    loading: profileLoading || query.isLoading,
+    loading: ledgerLoading || query.isLoading,
     isError: query.isError,
     error: query.error,
   }

@@ -20,6 +20,19 @@ export function fromCents(cents: number): number {
  * `signDisplay` defaults to 'auto' (only negatives get a sign); pass 'always' to
  * force a leading + on positives.
  */
+// Short form for tight spaces such as chart axes ("$1.2M", "$350K"). Whole
+// amounts under 1,000 keep no decimals. Use formatMoney anywhere the exact
+// figure matters.
+export function formatMoneyCompact(cents: number, currency: string): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    notation: 'compact',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1,
+  }).format(fromCents(cents))
+}
+
 export function formatMoney(
   cents: number,
   currency: string,

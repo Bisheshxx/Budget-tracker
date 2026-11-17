@@ -37,9 +37,16 @@ export function DeltaDisplay({
       : `${deltaPercent > 0 ? '+' : ''}${Math.round(deltaPercent * 100)}%`
 
   return (
-    <span className={cn('inline-flex items-baseline gap-1.5', className)}>
+    <span
+      className={cn(
+        'inline-flex flex-wrap items-baseline gap-x-1.5',
+        className,
+      )}
+    >
       <Money cents={deltaCents} currency={currency} tone={tone} signed />
-      <span className="text-xs text-muted-foreground">({percentLabel})</span>
+      <span className="whitespace-nowrap text-xs text-muted-foreground">
+        ({percentLabel})
+      </span>
     </span>
   )
 }

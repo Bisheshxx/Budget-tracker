@@ -12,7 +12,6 @@ const blankProfile: UserProfile = {
   avatarUrl: null,
   currency: 'USD',
   budgetPeriodStartDay: 1,
-  groceryDayOfWeek: null,
   monthlyBudgetTargetCents: 0,
   onboardingCompletedAt: null,
 }
@@ -67,7 +66,6 @@ describe('ProfileService', () => {
         displayName: 'Alex',
         currency: 'USD',
         budgetPeriodStartDay: 15,
-        groceryDayOfWeek: null,
         monthlyBudgetTargetCents: 0,
         onboardingCompletedAt: expect.any(String),
       })
@@ -86,23 +84,6 @@ describe('ProfileService', () => {
       expect(repo.update).toHaveBeenCalledWith(
         'auth-1',
         expect.objectContaining({ monthlyBudgetTargetCents: 150050 }),
-      )
-    })
-
-    it('passes the optional grocery day through when provided', async () => {
-      const repo = makeFakeRepo()
-      const service = new ProfileService(repo)
-
-      await service.completeOnboarding('auth-1', {
-        ...requiredOnly,
-        groceryDayOfWeek: 6,
-      })
-
-      expect(repo.update).toHaveBeenCalledWith(
-        'auth-1',
-        expect.objectContaining({
-          groceryDayOfWeek: 6,
-        }),
       )
     })
 
@@ -177,7 +158,6 @@ describe('ProfileService', () => {
         currency: 'EUR',
         budgetPeriodStartDay: 5,
         displayName: 'Alexandra',
-        groceryDayOfWeek: 6,
         monthlyBudgetTarget: 1500.5,
       })
 
@@ -185,7 +165,6 @@ describe('ProfileService', () => {
         displayName: 'Alexandra',
         currency: 'EUR',
         budgetPeriodStartDay: 5,
-        groceryDayOfWeek: 6,
         monthlyBudgetTargetCents: 150050,
         onboardingCompletedAt: '2026-06-13T12:00:00.000Z',
       })

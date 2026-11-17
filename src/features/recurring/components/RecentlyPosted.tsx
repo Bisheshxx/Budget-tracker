@@ -5,7 +5,7 @@ import {
   useSkipDue,
 } from '#/features/recurring/use-recurring'
 import { QuickAddForm } from '#/shared/components/QuickAddForm'
-import { useProfile } from '#/shared/hooks/use-profile'
+import { useLedger } from '#/shared/hooks/use-ledger'
 import { useDialog } from '#/shared/hooks/use-dialog'
 import { DIALOG } from '#/shared/stores/ui-store'
 import { Dialog as StoreDialog } from '#/shared/components/Dialog'
@@ -30,7 +30,7 @@ import type { Transaction } from '#/shared/types/transaction.type'
 export function RecentlyPosted() {
   useAutoReconcile()
   const { items, loading } = useRecentlyPosted()
-  const { profile } = useProfile()
+  const { ledger } = useLedger()
   const editDialog = useDialog(DIALOG.editRecentlyPosted)
   const undoDialog = useDialog(DIALOG.confirmUndoRecurring)
   const [editing, setEditing] = useState<Transaction | null>(null)
@@ -41,10 +41,10 @@ export function RecentlyPosted() {
   // Quietly absent until there's something to show — no empty card.
   if (loading || items.length === 0) return null
 
-  const currency = profile?.currency ?? 'USD'
+  const currency = ledger?.currency ?? 'USD'
 
   return (
-    <Card>
+    <Card className="flex min-h-0 flex-col lg:flex-1">
       <CardHeader>
         <CardTitle>Recently posted</CardTitle>
         <CardDescription>
@@ -52,7 +52,7 @@ export function RecentlyPosted() {
           date needs a correction, or Undo to remove one.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-h-72 min-h-0 overflow-y-auto overscroll-contain pr-3 lg:max-h-none lg:flex-1">
         <ul className="flex flex-col divide-y">
           {items.map((item) => (
             <li
@@ -69,6 +69,12 @@ export function RecentlyPosted() {
                     : 'Expense'}{' '}
                   · {item.occurrence.occurrenceDate}
                 </p>
+                {item.transaction.note &&
+                  item.transaction.note !== item.recurringTransaction.name && (
+                    <p className="truncate text-xs text-muted-foreground">
+                      {item.transaction.note}
+                    </p>
+                  )}
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <Money

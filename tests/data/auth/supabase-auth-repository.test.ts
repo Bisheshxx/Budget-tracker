@@ -17,9 +17,8 @@ const { auth } = vi.hoisted(() => ({
 
 vi.mock('#/lib/supabase.ts', () => ({ supabase: { auth } }))
 
-const { SupabaseAuthRepository } = await import(
-  '#/data/auth/supabase-auth-repository.ts'
-)
+const { SupabaseAuthRepository } =
+  await import('#/data/auth/supabase-auth-repository.ts')
 
 // Minimal Supabase session — only the fields toAuthSession reads.
 function fakeSession(
@@ -35,6 +34,25 @@ beforeEach(() => {
 })
 
 describe('SupabaseAuthRepository', () => {
+  it('translates a Supabase auth failure into a DataError', async () => {
+    auth.signInWithPassword.mockResolvedValue({
+      data: { session: null },
+      error: {
+        name: 'AuthApiError',
+        status: 400,
+        code: 'invalid_credentials',
+        message: 'Invalid login credentials',
+      },
+    })
+    const repo = new SupabaseAuthRepository()
+
+    await expect(repo.signIn(creds)).rejects.toMatchObject({
+      name: 'DataError',
+      code: 'unauthenticated',
+      message: 'Invalid login credentials',
+    })
+  })
+
   describe('signUp', () => {
     it('maps the returned session to an AuthSession', async () => {
       auth.signUp.mockResolvedValue({

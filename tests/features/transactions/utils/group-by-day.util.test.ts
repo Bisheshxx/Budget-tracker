@@ -21,6 +21,8 @@ function tx(
     note: null,
     transactionDate,
     createdAt: `${transactionDate}T00:00:00Z`,
+    createdBy: null,
+    recurringOwnerId: null,
   }
 }
 

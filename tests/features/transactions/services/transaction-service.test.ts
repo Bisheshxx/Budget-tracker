@@ -9,23 +9,27 @@ import type {
 import type { ITransactionRepository } from '#/data/transactions/ITransactionRepository.ts'
 import type { QuickAddInput } from '#/shared/schemas/transaction.schema.ts'
 
+const scope = { householdId: 'house-1', profileId: 'profile-1' }
+
 // Minimal in-memory fake — the whole point of ADR 0001's repository pattern.
 // `create` echoes the input back with DB-assigned fields so we can assert what
 // the service decided to persist.
 function makeFakeRepo(overrides: Partial<ITransactionRepository> = {}) {
   return {
     listPage: vi.fn(
-      async (_userId: string, _params: TransactionPageParams) =>
+      async (_householdId: string, _params: TransactionPageParams) =>
         [] as Transaction[],
     ),
     listInRange: vi.fn(
-      async (_userId: string, _start: string, _end: string) =>
+      async (_householdId: string, _start: string, _end: string) =>
         [] as Transaction[],
     ),
     create: vi.fn(
       async (input: TransactionCreate): Promise<Transaction> => ({
         id: 'tx-1',
         createdAt: '2026-06-12T00:00:00Z',
+        createdBy: null,
+        recurringOwnerId: null,
         ...input,
       }),
     ),
@@ -33,6 +37,8 @@ function makeFakeRepo(overrides: Partial<ITransactionRepository> = {}) {
       async (input: TransactionCreate): Promise<Transaction> => ({
         id: 'tx-1',
         createdAt: '2026-06-12T00:00:00Z',
+        createdBy: null,
+        recurringOwnerId: null,
         ...input,
       }),
     ),
@@ -41,6 +47,8 @@ function makeFakeRepo(overrides: Partial<ITransactionRepository> = {}) {
         id,
         userId: 'profile-1',
         createdAt: '2026-06-12T00:00:00Z',
+        createdBy: null,
+        recurringOwnerId: null,
         ...input,
       }),
     ),
@@ -62,20 +70,21 @@ describe('TransactionService', () => {
       const repo = makeFakeRepo()
       const service = new TransactionService(repo)
 
-      await service.create('profile-1', { ...validExpense, amount: 50.5 })
+      await service.create(scope, { ...validExpense, amount: 50.5 })
 
       expect(repo.create).toHaveBeenCalledWith(
         expect.objectContaining({ amountCents: 5050 }),
       )
     })
 
-    it('passes type, note, date, and userId through; category is null', async () => {
+    it('files it in the Household for the profile; category is null', async () => {
       const repo = makeFakeRepo()
       const service = new TransactionService(repo)
 
-      await service.create('profile-1', validExpense)
+      await service.create(scope, validExpense)
 
       expect(repo.create).toHaveBeenCalledWith({
+        householdId: 'house-1',
         userId: 'profile-1',
         categoryId: null,
         type: 'expense',
@@ -89,7 +98,7 @@ describe('TransactionService', () => {
       const repo = makeFakeRepo()
       const service = new TransactionService(repo)
 
-      await service.create('profile-1', {
+      await service.create(scope, {
         ...validExpense,
         categoryId: 'cat-9',
       })
@@ -104,7 +113,7 @@ describe('TransactionService', () => {
       const service = new TransactionService(repo)
 
       await expect(
-        service.create('profile-1', {
+        service.create(scope, {
           amount: 5,
           type: 'income',
           transactionDate: '2026-06-12',
@@ -119,10 +128,10 @@ describe('TransactionService', () => {
       const service = new TransactionService(repo)
 
       await expect(
-        service.create('profile-1', { ...validExpense, amount: 0 }),
+        service.create(scope, { ...validExpense, amount: 0 }),
       ).rejects.toThrow('Amount must be greater than 0')
       await expect(
-        service.create('profile-1', { ...validExpense, amount: -5 }),
+        service.create(scope, { ...validExpense, amount: -5 }),
       ).rejects.toThrow('Amount must be greater than 0')
       expect(repo.create).not.toHaveBeenCalled()
     })
@@ -214,6 +223,8 @@ describe('TransactionService', () => {
         note: null,
         transactionDate: '2026-06-10',
         createdAt: '2026-06-10T00:00:00Z',
+        createdBy: null,
+        recurringOwnerId: null,
       }
     }
 
@@ -227,10 +238,10 @@ describe('TransactionService', () => {
       const repo = makeFakeRepo()
       const service = new TransactionService(repo)
 
-      await service.getPeriodSummary('profile-1', range)
+      await service.getPeriodSummary('house-1', range)
 
       expect(repo.listInRange).toHaveBeenCalledWith(
-        'profile-1',
+        'house-1',
         '2026-06-01',
         '2026-07-01',
       )
@@ -245,7 +256,7 @@ describe('TransactionService', () => {
       ])
       const service = new TransactionService(repo)
 
-      const summary = await service.getPeriodSummary('profile-1', range)
+      const summary = await service.getPeriodSummary('house-1', range)
 
       expect(summary.incomeCents).toBe(75000)
       expect(summary.expensesCents).toBe(20000)
@@ -256,7 +267,7 @@ describe('TransactionService', () => {
       const repo = makeRepoReturning([tx('income', 1000), tx('expense', 4000)])
       const service = new TransactionService(repo)
 
-      const summary = await service.getPeriodSummary('profile-1', range)
+      const summary = await service.getPeriodSummary('house-1', range)
 
       expect(summary.netCents).toBe(-3000)
     })
@@ -270,7 +281,7 @@ describe('TransactionService', () => {
       ])
       const service = new TransactionService(repo)
 
-      const summary = await service.getPeriodSummary('profile-1', range)
+      const summary = await service.getPeriodSummary('house-1', range)
 
       expect(summary.byCategory).toEqual([
         { categoryId: 'rent', amountCents: 9000 },
@@ -285,7 +296,7 @@ describe('TransactionService', () => {
       ])
       const service = new TransactionService(repo)
 
-      const summary = await service.getPeriodSummary('profile-1', range)
+      const summary = await service.getPeriodSummary('house-1', range)
 
       expect(summary.byCategory).toEqual([
         { categoryId: null, amountCents: 2000 },
@@ -296,7 +307,7 @@ describe('TransactionService', () => {
       const repo = makeRepoReturning([])
       const service = new TransactionService(repo)
 
-      const summary = await service.getPeriodSummary('profile-1', range)
+      const summary = await service.getPeriodSummary('house-1', range)
 
       expect(summary).toEqual({
         incomeCents: 0,
@@ -318,9 +329,9 @@ describe('TransactionService', () => {
         cursor: { transactionDate: '2026-06-10', id: 'tx-9' },
       }
 
-      await service.listPage('profile-1', params)
+      await service.listPage('house-1', params)
 
-      expect(repo.listPage).toHaveBeenCalledWith('profile-1', params)
+      expect(repo.listPage).toHaveBeenCalledWith('house-1', params)
     })
   })
 })

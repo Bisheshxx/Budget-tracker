@@ -18,6 +18,8 @@ function tx(partial: Partial<Transaction>): Transaction {
     note: null,
     transactionDate: partial.transactionDate ?? '2026-06-01',
     createdAt: '2026-06-01T00:00:00Z',
+    createdBy: null,
+    recurringOwnerId: null,
   }
 }
 

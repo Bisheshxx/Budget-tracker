@@ -1,3 +1,4 @@
+import { parseOrThrow } from '#/shared/utils/validation.util'
 import { credentialsSchema } from '#/features/auth/schemas/auth.schema'
 import type { AuthSession, Credentials } from '#/features/auth/types/auth.type'
 import type { IAuthRepository } from '#/data/auth/IAuthRepository'
@@ -37,11 +38,6 @@ export class AuthService {
   }
 
   private validate(credentials: Credentials): void {
-    const result = credentialsSchema.safeParse(credentials)
-    if (!result.success) {
-      // Surface the first issue as a plain Error so callers (UI catch blocks,
-      // tests) get a friendly message rather than a raw ZodError.
-      throw new Error(result.error.issues[0].message)
-    }
+    parseOrThrow(credentialsSchema, credentials)
   }
 }

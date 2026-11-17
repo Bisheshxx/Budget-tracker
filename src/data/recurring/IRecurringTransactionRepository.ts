@@ -13,10 +13,10 @@ export interface RecentlyPostedItem {
 }
 
 export interface IRecurringTransactionRepository {
-  /** All of the user's active templates (the ones that can surface as Due). */
-  listActive: (userId: string) => Promise<RecurringTransaction[]>
-  /** Every template the user owns, active or not (the Recurring management screen). */
-  listAll: (userId: string) => Promise<RecurringTransaction[]>
+  /** All of the Household's active templates (the ones that can surface as Due). */
+  listActive: (householdId: string) => Promise<RecurringTransaction[]>
+  /** Every template in the Household, active or not (the Recurring management screen). */
+  listAll: (householdId: string) => Promise<RecurringTransaction[]>
   create: (input: RecurringTransactionCreate) => Promise<RecurringTransaction>
   /** Update editable fields; returns the saved row. Affects only future occurrences. */
   update: (
@@ -76,7 +76,7 @@ export interface IRecurringTransactionRepository {
    * transaction they created — feeds the Dashboard's "Recently posted" list.
    */
   listRecentlyConfirmed: (
-    userId: string,
+    householdId: string,
     since: string,
   ) => Promise<RecentlyPostedItem[]>
 }

@@ -21,7 +21,9 @@ export function MoneyBadge({
   className?: string
 }) {
   const surface =
-    tone === 'income' ? 'bg-income-bg text-income' : 'bg-expense-bg text-expense'
+    tone === 'income'
+      ? 'bg-income-bg text-income'
+      : 'bg-expense-bg text-expense'
 
   return (
     <div className={cn('rounded-xl px-4 py-3', surface, className)}>

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CURRENCIES } from './constants/profile.constant'
+import { CURRENCIES } from '#/shared/constants/currency.constant'
 
 // Single source of truth for Onboarding input. Used by the onboarding form (via
 // @hookform/resolvers' zodResolver) AND by ProfileService as a backstop, so the
@@ -31,15 +31,6 @@ export const onboardingSchema = z.object({
   displayName: z.preprocess(
     blankToUndefined,
     z.string().trim().min(1).max(80, 'Name is too long').optional(),
-  ),
-  groceryDayOfWeek: z.preprocess(
-    blankToUndefined,
-    z.coerce
-      .number()
-      .int()
-      .min(0, 'Pick a day of the week')
-      .max(6, 'Pick a day of the week')
-      .optional(),
   ),
   // Display units (e.g. dollars); ProfileService converts to integer cents.
   monthlyBudgetTarget: z.preprocess(

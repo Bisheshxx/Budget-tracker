@@ -1,8 +1,5 @@
-import { SupabaseProfileRepository } from './supabase-profile-repository'
-import type { IProfileRepository } from './IProfileRepository'
+import { dataSource } from '#/data'
 
-// THE swap point for profile data. Replace this one construction to move to an
-// axios/REST backend later; nothing else references the concrete implementation.
-// See docs/adr/0001-client-side-swappable-repositories.md.
-export const profileRepository: IProfileRepository =
-  new SupabaseProfileRepository()
+// The profile repository the app uses, taken from the active data source. The
+// backend is chosen once, in src/data/index.ts — not here. See docs/adr/0011.
+export const profileRepository = dataSource.profile

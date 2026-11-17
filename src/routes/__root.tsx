@@ -12,6 +12,7 @@ import { RootErrorBoundary } from '#/components/RootErrorBoundary'
 import { Toaster } from '#/components/ui/sonner'
 import { TooltipProvider } from '#/components/ui/tooltip'
 import { AuthProvider } from '#/features/auth/contexts/auth-context'
+import { CreateHouseholdDialog } from '#/features/households/components/CreateHouseholdDialog'
 
 import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
 
@@ -64,6 +65,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <Header />
             <div className="flex flex-1 flex-col">{children}</div>
             <Footer />
+            <CreateHouseholdDialog />
             <Toaster />
           </TooltipProvider>
         </AuthProvider>
