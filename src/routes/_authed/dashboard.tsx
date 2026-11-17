@@ -63,16 +63,17 @@ function DashboardPage() {
         <h1 className="text-2xl font-semibold">Dashboard</h1>
       </div>
 
-      {/* On lg+ the grid has a soft min-height floor so it doesn't look
-          cramped with little data, but grows naturally with content — the
-          page scrolls as a whole rather than clipping any card. */}
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:min-h-[calc(100dvh-260px)] lg:grid-cols-12">
-        <div className="flex flex-col gap-6 lg:col-span-5 lg:pr-1">
+      {/* On lg+ the row has a definite height so the two columns end on the
+          same line: the left column's Recently posted card stretches to fill,
+          the right card's list scrolls inside it. Below lg they stack at their
+          natural heights. */}
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:h-[calc(100dvh-12rem)] lg:min-h-[40rem] lg:grid-cols-12">
+        <div className="flex min-h-0 flex-col gap-6 lg:col-span-5">
           <CashflowSummary range={activeRange} />
           <RecentlyPosted />
         </div>
 
-        <Card className="flex flex-col lg:col-span-7">
+        <Card className="flex min-h-0 flex-col lg:col-span-7">
           <CardHeader className="gap-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               {/* Heading mirrors the card above: the Range when active, else the
@@ -85,7 +86,10 @@ function DashboardPage() {
               <Button onClick={openQuickAdd}>Add transaction</Button>
             </div>
           </CardHeader>
-          <CardContent>
+          {/* Fixed-height, internally scrolling list so the card keeps its size
+              however many transactions there are; infinite scroll loads more
+              as the bottom of this box comes into view. */}
+          <CardContent className="h-[32rem] min-h-0 overflow-y-auto overscroll-contain pr-3 lg:h-auto lg:flex-1">
             <RecentTransactions range={activeRange} onEdit={openEdit} />
           </CardContent>
         </Card>

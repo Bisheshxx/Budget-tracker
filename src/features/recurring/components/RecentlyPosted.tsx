@@ -44,7 +44,7 @@ export function RecentlyPosted() {
   const currency = ledger?.currency ?? 'USD'
 
   return (
-    <Card>
+    <Card className="flex min-h-0 flex-col lg:flex-1">
       <CardHeader>
         <CardTitle>Recently posted</CardTitle>
         <CardDescription>
@@ -52,7 +52,7 @@ export function RecentlyPosted() {
           date needs a correction, or Undo to remove one.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-h-72 min-h-0 overflow-y-auto overscroll-contain pr-3 lg:max-h-none lg:flex-1">
         <ul className="flex flex-col divide-y">
           {items.map((item) => (
             <li
