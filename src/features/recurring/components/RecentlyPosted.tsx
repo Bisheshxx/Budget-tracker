@@ -69,6 +69,12 @@ export function RecentlyPosted() {
                     : 'Expense'}{' '}
                   · {item.occurrence.occurrenceDate}
                 </p>
+                {item.transaction.note &&
+                  item.transaction.note !== item.recurringTransaction.name && (
+                    <p className="truncate text-xs text-muted-foreground">
+                      {item.transaction.note}
+                    </p>
+                  )}
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <Money

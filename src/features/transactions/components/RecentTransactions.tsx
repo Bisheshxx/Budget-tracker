@@ -183,6 +183,30 @@ function ConfirmDeleteDialog({
   )
 }
 
+// Who/what added the entry: the author in a group, or a "Recurring" badge for
+// an auto-posted entry in a personal ledger (where there is no author).
+function EntryOrigin({
+  author,
+  recurring,
+}: {
+  author: string | null
+  recurring: boolean
+}) {
+  if (author) {
+    return (
+      <span className="truncate text-xs text-muted-foreground">
+        Added by {author}
+      </span>
+    )
+  }
+  if (!recurring) return null
+  return (
+    <Badge variant="outline" className="font-normal">
+      Recurring
+    </Badge>
+  )
+}
+
 function TransactionRow({
   tx,
   category,
@@ -205,18 +229,19 @@ function TransactionRow({
     <li className="group flex items-center gap-2 py-3">
       <div className="flex min-w-0 flex-1 items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="truncate font-medium">{tx.note || categoryLabel}</p>
+          <p className="truncate font-medium">{categoryLabel}</p>
+          {tx.note && (
+            <p className="line-clamp-3 break-words text-sm text-muted-foreground">
+              {tx.note}
+            </p>
+          )}
           <div className="mt-1 flex items-center gap-2">
             <SimpleTooltip content={categoryLabel}>
               <Badge variant="secondary" className="font-normal">
                 <CategoryChip category={category} className="gap-1.5" />
               </Badge>
             </SimpleTooltip>
-            {author && (
-              <span className="truncate text-xs text-muted-foreground">
-                Added by {author}
-              </span>
-            )}
+            <EntryOrigin author={author} recurring={tx.createdBy === null} />
           </div>
         </div>
         <Money
