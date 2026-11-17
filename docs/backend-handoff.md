@@ -212,7 +212,8 @@ Because auth moves into the API, **Supabase can no longer be the front door**: r
 - `AppUser : IdentityUser<Guid>`; `AppDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>` (we use no roles; household roles live in `household_members`). Npgsql provider. Identity tables are created by EF migrations.
 - **User id = profile link.** Keep `AppUser.Id` equal to today's `auth.users.id` when importing, so `user_profiles.auth_user_id` and every FK stays valid with no remapping.
 - **Registration** (`POST /v1/auth/register`) runs in **one transaction**: create user, create the profile, create the Personal household and its Admin membership. This replaces the `handle_new_user` trigger.
-- **Login** (`POST /v1/auth/login`): email + password, lockout on repeated failures, returns `{ accessToken, expiresIn, refreshToken }`. `POST /v1/auth/refresh` rotates the refresh token (store hashed, one-time use, revoke the family on reuse). `POST /v1/auth/logout` revokes it.
+- **No cookies, anywhere (decided 2026-11-17):** the API never sets or reads an auth cookie, so there is no cross-site/SameSite/CSRF handling and no `credentials: 'include'` CORS. Both tokens travel in JSON bodies and the `Authorization: Bearer` header only. CORS is a plain allow-list of the frontend origin(s) with **no** `AllowCredentials`.
+- **Login** (`POST /v1/auth/login`): email + password, lockout on repeated failures, returns `{ accessToken, expiresIn, refreshToken }` in the body. `POST /v1/auth/refresh` takes the refresh token in the body and rotates it (store hashed, one-time use, **revoke the whole family on reuse** so a stolen token is detected, absolute lifetime cap). `POST /v1/auth/logout` revokes it.
 - **Google**: `Microsoft.AspNetCore.Authentication.Google` as an external login. Flow for a SPA/SSR client: `GET /v1/auth/google/start?redirectTo=...` (validate `redirectTo` against an allow-list) → Google → API callback signs the user in or creates them → redirects to `redirectTo` with a short-lived one-time code the client exchanges at `POST /v1/auth/exchange` for tokens (never put tokens in a URL).
 - **Tokens:** access JWT ~15 minutes, claims `sub` (user id) and `email` only; refresh token days/weeks. Validate with `AddJwtBearer`; the **actor is always read from `sub`** (§2 rule 1). No household/role claims in the token (they change; look them up per request).
 - Email confirmation and password reset: decide whether v1 needs them (Identity supports both; they need an email sender).
@@ -226,11 +227,11 @@ Because auth moves into the API, **Supabase can no longer be the front door**: r
 
 ### 11.3 What the frontend changes (at cutover)
 Implement `ApiAuthRepository` against `IAuthRepository`:
-- `signIn`/`signUp` → the endpoints above; keep tokens in memory plus a refresh mechanism (refresh token in an `httpOnly` cookie if same-site, else secure storage), never `localStorage` for the refresh token.
+- `signIn`/`signUp` → the endpoints above. **Access token in memory only. Refresh token in `localStorage`** (web) so a reload keeps the session; the native app uses the platform secure store. This is the known trade-off of avoiding cookies: JavaScript-readable storage is exposed to XSS, so compensate with a strict `Content-Security-Policy`, no `dangerouslySetInnerHTML`/untrusted HTML, short access-token life, refresh-token rotation with reuse detection (above), and a logout that revokes server-side. Don't put either token in a URL, a log, or query string.
 - `getSession` → validate/refresh and return `{ user }`; `onAuthStateChange` → an in-app event emitter fired on login, logout and refresh failure (Supabase provided this for free; we now own it).
 - `signInWithOAuth` → navigate to `/v1/auth/google/start`.
 - A shared API client attaches the bearer token, refreshes once on `401`, then surfaces `unauthenticated` as a `DataError`.
-- The SSR side of TanStack Start must not hold user tokens in module-level state (per-request only).
+- **SSR:** with no cookie, the server renders no per-user data; the session lives in the browser. Authenticated routes load their data client-side (as the app's Supabase session already does from browser storage). The SSR side of TanStack Start must never hold user tokens in module-level state.
 
 ## 12. Decide first, and the order to do it
 
