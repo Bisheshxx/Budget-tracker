@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { formatMoney } from '#/lib/money'
+import { formatMoney, formatMoneyCompact } from '#/lib/money'
 import { Card, CardContent, CardHeader, CardTitle } from '#/components/ui/card'
 import type { WeekSlice } from '#/features/reports/types'
 
@@ -55,11 +55,13 @@ export function WeeklyCashflowChart({
               axisLine={{ stroke: 'var(--border)' }}
             />
             <YAxis
-              width={64}
+              width={56}
               tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(cents: number) => formatMoney(cents, currency)}
+              tickFormatter={(cents: number) =>
+                formatMoneyCompact(cents, currency)
+              }
             />
             <Tooltip
               formatter={(value) => formatMoney(Number(value), currency)}

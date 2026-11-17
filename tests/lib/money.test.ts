@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { formatMoney, fromCents, toCents } from '#/lib/money.ts'
+import {
+  formatMoney,
+  formatMoneyCompact,
+  fromCents,
+  toCents,
+} from '#/lib/money.ts'
 
 describe('money', () => {
   describe('toCents', () => {
@@ -40,18 +45,32 @@ describe('money', () => {
       expect(formatMoney(-1250, 'USD')).toBe('-$12.50')
     })
 
-    it("does not sign a positive amount under the default signDisplay", () => {
+    it('does not sign a positive amount under the default signDisplay', () => {
       expect(formatMoney(1250, 'USD')).toBe('$12.50')
     })
 
     it("forces a leading + on positives when signDisplay is 'always'", () => {
-      expect(formatMoney(1250, 'USD', { signDisplay: 'always' })).toBe('+$12.50')
+      expect(formatMoney(1250, 'USD', { signDisplay: 'always' })).toBe(
+        '+$12.50',
+      )
       // Zero reads as a signed positive under 'always'.
       expect(formatMoney(0, 'USD', { signDisplay: 'always' })).toBe('+$0.00')
     })
 
     it("drops the sign entirely when signDisplay is 'never'", () => {
       expect(formatMoney(-1250, 'USD', { signDisplay: 'never' })).toBe('$12.50')
+    })
+  })
+
+  describe('formatMoneyCompact', () => {
+    it('abbreviates large amounts for chart axes', () => {
+      expect(formatMoneyCompact(105000000, 'USD')).toBe('$1.1M')
+      expect(formatMoneyCompact(35000000, 'USD')).toBe('$350K')
+    })
+
+    it('keeps small amounts readable', () => {
+      expect(formatMoneyCompact(0, 'USD')).toBe('$0')
+      expect(formatMoneyCompact(12300, 'USD')).toBe('$123')
     })
   })
 })

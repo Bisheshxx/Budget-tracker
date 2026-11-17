@@ -31,7 +31,11 @@ export function Money({
 }) {
   return (
     <span
-      className={cn('tabular-nums', TONE_CLASS[tone], className)}
+      className={cn(
+        'whitespace-nowrap tabular-nums',
+        TONE_CLASS[tone],
+        className,
+      )}
       data-testid="money"
     >
       {formatMoney(
